@@ -5,7 +5,6 @@
     "session_id": "session_abc",
     "operation": "repository.search",
     "payload": {
-        "repository_session_id": "session_abc",
         "query": "test",
         "mode": "lexical",
         "limit": 10

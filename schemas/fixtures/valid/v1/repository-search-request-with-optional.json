@@ -5,7 +5,6 @@
     "session_id": "session_def",
     "operation": "repository.search",
     "payload": {
-        "repository_session_id": "session_def",
         "query": "async",
         "mode": "semantic",
         "limit": 25,

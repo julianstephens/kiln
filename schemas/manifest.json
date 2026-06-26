@@ -25,6 +25,8 @@
         "repository/search-result",
         "repository/session",
         "repository/source",
+        "repository/source-request",
+        "repository/source-request-payload",
         "repository/source-response",
         "repository/source-result",
         "repository/usage",
@@ -42,6 +44,7 @@
         "repository/search-request",
         "repository/search-response",
         "repository/session",
+        "repository/source-request",
         "repository/source-response"
     ]
 }
