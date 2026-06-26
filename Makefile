@@ -85,9 +85,8 @@ build: build-python build-go
 build-python:
 	rm -rf $(DIST_DIR)/python
 	mkdir -p $(DIST_DIR)/python
-	$(PYTHON) -m build \
-		--outdir "$(CURDIR)/$(DIST_DIR)/python" \
-		$(PYTHON_DIR)
+	uv build \
+		--out-dir "$(CURDIR)/$(DIST_DIR)/python"
 
 build-go:
 	rm -rf $(DIST_DIR)/bin

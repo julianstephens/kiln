@@ -22,3 +22,16 @@ extend-select = ["B", "LOG", "Q", "RET", "SIM", "ARG", "I", "N", "E", "W", "F", 
 [tool.pytest.ini_options]
 addopts = "-n auto"
 pythonpath = ["python"]
+
+[dependency-groups]
+dev = [
+    "build>=1.5.0",
+]
+
+[tool.uv.build-backend]
+module-root = "python"
+module-name = "kiln"
+
+[build-system]
+requires = ["uv_build>=0.11.17,<0.12.0"]
+build-backend = "uv_build"
