@@ -33,7 +33,7 @@ jobs:
         run: uvx ruff check
 
       - name: Run pytests
-        run: uv run pytest tests
+        run: uv run pytest
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
