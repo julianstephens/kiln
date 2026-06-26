@@ -6,8 +6,10 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "artifact_references",
         "code",
         "category",
+        "diagnostics",
         "message",
         "retryable",
         "operation_id",
@@ -62,14 +64,12 @@
         },
         "diagnostics": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json"
             }
         },
         "artifact_references": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
             }

@@ -50,7 +50,6 @@
         },
         "related_artifacts": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
             }

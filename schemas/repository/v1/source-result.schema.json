@@ -1,18 +1,23 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source.schema.json",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source-result.schema.json",
     "x-kiln-schema-release": "1.0.0",
-    "title": "Kiln repository source",
+    "title": "Kiln repository source result",
     "type": "object",
     "additionalProperties": false,
     "required": [
-        "repository_path",
-        "source_digest",
-        "byte_ranges",
-        "line_ranges"
+        "candidates",
+        "line_ranges",
+        "byte_ranges"
     ],
     "properties": {
-        "repository_path": {
+        "candidates": {
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
+            }
+        },
+        "source_location": {
             "type": "string",
             "minLength": 1
         },
@@ -32,13 +37,12 @@
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/byte-range.schema.json"
             }
         },
-        "qualified_name": {
-            "type": "string",
-            "minLength": 1
+        "estimated_token_count": {
+            "type": "integer",
+            "minimum": 0
         },
-        "language": {
-            "type": "string",
-            "minLength": 1
+        "truncated": {
+            "type": "boolean"
         }
     }
 }

@@ -2,6 +2,13 @@ version = 1
 revision = 3
 requires-python = ">=3.13"
 
+[manifest]
+members = [
+    "kiln",
+    "kiln-schema-scripts",
+    "kiln-sdk",
+]
+
 [[package]]
 name = "arrow"
 version = "1.4.0"
@@ -206,6 +213,7 @@ source = { editable = "." }
 dev = [
     { name = "build" },
     { name = "jsonschema", extra = ["format"] },
+    { name = "kiln-schema-scripts" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
@@ -218,10 +226,39 @@ dev = [
 dev = [
     { name = "build", specifier = ">=1.5.0" },
     { name = "jsonschema", extras = ["format"], specifier = ">=4.26.0" },
+    { name = "kiln-schema-scripts", editable = "schemas/scripts" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "referencing", specifier = ">=0.37.0" },
+]
+
+[[package]]
+name = "kiln-schema-scripts"
+version = "0.1.0"
+source = { editable = "schemas/scripts" }
+
+[[package]]
+name = "kiln-sdk"
+version = "0.1.0"
+source = { virtual = "python/kiln" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-xdist" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=1.5.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "pytest-xdist", specifier = ">=3.8.0" },
 ]
 
 [[package]]

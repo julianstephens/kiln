@@ -1,0 +1,22 @@
+[project]
+name = "kiln-schema-scripts"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/julianstephens/kiln"
+Issues = "https://github.com/julianstephens/kiln/issues"
+
+[project.scripts]
+newschema = "new_schema:main"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["new_schema", "validate"]

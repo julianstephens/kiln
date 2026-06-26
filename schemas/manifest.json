@@ -11,13 +11,18 @@
         "repository/cost",
         "repository/diagnostic",
         "repository/error",
+        "repository/open-session-response",
         "repository/preparation-status",
         "repository/protocol-request",
         "repository/protocol-response",
         "repository/provenance",
         "repository/relevance",
+        "repository/search-response",
+        "repository/search-result",
         "repository/session",
         "repository/source",
+        "repository/source-response",
+        "repository/source-result",
         "repository/usage",
         "repository/validity"
     ],
@@ -26,9 +31,12 @@
         "repository/candidate",
         "repository/diagnostic",
         "repository/error",
+        "repository/open-session-response",
+        "repository/preparation-status",
         "repository/protocol-request",
         "repository/protocol-response",
-        "repository/preparation-status",
-        "repository/session"
+        "repository/search-response",
+        "repository/session",
+        "repository/source-response"
     ]
 }

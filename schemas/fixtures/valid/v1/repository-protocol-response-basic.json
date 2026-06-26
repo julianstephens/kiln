@@ -2,5 +2,6 @@
     "protocol_version": "1",
     "request_id": "req_01",
     "operation": "runtime.health",
-    "status": "ok"
+    "status": "ok",
+    "artifact_references": []
 }

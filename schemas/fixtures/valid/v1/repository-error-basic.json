@@ -14,5 +14,6 @@
             "content_id": "content_01",
             "message": "failed to parse source file"
         }
-    ]
+    ],
+    "artifact_references": []
 }

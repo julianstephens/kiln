@@ -1,0 +1,10 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_02",
+    "operation": "repository.invalid",
+    "status": "ok",
+    "result": {
+        "candidates": [],
+        "result_count": 0
+    }
+}

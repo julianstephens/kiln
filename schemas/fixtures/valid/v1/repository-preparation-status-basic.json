@@ -3,5 +3,7 @@
     "stale_file_count": 0,
     "refresh_state": "completed",
     "repository_version": {},
-    "workspace_version": {}
+    "workspace_version": {},
+    "preparation_checkpoints": [],
+    "diagnostics": []
 }

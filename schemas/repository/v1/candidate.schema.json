@@ -6,6 +6,7 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "alternative_representations",
         "content_id",
         "repository_id",
         "repository_version_id",
@@ -64,7 +65,6 @@
         },
         "alternative_representations": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
             }

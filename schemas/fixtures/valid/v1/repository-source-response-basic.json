@@ -1,0 +1,12 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_03",
+    "operation": "repository.get_source",
+    "status": "ok",
+    "result": {
+        "candidates": [],
+        "line_ranges": [],
+        "byte_ranges": []
+    },
+    "artifact_references": []
+}

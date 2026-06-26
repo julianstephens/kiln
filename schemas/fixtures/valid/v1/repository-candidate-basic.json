@@ -8,7 +8,7 @@
     "source": {
         "repository_path": "src/main.go",
         "source_digest": "sha256:deadbeef01234567",
-        "line_range": [
+        "line_ranges": [
             {
                 "start": {
                     "line": 10,
@@ -20,9 +20,11 @@
                 }
             }
         ],
+        "byte_ranges": [],
         "qualified_name": "main.Foo",
         "language": "go"
     },
+    "alternative_representations": [],
     "content": {
         "content_type": "inline",
         "inline": "func Foo() string { return \"bar\" }"

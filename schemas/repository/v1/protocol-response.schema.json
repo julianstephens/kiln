@@ -6,6 +6,7 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "artifact_references",
         "protocol_version",
         "request_id",
         "operation",
@@ -64,7 +65,6 @@
             "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json"
         },
         "artifact_references": {
-            "minItems": 1,
             "type": "array",
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"

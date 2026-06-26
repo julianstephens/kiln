@@ -6,6 +6,7 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "match_terms",
         "lexical_score",
         "semantic_score",
         "hybrid_score",
@@ -32,7 +33,6 @@
         },
         "match_terms": {
             "type": "array",
-            "minItems": 1,
             "uniqueItems": true,
             "items": {
                 "type": "string",
