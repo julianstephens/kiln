@@ -30,7 +30,7 @@ jobs:
         run: uv sync --locked --all-extras --dev
 
       - name: Lint Python code
-        run: uv run ruff check
+        run: uvx ruff check
 
       - name: Run pytests
         run: uv run pytest tests
