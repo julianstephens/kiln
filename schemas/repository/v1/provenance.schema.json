@@ -1,0 +1,74 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/provenance.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository provenance",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "source_operation_id",
+        "query_id",
+        "created_at",
+        "creation_method"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "extraction_method",
+                "parser_version"
+            ]
+        },
+        {
+            "required": [
+                "generation_method",
+                "summarizer_version"
+            ]
+        }
+    ],
+    "properties": {
+        "source_operation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "query_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "extraction_method": {
+            "type": "string",
+            "minLength": 1
+        },
+        "generation_method": {
+            "type": "string",
+            "minLength": 1
+        },
+        "parser_version": {
+            "type": "string",
+            "minLength": 1
+        },
+        "summarizer_version": {
+            "type": "string",
+            "minLength": 1
+        },
+        "source_content_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "creation_method": {
+            "type": "string",
+            "enum": [
+                "generated",
+                "extracted"
+            ]
+        }
+    }
+}

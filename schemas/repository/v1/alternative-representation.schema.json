@@ -1,0 +1,38 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/alternative-representation.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository alternative representation",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "representation_kind",
+        "estimated_tokens",
+        "availability",
+        "generation_required",
+        "quality_metadata"
+    ],
+    "properties": {
+        "representation_kind": {
+            "type": "string",
+            "minLength": 1
+        },
+        "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "availability": {
+            "type": "string",
+            "enum": [
+                "available",
+                "unavailable"
+            ]
+        },
+        "generation_required": {
+            "type": "boolean"
+        },
+        "quality_metadata": {
+            "type": "object"
+        }
+    }
+}

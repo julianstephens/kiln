@@ -1,0 +1,11 @@
+{
+    "category": "parsing",
+    "message": "failed to index repository: parse error in source file",
+    "retryable": true,
+    "operation_id": "op_01",
+    "repository_session_id": "sess_01",
+    "repository_version": {},
+    "workspace_version": {},
+    "diagnostics": [],
+    "artifact_references": []
+}

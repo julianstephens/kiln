@@ -1,0 +1,72 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln artifact reference",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "artifact_id",
+        "scope",
+        "artifact_kind",
+        "content_type",
+        "content_hash",
+        "uncompressed_size",
+        "stored_size",
+        "compression_method",
+        "retention_class",
+        "created_at"
+    ],
+    "properties": {
+        "artifact_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "scope": {
+            "type": "string",
+            "enum": [
+                "installation",
+                "tenant"
+            ]
+        },
+        "run_identity": {
+            "type": "string",
+            "minLength": 1
+        },
+        "artifact_kind": {
+            "type": "string",
+            "minLength": 1
+        },
+        "content_type": {
+            "type": "string",
+            "minLength": 1
+        },
+        "content_hash": {
+            "type": "string",
+            "minLength": 1
+        },
+        "uncompressed_size": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "stored_size": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "compression_method": {
+            "type": "string",
+            "minLength": 1
+        },
+        "retention_class": {
+            "type": "string",
+            "minLength": 1
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "encryption_metadata": {
+            "type": "object"
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "schema_set_version": "1.0.0",
+    "compatibility_major": 1,
+    "schemas": [
+        "artifact/reference",
+        "common/byte-range",
+        "common/source-range",
+        "repository/alternative-representation",
+        "repository/candidate",
+        "repository/content",
+        "repository/cost",
+        "repository/diagnostic",
+        "repository/error",
+        "repository/preparation-status",
+        "repository/protocol-request",
+        "repository/protocol-response",
+        "repository/provenance",
+        "repository/relevance",
+        "repository/session",
+        "repository/source",
+        "repository/usage",
+        "repository/validity"
+    ],
+    "entrypoints": [
+        "artifact/reference",
+        "repository/candidate",
+        "repository/diagnostic",
+        "repository/error",
+        "repository/protocol-request",
+        "repository/protocol-response",
+        "repository/preparation-status",
+        "repository/session"
+    ]
+}

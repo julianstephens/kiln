@@ -1,0 +1,59 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository diagnostic",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "diagnostic_code",
+        "severity",
+        "content_id",
+        "message"
+    ],
+    "properties": {
+        "diagnostic_code": {
+            "type": "string",
+            "enum": [
+                "parse_failure",
+                "unsupported_language",
+                "unresolved_reference",
+                "truncated_source",
+                "graph_confidence_warning",
+                "summary_generation_warning",
+                "ignored_file",
+                "oversized_file_skipped"
+            ]
+        },
+        "severity": {
+            "type": "string",
+            "enum": [
+                "error",
+                "warning",
+                "info"
+            ]
+        },
+        "path": {
+            "type": "string",
+            "minLength": 1
+        },
+        "range": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/source-range.schema.json"
+        },
+        "content_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "message": {
+            "type": "string",
+            "minLength": 1
+        },
+        "related_artifacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            }
+        }
+    }
+}

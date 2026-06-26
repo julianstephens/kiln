@@ -1,0 +1,47 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/preparation-status.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository preparation status",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "repository_version": {
+            "type": "object"
+        },
+        "workspace_version": {
+            "type": "object"
+        },
+        "current_index_state": {
+            "type": "string",
+            "minLength": 1
+        },
+        "stale_file_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "refresh_state": {
+            "type": "string",
+            "enum": [
+                "not_started",
+                "in_progress",
+                "completed",
+                "failed"
+            ]
+        },
+        "preparation_checkpoints": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object"
+            }
+        },
+        "diagnostics": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json"
+            }
+        }
+    }
+}

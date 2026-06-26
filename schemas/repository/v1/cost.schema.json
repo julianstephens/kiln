@@ -1,0 +1,35 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/cost.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository cost",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "estimated_tokens",
+        "estimated_bytes",
+        "estimation_method"
+    ],
+    "properties": {
+        "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "estimated_bytes": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "estimation_method": {
+            "type": "string",
+            "minLength": 1
+        },
+        "tokenizer_family": {
+            "type": "string",
+            "minLength": 1
+        },
+        "estimated_confidence": {
+            "type": "integer",
+            "minimum": 0
+        }
+    }
+}

@@ -1,0 +1,63 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/content.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository content",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "content_type"
+    ],
+    "properties": {
+        "content_type": {
+            "type": "string",
+            "enum": [
+                "inline",
+                "artifact",
+                "structured_representation"
+            ]
+        },
+        "inline": {
+            "type": "string",
+            "minLength": 1
+        },
+        "artifact_reference": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "structured_representation": {
+            "type": "object"
+        }
+    },
+    "oneOf": [
+        {
+            "properties": {
+                "content_type": {
+                    "const": "inline"
+                }
+            },
+            "required": [
+                "inline"
+            ]
+        },
+        {
+            "properties": {
+                "content_type": {
+                    "const": "artifact"
+                }
+            },
+            "required": [
+                "artifact_reference"
+            ]
+        },
+        {
+            "properties": {
+                "content_type": {
+                    "const": "structured_representation"
+                }
+            },
+            "required": [
+                "structured_representation"
+            ]
+        }
+    ]
+}

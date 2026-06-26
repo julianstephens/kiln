@@ -1,0 +1,7 @@
+{
+    "diagnostic_code": "parse_failure",
+    "severity": "error",
+    "content_id": "cnt_01",
+    "message": "failed to parse file: unexpected token at line 42",
+    "path": "src/main.go"
+}

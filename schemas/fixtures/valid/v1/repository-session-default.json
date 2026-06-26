@@ -1,0 +1,12 @@
+{
+    "session_id": "sess_01",
+    "capabilities": [
+        "search",
+        "graph",
+        "summary"
+    ],
+    "index_status": "ok",
+    "repository_id": "repo_01",
+    "repository_version_id": "rev_01",
+    "workspace_version_id": "wsv_01"
+}
