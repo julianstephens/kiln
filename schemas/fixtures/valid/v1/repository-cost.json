@@ -1,7 +1,0 @@
-{
-    "estimated_tokens": 128,
-    "estimated_bytes": 512,
-    "estimation_method": "tiktoken",
-    "tokenizer_family": "cl100k_base",
-    "estimated_confidence": 90
-}

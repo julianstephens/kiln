@@ -1,4 +1,6 @@
 {
-    "capabilities": ["search"],
+    "capabilities": [
+        "search"
+    ],
     "index_status": "ok"
 }

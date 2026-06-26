@@ -3,6 +3,7 @@
     "compatibility_major": 1,
     "schemas": [
         "artifact/reference",
+        "common/byte-range",
         "common/source-range",
         "repository/alternative-representation",
         "repository/candidate",

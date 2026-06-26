@@ -8,10 +8,8 @@
     "required": [
         "protocol_version",
         "request_id",
-        "run_id",
         "operation",
-        "payload",
-        "deadline"
+        "payload"
     ],
     "properties": {
         "protocol_version": {

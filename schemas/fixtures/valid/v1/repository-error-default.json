@@ -7,6 +7,12 @@
     "repository_session_id": "sess_01",
     "repository_version": {},
     "workspace_version": {},
-    "diagnostics": [],
-    "artifact_references": []
+    "diagnostics": [
+        {
+            "diagnostic_code": "parse_failure",
+            "severity": "error",
+            "content_id": "content_01",
+            "message": "failed to parse source file"
+        }
+    ]
 }

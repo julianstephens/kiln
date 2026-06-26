@@ -31,14 +31,16 @@
         },
         "preparation_checkpoints": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "type": "object"
             }
         },
         "diagnostics": {
             "type": "array",
+            "minItems": 1,
             "items": {
-                "$ref": "./diagnostic.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json"
             }
         }
     }

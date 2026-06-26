@@ -10,7 +10,6 @@
         "semantic_score",
         "hybrid_score",
         "graph_distance",
-        "match_terms",
         "rank",
         "score_explanation"
     ],
@@ -33,6 +32,8 @@
         },
         "match_terms": {
             "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
             "items": {
                 "type": "string",
                 "minLength": 1

@@ -4,11 +4,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urljoin, urlparse
 
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError
 from referencing import Registry, Resource
 from referencing.exceptions import NoSuchResource
+
+EXPECTED_DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
 
 @dataclass(frozen=True)
@@ -22,10 +25,6 @@ class SchemaDefinition:
     contract: str
     path: Path
     contents: dict[str, Any]
-
-    @property
-    def fixture_name(self) -> str:
-        return f"{self.domain}-{self.contract}.json"
 
     @property
     def fixture_prefix(self) -> str:
@@ -96,6 +95,20 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
             message=f"{manifest_path}: compatibility_major must be a positive integer"
         )
 
+    version_parts = schema_set_version.split(".")
+    if len(version_parts) < 1 or not version_parts[0].isdigit():
+        raise ValidationFailureError(
+            message=f"{manifest_path}: schema_set_version {schema_set_version!r} "
+            "is not a valid semver string"
+        )
+
+    version_major = int(version_parts[0])
+    if version_major != compatibility_major:
+        raise ValidationFailureError(
+            message=f"{manifest_path}: schema_set_version major {version_major} "
+            f"does not match compatibility_major {compatibility_major}"
+        )
+
     schemas = manifest["schemas"]
     if not isinstance(schemas, list) or not schemas:
         raise ValidationFailureError(
@@ -136,7 +149,10 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
         for index, ep_key in enumerate(entrypoints):
             if not isinstance(ep_key, str) or not ep_key:
                 raise ValidationFailureError(
-                    message=f"{manifest_path}: entrypoints[{index}] must be a non-empty string"
+                    message=(
+                        f"{manifest_path}: entrypoints[{index}] must be a "
+                        "non-empty string"
+                    )
                 )
 
             parts = ep_key.split("/")
@@ -156,7 +172,10 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
         not_in_schemas = sorted(seen_entrypoints - seen)
         if not_in_schemas:
             raise ValidationFailureError(
-                message=f"{manifest_path}: entrypoints contains keys not declared in schemas: "
+                message=(
+                    f"{manifest_path}: entrypoints contains keys not declared in "
+                    "schemas: "
+                )
                 + ", ".join(not_in_schemas)
             )
 
@@ -176,6 +195,20 @@ def load_schemas(
         path = schema_root / domain / f"v{major}" / f"{contract}.schema.json"
         contents = require_object(load_json(path), path=path)
 
+        if contents.get("$schema") != EXPECTED_DIALECT:
+            print("SCHEMA", contents.get("$schema"))
+            raise ValidationFailureError(
+                message=f"{path}: $schema must be {EXPECTED_DIALECT!r}"
+            )
+
+        schema_release = contents.get("x-kiln-schema-release")
+        expected_release = manifest["schema_set_version"]
+        if schema_release != expected_release:
+            raise ValidationFailureError(
+                message=f"{path}: x-kiln-schema-release {schema_release!r} "
+                f"does not match manifest schema_set_version {expected_release!r}"
+            )
+
         try:
             Draft202012Validator.check_schema(contents)
         except SchemaError as exc:
@@ -188,6 +221,29 @@ def load_schemas(
         if not isinstance(schema_id, str) or not schema_id:
             raise ValidationFailureError(
                 message=f"{path}: schema must define a non-empty string $id"
+            )
+
+        # Validate that the $id path encodes the correct domain, version, and
+        # contract, and that the local file path is consistent with all three.
+        id_path = urlparse(schema_id).path
+        expected_id_path = f"/schemas/{domain}/v{major}/{contract}.schema.json"
+        if id_path != expected_id_path:
+            raise ValidationFailureError(
+                message=f"{path}: $id path {id_path!r} does not match "
+                f"expected {expected_id_path!r} for manifest key "
+                f"{schema_key!r} with compatibility_major={major}"
+            )
+
+        expected_local_suffix = Path(domain) / f"v{major}" / f"{contract}.schema.json"
+        try:
+            actual_local_suffix = path.relative_to(schema_root)
+        except ValueError:
+            actual_local_suffix = path
+        if actual_local_suffix != expected_local_suffix:
+            raise ValidationFailureError(
+                message=f"{path}: local path suffix {str(actual_local_suffix)!r} "
+                f"does not match expected {str(expected_local_suffix)!r} for "
+                f"manifest key {schema_key!r} with compatibility_major={major}"
             )
 
         previous_path = seen_ids.get(schema_id)
@@ -250,66 +306,47 @@ def entrypoint_definitions(
 def find_fixture_schema(
     fixture_path: Path,
     definitions: list[SchemaDefinition],
-    *,
-    should_pass: bool,
 ) -> SchemaDefinition:
     filename = fixture_path.name
 
-    if should_pass:
-        matches = [
-            definition
-            for definition in definitions
-            if filename == definition.fixture_name
-        ]
-    else:
-        matches = [
-            definition
-            for definition in definitions
-            if filename.startswith(definition.fixture_prefix)
-            and filename.endswith(".json")
-        ]
+    matches = [
+        definition
+        for definition in definitions
+        if filename.startswith(definition.fixture_prefix) and filename.endswith(".json")
+    ]
 
     if not matches:
-        if should_pass:
-            expected = ", ".join(
-                sorted(definition.fixture_name for definition in definitions)
+        expected = ", ".join(
+            sorted(
+                f"{definition.fixture_prefix}<case>.json" for definition in definitions
             )
-        else:
-            expected = ", ".join(
-                sorted(
-                    f"{definition.fixture_prefix}<case>.json"
-                    for definition in definitions
-                )
-            )
+        )
         raise ValidationFailureError(
             message=f"{fixture_path}: filename does not match a declared schema; "
             f"expected one of: {expected}"
         )
 
-    if not should_pass:
-        # Prefer the longest prefix so contracts such as `request` and
-        # `request-envelope` can coexist without ambiguous fixture matching.
-        matches.sort(
-            key=lambda definition: len(definition.fixture_prefix),
-            reverse=True,
+    # Prefer the longest prefix so contracts such as `request` and
+    # `request-envelope` can coexist without ambiguous fixture matching.
+    matches.sort(
+        key=lambda definition: len(definition.fixture_prefix),
+        reverse=True,
+    )
+
+    longest_length = len(matches[0].fixture_prefix)
+    longest_matches = [
+        definition
+        for definition in matches
+        if len(definition.fixture_prefix) == longest_length
+    ]
+
+    if len(longest_matches) > 1:
+        keys = ", ".join(sorted(definition.key for definition in longest_matches))
+        raise ValidationFailureError(
+            message=f"{fixture_path}: fixture name ambiguously matches: {keys}"
         )
 
-        longest_length = len(matches[0].fixture_prefix)
-        longest_matches = [
-            definition
-            for definition in matches
-            if len(definition.fixture_prefix) == longest_length
-        ]
-
-        if len(longest_matches) > 1:
-            keys = ", ".join(sorted(definition.key for definition in longest_matches))
-            raise ValidationFailureError(
-                message=f"{fixture_path}: fixture name ambiguously matches: {keys}"
-            )
-
-        return longest_matches[0]
-
-    return matches[0]
+    return longest_matches[0]
 
 
 def format_instance_path(error: Any) -> str:
@@ -334,7 +371,7 @@ def validate_fixture(
     definitions: list[SchemaDefinition],
     registry: Registry,
 ) -> list[str]:
-    definition = find_fixture_schema(fixture_path, definitions, should_pass=should_pass)
+    definition = find_fixture_schema(fixture_path, definitions)
     instance = load_json(fixture_path)
 
     validator = Draft202012Validator(
@@ -378,6 +415,45 @@ def validate_fixture(
     return []
 
 
+def iter_refs(value: Any) -> list[str]:
+    refs: list[str] = []
+
+    if isinstance(value, dict):
+        ref = value.get("$ref")
+        if isinstance(ref, str):
+            refs.append(ref)
+
+        for child in value.values():
+            refs.extend(iter_refs(child))
+
+    elif isinstance(value, list):
+        for child in value:
+            refs.extend(iter_refs(child))
+
+    return refs
+
+
+def validate_references(
+    definitions: list[SchemaDefinition],
+    registry: Registry,
+) -> None:
+    for definition in definitions:
+        base_uri = definition.contents["$id"]
+
+        for reference in iter_refs(definition.contents):
+            absolute_uri = urljoin(base_uri, reference)
+
+            try:
+                registry.get_or_retrieve(absolute_uri)
+            except Exception as exc:
+                raise ValidationFailureError(
+                    message=(
+                        f"{definition.path}: unresolved $ref "
+                        f"{reference!r} -> {absolute_uri!r}"
+                    )
+                ) from exc
+
+
 def collect_fixtures(
     schema_root: Path,
     *,
@@ -418,6 +494,8 @@ def validate_repository(schema_root: Path) -> list[str]:
         fixture_kind="invalid",
     )
 
+    validate_references(definitions, registry)
+
     failures: list[str] = []
 
     for fixture_path in valid_fixtures:
@@ -445,11 +523,11 @@ def validate_repository(schema_root: Path) -> list[str]:
     }
 
     for fixture_path in valid_fixtures:
-        definition = find_fixture_schema(fixture_path, definitions, should_pass=True)
+        definition = find_fixture_schema(fixture_path, definitions)
         fixture_counts[definition.key]["valid"] += 1
 
     for fixture_path in invalid_fixtures:
-        definition = find_fixture_schema(fixture_path, definitions, should_pass=False)
+        definition = find_fixture_schema(fixture_path, definitions)
         fixture_counts[definition.key]["invalid"] += 1
 
     for definition in entry_definitions:

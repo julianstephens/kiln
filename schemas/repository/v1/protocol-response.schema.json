@@ -49,24 +49,25 @@
         },
         "workspace_version_id": {
             "type": "string",
-            "format": "date-time"
+            "minLength": 1
         },
         "result": {
             "type": "object"
         },
         "error": {
-            "$ref": "./error.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/error.schema.json"
         },
         "usage": {
-            "$ref": "./usage.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/usage.schema.json"
         },
         "diagnostic": {
-            "$ref": "./diagnostic.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json"
         },
         "artifact_references": {
+            "minItems": 1,
             "type": "array",
             "items": {
-                "$ref": "../artifact/v1/reference.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
             }
         }
     }

@@ -45,27 +45,28 @@
             "minLength": 1
         },
         "source": {
-            "$ref": "./source.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source.schema.json"
         },
         "content": {
-            "$ref": "./content.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/content.schema.json"
         },
         "cost": {
-            "$ref": "./cost.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/cost.schema.json"
         },
         "relevance": {
-            "$ref": "./relevance.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/relevance.schema.json"
         },
         "provenance": {
-            "$ref": "./provenance.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/provenance.schema.json"
         },
         "validity": {
-            "$ref": "./validity.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/validity.schema.json"
         },
         "alternative_representations": {
             "type": "array",
+            "minItems": 1,
             "items": {
-                "$ref": "./alternative-representation.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
             }
         }
     }
