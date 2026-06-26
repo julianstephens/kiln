@@ -1,0 +1,112 @@
+SHELL := /usr/bin/env bash
+
+RUFF ?= uvx ruff
+GO ?= go
+GOLANGCI_LINT ?= golangci-lint
+
+PYTHON_DIR := python
+GO_DIR := go
+DIST_DIR := dist
+
+default: check
+
+.PHONY: \
+	help \
+	format format-python format-go \
+	format-check format-check-python format-check-go \
+	lint lint-python lint-go \
+	test test-python test-go \
+	build build-python build-go \
+	clean check 
+
+help:
+	@printf '%s\n' \
+		"Kiln development commands:" \
+		"" \
+		"  make format        Format all Python and Go code" \
+		"  make format-check  Verify formatting without modifying files" \
+		"  make lint          Lint all Python and Go code" \
+		"  make test          Run all tests" \
+		"  make build         Build Python and Go artifacts" \
+		"  make clean         Remove generated build artifacts"
+
+# ---------------------------------------------------------------------------
+# Formatting
+# ---------------------------------------------------------------------------
+
+format: format-python format-go
+
+format-python:
+	cd $(PYTHON_DIR) && $(RUFF) format .
+	cd $(PYTHON_DIR) && $(RUFF) check --fix .
+
+format-go:
+	cd $(GO_DIR) && $(GOLANGCI_LINT) fmt ./...
+
+format-check: format-check-python format-check-go
+
+format-check-python:
+	cd $(PYTHON_DIR) && $(RUFF) format --check .
+
+format-check-go:
+	cd $(GO_DIR) && $(GOLANGCI_LINT) fmt --diff ./...
+
+# ---------------------------------------------------------------------------
+# Linting
+# ---------------------------------------------------------------------------
+
+lint: lint-python lint-go
+
+lint-python:
+	cd $(PYTHON_DIR) && $(RUFF) check .
+
+lint-go:
+	cd $(GO_DIR) && $(GOLANGCI_LINT) run ./...
+
+# ---------------------------------------------------------------------------
+# Testing
+# ---------------------------------------------------------------------------
+
+test: test-python test-go
+
+test-python:
+	cd $(PYTHON_DIR) && uv run pytest --cov=kiln --cov-report=term-missing
+
+test-go:
+	cd $(GO_DIR) && $(GO) test -v ./...
+
+# ---------------------------------------------------------------------------
+# Builds
+# ---------------------------------------------------------------------------
+
+build: build-python build-go
+
+build-python:
+	rm -rf $(DIST_DIR)/python
+	mkdir -p $(DIST_DIR)/python
+	uv build \
+		--out-dir "$(CURDIR)/$(DIST_DIR)/python"
+
+build-go:
+	rm -rf $(DIST_DIR)/bin
+	mkdir -p $(DIST_DIR)/bin
+	cd $(GO_DIR) && \
+		$(GO) build \
+			-o "$(CURDIR)/$(DIST_DIR)/bin/kiln-runtime" \
+			./cmd/kiln-runtime
+
+# ---------------------------------------------------------------------------
+# Cleanup
+# ---------------------------------------------------------------------------
+
+clean:
+	rm -rf $(DIST_DIR)
+	rm -rf $(PYTHON_DIR)/build
+	rm -rf $(PYTHON_DIR)/*.egg-info
+	find $(PYTHON_DIR) \
+		-type d \
+		\( -name __pycache__ -o -name .ruff_cache \) \
+		-prune \
+		-exec rm -rf {} +
+
+check: format-check lint test build
