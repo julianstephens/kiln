@@ -1,6 +1,5 @@
 SHELL := /usr/bin/env bash
 
-PYTHON ?= python
 RUFF ?= uvx ruff
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -71,7 +70,7 @@ lint-go:
 test: test-python test-go
 
 test-python:
-	cd $(PYTHON_DIR) && $(PYTHON) -m pytest --cov=kiln --cov-report=term-missing
+	cd $(PYTHON_DIR) && uv run pytest --cov=kiln --cov-report=term-missing
 
 test-go:
 	cd $(GO_DIR) && $(GO) test -v ./...
