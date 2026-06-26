@@ -4,6 +4,7 @@
     "schemas": [
         "artifact/reference",
         "common/byte-range",
+        "common/protocol-request",
         "common/protocol-response",
         "common/source-range",
         "repository/alternative-representation",
@@ -18,6 +19,8 @@
         "repository/protocol-response",
         "repository/provenance",
         "repository/relevance",
+        "repository/search-request",
+        "repository/search-request-payload",
         "repository/search-response",
         "repository/search-result",
         "repository/session",
@@ -36,6 +39,7 @@
         "repository/preparation-status",
         "repository/protocol-request",
         "repository/protocol-response",
+        "repository/search-request",
         "repository/search-response",
         "repository/session",
         "repository/source-response"

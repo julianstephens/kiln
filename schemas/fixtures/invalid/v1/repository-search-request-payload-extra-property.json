@@ -1,0 +1,7 @@
+{
+    "repository_session_id": "session_123",
+    "query": "function",
+    "mode": "lexical",
+    "limit": 10,
+    "extra_property": "not allowed"
+}

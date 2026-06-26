@@ -4,52 +4,36 @@
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository protocol request",
     "type": "object",
-    "additionalProperties": false,
-    "required": [
-        "protocol_version",
-        "request_id",
-        "operation",
-        "payload"
-    ],
-    "properties": {
-        "protocol_version": {
-            "type": "string",
-            "const": "1"
+    "allOf": [
+        {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/protocol-request.schema.json"
         },
-        "request_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "run_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "session_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "operation": {
-            "type": "string",
-            "minLength": 1
-        },
-        "payload": {
-            "type": "object"
-        },
-        "deadline": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "correlation_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "capability_grant_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "budget_reservation_id": {
-            "type": "string",
-            "minLength": 1
+        {
+            "required": [
+                "run_id"
+            ],
+            "properties": {
+                "operation": {
+                    "type": "string",
+                    "pattern": "^repository\\."
+                },
+                "run_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "session_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "capability_grant_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "budget_reservation_id": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
         }
-    }
+    ]
 }

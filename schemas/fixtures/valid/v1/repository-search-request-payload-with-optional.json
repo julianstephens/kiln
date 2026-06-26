@@ -1,0 +1,12 @@
+{
+    "repository_session_id": "session_456",
+    "query": "async function",
+    "mode": "full-text",
+    "limit": 50,
+    "filters": [
+        {}
+    ],
+    "representation_preference": "source",
+    "minimum_score": 0.75,
+    "result_size_limit": 100
+}
