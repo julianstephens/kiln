@@ -1,0 +1,9 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_04",
+    "operation": "test.operation",
+    "status": "invalid_request",
+    "result": {
+        "data": "invalid"
+    }
+}

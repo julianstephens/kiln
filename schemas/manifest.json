@@ -4,6 +4,7 @@
     "schemas": [
         "artifact/reference",
         "common/byte-range",
+        "common/protocol-response",
         "common/source-range",
         "repository/alternative-representation",
         "repository/candidate",

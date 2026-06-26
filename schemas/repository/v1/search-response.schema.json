@@ -4,6 +4,7 @@
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository search response",
     "type": "object",
+    "unevaluatedProperties": false,
     "allOf": [
         {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/protocol-response.schema.json"
