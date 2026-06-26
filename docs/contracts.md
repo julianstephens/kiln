@@ -1160,7 +1160,76 @@ Trusted product or installation configuration.
 
 ---
 
-## 7.2 CapabilityGrant
+## 7.2 CapabilityScope
+
+### Meaning
+
+Represents the bounded set of resources and operations to which a capability rule, grant, request, or decision applies.
+
+A capability scope identifies where authority may be exercised. It does not itself grant authority.
+
+### Owner
+
+The component that establishes the enclosing security profile, capability grant, or capability decision.
+
+The capability broker validates and resolves scopes before they become effective.
+
+### Contains
+
+A scope may constrain authority by:
+
+- installation identity;
+- tenant identity;
+- workspace identity;
+- repository identity;
+- repository version;
+- workspace version;
+- run identity;
+- repository-session identity;
+- artifact identity or artifact class;
+- filesystem roots or path patterns;
+- network destinations;
+- external-integration identities;
+- model providers or model identities;
+- validation execution;
+- operation kinds.
+
+A scope may also contain:
+
+- explicit exclusions;
+- depth or traversal limits;
+- read, write, execute, or egress restrictions;
+- validity bounds inherited from the enclosing grant;
+- scope version or normalization metadata.
+
+### Composition
+
+Scopes may be narrowed through intersection.
+
+For example:
+
+- a security profile may permit repository reads within a workspace;
+- a run may request access to one repository;
+- a repository session may bind access to one repository version;
+- the effective grant scope is the intersection of those constraints.
+
+A child scope cannot expand its parent scope.
+
+### Invariants
+
+- A scope is descriptive and does not independently authorize an operation.
+- Effective authority requires both an applicable `CapabilityGrant` and a matching scope.
+- Missing scope dimensions do not imply unrestricted access.
+- Caller-supplied identities cannot expand the runtime-established scope.
+- Scope narrowing is explicit and inspectable.
+- Scope comparison and intersection are deterministic.
+- Resource identities are treated as opaque values.
+- Repository evidence must remain bound to the repository and workspace versions in its effective scope.
+- A scope attached to an immutable grant or decision is immutable.
+
+---
+
+## 7.3 CapabilityGrant
 
 ### Meaning
 
@@ -1191,7 +1260,7 @@ Capability broker.
 
 ---
 
-## 7.3 CapabilityDecision
+## 7.4 CapabilityDecision
 
 ### Meaning
 
@@ -1227,7 +1296,7 @@ Capability broker.
 
 ---
 
-## 7.4 ToolDefinition
+## 7.5 ToolDefinition
 
 ### Meaning
 
@@ -1257,7 +1326,7 @@ Tool registry.
 
 ---
 
-## 7.5 ToolCall
+## 7.6 ToolCall
 
 ### Meaning
 
@@ -1297,7 +1366,7 @@ proposed
 
 ---
 
-## 7.6 ToolResult
+## 7.7 ToolResult
 
 ### Meaning
 

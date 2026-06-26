@@ -33,8 +33,7 @@
         "filters": {
             "type": "array",
             "items": {
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
             }
         },
         "representation_preference": {

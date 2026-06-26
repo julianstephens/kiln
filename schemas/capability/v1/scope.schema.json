@@ -1,0 +1,534 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/capability/v1/scope.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln capability scope",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "installation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "tenant_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "workspace_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "repository_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "repository_version_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "workspace_version_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "repository_session_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "artifacts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 1
+                },
+                "kinds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "uniqueItems": true,
+                    "minItems": 1
+                },
+                "ownership": {
+                    "type": "string",
+                    "enum": [
+                        "current_run",
+                        "current_repository_session",
+                        "current_workspace",
+                        "installation"
+                    ]
+                },
+                "retention_classes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "temporary",
+                            "standard",
+                            "audit",
+                            "debug"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "anyOf": [
+                {
+                    "required": [
+                        "ids"
+                    ]
+                },
+                {
+                    "required": [
+                        "kinds"
+                    ]
+                },
+                {
+                    "required": [
+                        "ownership"
+                    ]
+                },
+                {
+                    "required": [
+                        "retention_classes"
+                    ]
+                }
+            ]
+        },
+        "filesystem": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "access"
+            ],
+            "properties": {
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "patterns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "access": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "read",
+                            "write",
+                            "execute"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "anyOf": [
+                {
+                    "required": [
+                        "paths"
+                    ]
+                },
+                {
+                    "required": [
+                        "patterns"
+                    ]
+                }
+            ]
+        },
+        "network_destinations": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "default"
+            ],
+            "properties": {
+                "default": {
+                    "type": "string",
+                    "enum": [
+                        "deny",
+                        "allow"
+                    ]
+                },
+                "allow": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/networkDestination"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "deny": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/networkDestination"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "anyOf": [
+                {
+                    "required": [
+                        "allow"
+                    ]
+                },
+                {
+                    "required": [
+                        "deny"
+                    ]
+                }
+            ]
+        },
+        "external_integrations": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/externalIntegration"
+            },
+            "minItems": 1
+        },
+        "model_ids": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "operation_kinds": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "validation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "execution_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "validator_kinds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "unit_tests",
+                            "integration_tests",
+                            "typecheck",
+                            "lint",
+                            "format_check",
+                            "security_scan",
+                            "custom"
+                        ]
+                    }
+                },
+                "allowed_operations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "start",
+                            "cancel",
+                            "read_status",
+                            "read_report",
+                            "write_report",
+                            "read_logs",
+                            "write_logs"
+                        ]
+                    },
+                    "uniqueItems": true
+                },
+                "artifact_kinds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "patch",
+                            "changed-file-manifest",
+                            "validation-report",
+                            "diagnostic-log"
+                        ]
+                    },
+                    "uniqueItems": true
+                }
+            },
+            "anyOf": [
+                {
+                    "required": [
+                        "execution_ids"
+                    ]
+                },
+                {
+                    "required": [
+                        "validator_kinds"
+                    ]
+                },
+                {
+                    "required": [
+                        "allowed_operations"
+                    ]
+                },
+                {
+                    "required": [
+                        "artifact_kinds"
+                    ]
+                }
+            ]
+        }
+    },
+    "$defs": {
+        "networkDestination": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "destination_type"
+            ],
+            "properties": {
+                "destination_type": {
+                    "type": "string",
+                    "enum": [
+                        "host",
+                        "domain_suffix",
+                        "url_origin",
+                        "cidr",
+                        "private_network",
+                        "loopback",
+                        "link_local",
+                        "metadata_service",
+                        "external_integration"
+                    ]
+                },
+                "host": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "domain_suffix": {
+                    "type": "string",
+                    "pattern": "^\\.[A-Za-z0-9.-]+$"
+                },
+                "url_origin": {
+                    "type": "string"
+                },
+                "cidr": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "external_integration_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "ports": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 65535
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "protocols": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "http",
+                            "https",
+                            "ssh",
+                            "git",
+                            "grpc"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "purposes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "model_inference",
+                            "repository_metadata",
+                            "repository_fetch",
+                            "package_metadata",
+                            "artifact_storage",
+                            "validation",
+                            "telemetry"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "reason": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "destination_type": {
+                                "const": "host"
+                            }
+                        },
+                        "required": [
+                            "destination_type"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "host"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "destination_type": {
+                                "const": "domain_suffix"
+                            }
+                        },
+                        "required": [
+                            "destination_type"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "domain_suffix"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "destination_type": {
+                                "const": "url_origin"
+                            }
+                        },
+                        "required": [
+                            "destination_type"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "url_origin"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "destination_type": {
+                                "const": "cidr"
+                            }
+                        },
+                        "required": [
+                            "destination_type"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "cidr"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "destination_type": {
+                                "const": "external_integration"
+                            }
+                        },
+                        "required": [
+                            "destination_type"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "external_integration_id"
+                        ]
+                    }
+                }
+            ]
+        },
+        "externalIntegration": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "integration_kind",
+                "integration_id",
+                "allowed_operations"
+            ],
+            "properties": {
+                "integration_kind": {
+                    "type": "string",
+                    "enum": [
+                        "model_provider",
+                        "artifact_store",
+                        "repository_provider",
+                        "validation_service"
+                    ]
+                },
+                "integration_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "allowed_operations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "generate",
+                            "read",
+                            "write",
+                            "read_metadata",
+                            "read_content",
+                            "validate"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

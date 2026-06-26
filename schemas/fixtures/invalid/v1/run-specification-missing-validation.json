@@ -1,0 +1,60 @@
+{
+    "repository": {
+        "repository_path": "src/main.ts",
+        "source_digest": "abc123def456",
+        "byte_ranges": [
+            {
+                "start": 0,
+                "end": 100
+            }
+        ],
+        "line_ranges": [
+            {
+                "start": {
+                    "line": 1,
+                    "column": 1
+                },
+                "end": {
+                    "line": 5,
+                    "column": 1
+                }
+            }
+        ]
+    },
+    "task_specification": {
+        "description": "Implement feature X",
+        "success_criteria": "All tests pass",
+        "constraints": "Must not break existing functionality",
+        "deliverables": [
+            "feature-implementation"
+        ],
+        "provenance": {
+            "source_operation_id": "op_123",
+            "source_content_ids": [
+                "content_1"
+            ],
+            "query_id": "query_1",
+            "created_at": "2026-06-26T00:00:00Z",
+            "creation_method": "extracted",
+            "extraction_method": "static_analysis",
+            "parser_version": "1.0.0"
+        }
+    },
+    "model_configuration": {
+        "model_id": "gpt-4",
+        "context_limit": 8000,
+        "tool_call_mode": "unrestricted",
+        "tokenizer_strategy": "default",
+        "generation_parameters": {},
+        "allowed_endpoint": "https://api.openai.com",
+        "credential_reference": "openai_key",
+        "streaming_preference": "enabled",
+        "provider_id": "openai"
+    },
+    "budget_limits": {},
+    "security_profile": {},
+    "output_mode": [
+        "answer"
+    ],
+    "caller_metadata": {}
+}

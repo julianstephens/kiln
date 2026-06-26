@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/model/v1/configuration.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln model configuration",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "model_id",
+        "context_limit",
+        "tool_call_mode",
+        "tokenizer_strategy",
+        "generation_parameters",
+        "allowed_endpoint",
+        "credential_reference",
+        "streaming_preference"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "provider_id"
+            ]
+        },
+        {
+            "required": [
+                "local_adapter_id"
+            ]
+        }
+    ],
+    "properties": {
+        "model_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "context_limit": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "tool_call_mode": {
+            "type": "string",
+            "enum": [
+                "none",
+                "restricted",
+                "unrestricted"
+            ]
+        },
+        "tokenizer_strategy": {
+            "type": "string",
+            "minLength": 1
+        },
+        "generation_parameters": {
+            "type": "object"
+        },
+        "allowed_endpoint": {
+            "type": "string",
+            "minLength": 1
+        },
+        "credential_reference": {
+            "type": "string",
+            "minLength": 1
+        },
+        "streaming_preference": {
+            "type": "string",
+            "minLength": 1
+        },
+        "provider_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "local_adapter_id": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

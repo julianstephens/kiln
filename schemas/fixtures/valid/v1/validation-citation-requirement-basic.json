@@ -1,0 +1,8 @@
+{
+    "citation_model": "gpt-4",
+    "allowed_source_kinds": [
+        "documentation",
+        "code"
+    ],
+    "minimum_support_level": "direct"
+}

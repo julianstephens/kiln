@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/validation/v1/schema-requirement.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln validation schema requirement",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_id",
+        "instance_ref",
+        "mode"
+    ],
+    "properties": {
+        "schema_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "instance_ref": {
+            "type": "string",
+            "minLength": 1
+        },
+        "mode": {
+            "type": "string",
+            "enum": [
+                "strict",
+                "permissive"
+            ]
+        }
+    }
+}

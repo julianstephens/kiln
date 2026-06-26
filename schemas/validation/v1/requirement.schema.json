@@ -1,0 +1,144 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/validation/v1/requirement.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln validation requirement",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "requirement_id",
+        "requirement_kind",
+        "severity",
+        "trigger",
+        "config"
+    ],
+    "properties": {
+        "requirement_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "requirement_kind": {
+            "type": "string",
+            "enum": [
+                "command",
+                "schema",
+                "policy",
+                "approval",
+                "citation"
+            ]
+        },
+        "severity": {
+            "type": "string",
+            "enum": [
+                "advisory",
+                "blocking"
+            ]
+        },
+        "trigger": {
+            "type": "string",
+            "enum": [
+                "before_model",
+                "after_model",
+                "before_output",
+                "before_publication",
+                "on_demand"
+            ]
+        },
+        "scope": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/scope.schema.json"
+        },
+        "budget_limits": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "capability_requirements": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "config": {
+            "type": "object"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "requirement_kind": {
+                        "const": "schema"
+                    }
+                },
+                "required": [
+                    "requirement_kind"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "config": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/schema-requirement.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "requirement_kind": {
+                        "const": "policy"
+                    }
+                },
+                "required": [
+                    "requirement_kind"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "config": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/policy-requirement.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "requirement_kind": {
+                        "const": "approval"
+                    }
+                },
+                "required": [
+                    "requirement_kind"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "config": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/approval-requirement.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "requirement_kind": {
+                        "const": "citation"
+                    }
+                },
+                "required": [
+                    "requirement_kind"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "config": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/citation-requirement.schema.json"
+                    }
+                }
+            }
+        }
+    ]
+}

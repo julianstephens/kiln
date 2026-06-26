@@ -3,10 +3,14 @@
     "compatibility_major": 1,
     "schemas": [
         "artifact/reference",
+        "budget/limits",
+        "capability/scope",
+        "capability/security-profile",
         "common/byte-range",
         "common/protocol-request",
         "common/protocol-response",
         "common/source-range",
+        "model/configuration",
         "repository/alternative-representation",
         "repository/candidate",
         "repository/content",
@@ -30,10 +34,19 @@
         "repository/source-response",
         "repository/source-result",
         "repository/usage",
-        "repository/validity"
+        "repository/validity",
+        "run/specification",
+        "run/task-specification",
+        "validation/approval-requirement",
+        "validation/citation-requirement",
+        "validation/policy-requirement",
+        "validation/requirement",
+        "validation/schema-requirement"
     ],
     "entrypoints": [
         "artifact/reference",
+        "budget/limits",
+        "capability/security-profile",
         "repository/candidate",
         "repository/diagnostic",
         "repository/error",
@@ -45,6 +58,11 @@
         "repository/search-response",
         "repository/session",
         "repository/source-request",
-        "repository/source-response"
+        "repository/source-response",
+        "run/specification",
+        "validation/approval-requirement",
+        "validation/citation-requirement",
+        "validation/policy-requirement",
+        "validation/schema-requirement"
     ]
 }

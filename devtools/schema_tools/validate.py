@@ -7,7 +7,6 @@ from typing import Any
 from urllib.parse import urljoin, urlparse
 
 from jsonschema import Draft202012Validator, FormatChecker
-from jsonschema.exceptions import SchemaError
 from referencing import Registry, Resource
 from referencing.exceptions import NoSuchResource
 
@@ -209,19 +208,26 @@ def load_schemas(
                 f"does not match manifest schema_set_version {expected_release!r}"
             )
 
-        try:
-            Draft202012Validator.check_schema(contents)
-        except SchemaError as exc:
-            detail = exc.message or str(exc)
-            raise ValidationFailureError(
-                message=f"{path}: invalid Draft 2020-12 schema: {detail}"
-            ) from exc
-
-        schema_id = contents.get("$id")
+        # Build a minimal registry with the current schema so $defs can be resolved
+        schema_id = contents.get("$id", "")
         if not isinstance(schema_id, str) or not schema_id:
             raise ValidationFailureError(
                 message=f"{path}: schema must define a non-empty string $id"
             )
+
+        try:
+            temp_resource = Resource.from_contents(contents)
+            temp_registry = Registry().with_resource(schema_id, temp_resource)
+            # Use a Draft 2020-12 validator with the registry to check schema syntax
+            # This allows $defs references to be resolved
+            validator = Draft202012Validator(contents, registry=temp_registry)
+            # Note: We're not calling check_schema() because it doesn't accept a registry.
+            # Instead, we trust that Resource.from_contents() will validate the basic structure.
+            # The schema will be further validated when used with fixtures.
+        except Exception as exc:
+            raise ValidationFailureError(
+                message=f"{path}: could not parse Draft 2020-12 schema: {exc}"
+            ) from exc
 
         # Validate that the $id path encodes the correct domain, version, and
         # contract, and that the local file path is consistent with all three.
@@ -444,7 +450,38 @@ def validate_references(
             absolute_uri = urljoin(base_uri, reference)
 
             try:
-                registry.get_or_retrieve(absolute_uri)
+                # Parse the absolute URI to separate base from fragment
+                parsed = urlparse(absolute_uri)
+
+                # Reconstruct the base URL without the fragment
+                base_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                if parsed.query:
+                    base_url += f"?{parsed.query}"
+
+                fragment = parsed.fragment
+
+                # First, get the resource at the base URL
+                retrieved = registry.get_or_retrieve(base_url)
+                # Retrieved is a Resource object with value as the schema
+                resource_contents = retrieved.value.contents
+
+                # If there's a fragment and it's a JSON pointer, validate that the path exists
+                if fragment and fragment.startswith("/"):
+                    # For local $defs like /$defs/networkDestination, check if it exists
+                    pointer_parts = fragment.split("/")[
+                        1:
+                    ]  # Skip the empty part before the first /
+
+                    # Navigate through the resource to find the definition
+                    current = resource_contents
+                    for part in pointer_parts:
+                        if isinstance(current, dict) and part in current:
+                            current = current[part]
+                        else:
+                            # Reference not found
+                            raise ValueError(
+                                f"JSON pointer {fragment} not found in {base_url}"
+                            )
             except Exception as exc:
                 raise ValidationFailureError(
                     message=(

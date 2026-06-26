@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/validation/v1/policy-requirement.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln validation policy requirement",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "policy_id",
+        "policy_kind",
+        "inputs",
+        "failure_code"
+    ],
+    "properties": {
+        "policy_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "policy_kind": {
+            "type": "string",
+            "enum": [
+                "security",
+                "privacy",
+                "compliance"
+            ]
+        },
+        "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "failure_code": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}
