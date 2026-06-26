@@ -110,4 +110,4 @@ clean:
 		-prune \
 		-exec rm -rf {} +
 
-check: format lint test
+check: format-check lint test build
