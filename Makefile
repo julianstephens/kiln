@@ -5,6 +5,7 @@ GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
 PYTHON_DIR := python
+SCHEMAS_DIR := schemas
 GO_DIR := go
 DIST_DIR := dist
 
@@ -17,6 +18,7 @@ default: check
 	lint lint-python lint-go \
 	test test-python test-go \
 	build build-python build-go \
+	validate-schemas \
 	clean check 
 
 help:
@@ -28,6 +30,7 @@ help:
 		"  make lint          Lint all Python and Go code" \
 		"  make test          Run all tests" \
 		"  make build         Build Python and Go artifacts" \
+		"  make validate-schemas  Validate JSON schemas" \
 		"  make clean         Remove generated build artifacts"
 
 # ---------------------------------------------------------------------------
@@ -96,6 +99,12 @@ build-go:
 			./cmd/kiln-runtime
 
 # ---------------------------------------------------------------------------
+# Validate JSON Schemas
+# ---------------------------------------------------------------------------
+validate-schemas:
+	uv run python $(SCHEMAS_DIR)/scripts/validate.py
+
+# ---------------------------------------------------------------------------
 # Cleanup
 # ---------------------------------------------------------------------------
 
@@ -109,4 +118,4 @@ clean:
 		-prune \
 		-exec rm -rf {} +
 
-check: format-check lint test build
+check: format-check lint test build	validate-schemas
