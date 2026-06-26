@@ -124,6 +124,42 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
 
         seen.add(schema_key)
 
+    entrypoints = manifest.get("entrypoints")
+    if entrypoints is not None:
+        if not isinstance(entrypoints, list) or not entrypoints:
+            raise ValidationFailureError(
+                message=f"{manifest_path}: entrypoints must be a non-empty array"
+            )
+
+        seen_entrypoints: set[str] = set()
+
+        for index, ep_key in enumerate(entrypoints):
+            if not isinstance(ep_key, str) or not ep_key:
+                raise ValidationFailureError(
+                    message=f"{manifest_path}: entrypoints[{index}] must be a non-empty string"
+                )
+
+            parts = ep_key.split("/")
+            if len(parts) != 2 or not all(parts):
+                raise ValidationFailureError(
+                    message=f"{manifest_path}: invalid entrypoint entry {ep_key!r}; "
+                    "expected '<domain>/<contract>'"
+                )
+
+            if ep_key in seen_entrypoints:
+                raise ValidationFailureError(
+                    message=f"{manifest_path}: duplicate entrypoint entry: {ep_key}"
+                )
+
+            seen_entrypoints.add(ep_key)
+
+        not_in_schemas = sorted(seen_entrypoints - seen)
+        if not_in_schemas:
+            raise ValidationFailureError(
+                message=f"{manifest_path}: entrypoints contains keys not declared in schemas: "
+                + ", ".join(not_in_schemas)
+            )
+
     return manifest
 
 
@@ -194,6 +230,21 @@ def build_registry(
         registry = registry.with_resource(schema_id, resource)
 
     return registry
+
+
+def entrypoint_definitions(
+    definitions: list[SchemaDefinition],
+    manifest: dict[str, Any],
+) -> list[SchemaDefinition]:
+    """Return the subset of definitions that are declared entrypoints.
+
+    Falls back to all definitions when the manifest omits ``entrypoints``.
+    """
+    entrypoints = manifest.get("entrypoints")
+    if entrypoints is None:
+        return list(definitions)
+    keys = set(entrypoints)
+    return [d for d in definitions if d.key in keys]
 
 
 def find_fixture_schema(
@@ -352,6 +403,7 @@ def validate_repository(schema_root: Path) -> list[str]:
     manifest = load_manifest(schema_root)
     definitions = load_schemas(schema_root, manifest)
     registry = build_registry(definitions)
+    entry_definitions = entrypoint_definitions(definitions, manifest)
 
     major = manifest["compatibility_major"]
 
@@ -400,17 +452,18 @@ def validate_repository(schema_root: Path) -> list[str]:
         definition = find_fixture_schema(fixture_path, definitions, should_pass=False)
         fixture_counts[definition.key]["invalid"] += 1
 
-    for schema_key, counts in fixture_counts.items():
+    for definition in entry_definitions:
+        counts = fixture_counts[definition.key]
         if counts["valid"] == 0:
-            failures.append(f"{schema_key}: no valid fixtures found for v{major}")
-
+            failures.append(f"{definition.key}: no valid fixtures found for v{major}")
         if counts["invalid"] == 0:
-            failures.append(f"{schema_key}: no invalid fixtures found for v{major}")
+            failures.append(f"{definition.key}: no invalid fixtures found for v{major}")
 
     if not failures:
         print(
             "Schema validation passed: "
             f"{len(definitions)} schemas, "
+            f"{len(entry_definitions)} entrypoints, "
             f"{len(valid_fixtures)} valid fixtures, "
             f"{len(invalid_fixtures)} invalid fixtures, "
             f"schema set {manifest['schema_set_version']}"

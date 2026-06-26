@@ -1,3 +1,0 @@
-{
-    "inline": "func Foo() string { return \"bar\" }"
-}

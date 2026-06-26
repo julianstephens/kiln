@@ -22,13 +22,13 @@
         "line_range": {
             "type": "array",
             "items": {
-                "$ref": "./source-range.schema.json"
+                "$ref": "../../common/v1/source-range.schema.json"
             }
         },
         "byte_range": {
             "type": "array",
             "items": {
-                "$ref": "./source-range.schema.json"
+                "$ref": "../../common/v1/source-range.schema.json"
             }
         },
         "qualified_name": {

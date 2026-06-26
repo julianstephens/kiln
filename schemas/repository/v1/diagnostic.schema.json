@@ -38,7 +38,7 @@
             "minLength": 1
         },
         "range": {
-            "$ref": "./source-range.schema.json"
+            "$ref": "../../common/v1/source-range.schema.json"
         },
         "content_id": {
             "type": "string",

@@ -3,6 +3,7 @@
     "compatibility_major": 1,
     "schemas": [
         "artifact/reference",
+        "common/source-range",
         "repository/alternative-representation",
         "repository/candidate",
         "repository/content",
@@ -14,9 +15,19 @@
         "repository/protocol-response",
         "repository/provenance",
         "repository/relevance",
+        "repository/session",
         "repository/source",
-        "repository/source-range",
         "repository/usage",
         "repository/validity"
+    ],
+    "entrypoints": [
+        "artifact/reference",
+        "repository/candidate",
+        "repository/diagnostic",
+        "repository/error",
+        "repository/protocol-request",
+        "repository/protocol-response",
+        "repository/preparation-status",
+        "repository/session"
     ]
 }
