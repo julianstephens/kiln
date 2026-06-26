@@ -557,10 +557,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--schema-root",
         type=Path,
-        default=Path(__file__).resolve().parents[1],
+        default=Path(__file__).resolve().parents[2] / "schemas",
         help=(
             "Schema directory containing manifest.json. "
-            "Defaults to the parent of scripts/."
+            "Defaults to the schemas directory."
         ),
     )
     return parser.parse_args()

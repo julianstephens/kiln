@@ -5,7 +5,7 @@ GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
 PYTHON_DIR := python
-SCHEMAS_DIR := schemas
+TOOLS_DIR := devtools
 GO_DIR := go
 DIST_DIR := dist
 
@@ -102,7 +102,7 @@ build-go:
 # Validate JSON Schemas
 # ---------------------------------------------------------------------------
 validate-schemas:
-	uv run python $(SCHEMAS_DIR)/scripts/validate.py
+	uv run python $(TOOLS_DIR)/schema_tools/validate.py
 
 # ---------------------------------------------------------------------------
 # Cleanup

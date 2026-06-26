@@ -31,5 +31,5 @@ Breaking changes require a new major version.
 Run:
 
 ```bash
-make  validate-schemas
+make validate-schemas
 ```

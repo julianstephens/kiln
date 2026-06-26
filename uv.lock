@@ -5,7 +5,7 @@ requires-python = ">=3.13"
 [manifest]
 members = [
     "kiln",
-    "kiln-schema-scripts",
+    "kiln-devtools",
     "kiln-sdk",
 ]
 
@@ -213,7 +213,7 @@ source = { editable = "." }
 dev = [
     { name = "build" },
     { name = "jsonschema", extra = ["format"] },
-    { name = "kiln-schema-scripts" },
+    { name = "kiln-devtools" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
@@ -226,7 +226,7 @@ dev = [
 dev = [
     { name = "build", specifier = ">=1.5.0" },
     { name = "jsonschema", extras = ["format"], specifier = ">=4.26.0" },
-    { name = "kiln-schema-scripts", editable = "schemas/scripts" },
+    { name = "kiln-devtools", editable = "devtools" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
@@ -234,9 +234,9 @@ dev = [
 ]
 
 [[package]]
-name = "kiln-schema-scripts"
+name = "kiln-devtools"
 version = "0.1.0"
-source = { editable = "schemas/scripts" }
+source = { editable = "devtools" }
 
 [[package]]
 name = "kiln-sdk"
