@@ -1,0 +1,23 @@
+[project]
+name = "kiln"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/julianstephens/kiln"
+Issues = "https://github.com/julianstephens/kiln/issues"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+extend-select = ["B", "LOG", "Q", "RET", "SIM", "ARG", "I", "N", "E", "W", "F", "RUF", "TRY"]
+
+[tool.pytest.ini_options]
+addopts = "-n auto"
