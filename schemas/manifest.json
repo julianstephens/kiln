@@ -1,0 +1,22 @@
+{
+    "schema_set_version": "1.0.0",
+    "compatibility_major": 1,
+    "schemas": [
+        "artifact/reference",
+        "repository/alternative-representation",
+        "repository/candidate",
+        "repository/content",
+        "repository/cost",
+        "repository/diagnostic",
+        "repository/error",
+        "repository/preparation-status",
+        "repository/protocol-request",
+        "repository/protocol-response",
+        "repository/provenance",
+        "repository/relevance",
+        "repository/source",
+        "repository/source-range",
+        "repository/usage",
+        "repository/validity"
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "repository_path": "src/main.go",
+    "source_digest": "sha256:deadbeef01234567",
+    "line_range": [
+        {
+            "start": {
+                "line": 10,
+                "column": 1
+            },
+            "end": {
+                "line": 25,
+                "column": 1
+            }
+        }
+    ],
+    "qualified_name": "main.Foo",
+    "language": "go"
+}

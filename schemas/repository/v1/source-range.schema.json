@@ -1,0 +1,48 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source-range.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository source range",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "start",
+        "end"
+    ],
+    "properties": {
+        "start": {
+            "type": "object",
+            "required": [
+                "line",
+                "column"
+            ],
+            "properties": {
+                "line": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "column": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "end": {
+            "type": "object",
+            "required": [
+                "line",
+                "column"
+            ],
+            "properties": {
+                "line": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "column": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        }
+    }
+}

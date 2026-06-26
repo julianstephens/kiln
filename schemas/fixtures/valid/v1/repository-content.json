@@ -1,0 +1,4 @@
+{
+    "content_type": "inline",
+    "inline": "func Foo() string { return \"bar\" }"
+}

@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/content.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository content",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "content_type"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "inline"
+            ]
+        },
+        {
+            "required": [
+                "artifact_reference"
+            ]
+        },
+        {
+            "required": [
+                "structured_representation"
+            ]
+        }
+    ],
+    "properties": {
+        "content_type": {
+            "type": "string",
+            "enum": [
+                "inline",
+                "artifact",
+                "structured_representation"
+            ]
+        },
+        "inline": {
+            "type": "string",
+            "minLength": 1
+        },
+        "artifact_reference": {
+            "$ref": "../artifact/v1/reference.schema.json"
+        },
+        "structured_representation": {
+            "type": "object"
+        }
+    }
+}

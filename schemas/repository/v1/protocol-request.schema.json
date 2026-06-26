@@ -1,0 +1,57 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/protocol-request.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository protocol request",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "protocol_version",
+        "request_id",
+        "run_id",
+        "operation",
+        "payload",
+        "deadline"
+    ],
+    "properties": {
+        "protocol_version": {
+            "type": "string",
+            "const": "1"
+        },
+        "request_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "session_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "operation": {
+            "type": "string",
+            "minLength": 1
+        },
+        "payload": {
+            "type": "object"
+        },
+        "deadline": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "correlation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "capability_grant_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "budget_reservation_id": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

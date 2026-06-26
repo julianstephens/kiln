@@ -1,0 +1,9 @@
+{
+    "representation_kind": "summary",
+    "estimated_tokens": 512,
+    "availability": "available",
+    "generation_required": false,
+    "quality_metadata": {
+        "confidence": 0.95
+    }
+}

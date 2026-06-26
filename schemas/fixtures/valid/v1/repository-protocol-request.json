@@ -1,0 +1,8 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_01",
+    "run_id": "run_01",
+    "operation": "runtime.health",
+    "payload": {},
+    "deadline": "2026-06-26T01:00:00Z"
+}

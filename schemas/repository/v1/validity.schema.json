@@ -1,0 +1,39 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/validity.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository validity",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "content_status": {
+            "type": "string",
+            "enum": [
+                "current",
+                "stale"
+            ]
+        },
+        "version": {
+            "type": "string",
+            "minLength": 1
+        },
+        "invalidation_reason": {
+            "type": "string",
+            "minLength": 1
+        },
+        "synchronization_status": {
+            "type": "string",
+            "enum": [
+                "synchronized",
+                "out_of_sync"
+            ]
+        },
+        "content_completeness": {
+            "type": "string",
+            "enum": [
+                "complete",
+                "truncated"
+            ]
+        }
+    }
+}
