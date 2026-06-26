@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import BinaryIO
 
-from python.kiln.models.budget import Budget
-from python.kiln.models.run import RunResult
+from kiln.models.budget import Budget
+from kiln.models.run import RunResult
 
 from .runtime_process import RuntimeProcess
 
