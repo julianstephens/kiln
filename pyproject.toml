@@ -21,3 +21,4 @@ extend-select = ["B", "LOG", "Q", "RET", "SIM", "ARG", "I", "N", "E", "W", "F", 
 
 [tool.pytest.ini_options]
 addopts = "-n auto"
+pythonpath = ["python"]
