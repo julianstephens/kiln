@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
-from .errors import StdinUnavailableError, StdoutUnavailableError
+from .errors import (
+    MissingRuntimeBinaryError,
+    StdinUnavailableError,
+    StdoutUnavailableError,
+)
 
 
 @dataclass
@@ -55,7 +59,7 @@ def _find_runtime_binary() -> Path:
     if configured:
         return Path(configured)
 
-    return Path("dist/bin/kiln-runtime").resolve()
+    raise MissingRuntimeBinaryError
 
 
 def _runtime_environment() -> dict[str, str]:

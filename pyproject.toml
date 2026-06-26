@@ -3,11 +3,7 @@ name = "kiln"
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
-    "pytest-xdist>=3.8.0",
-]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/julianstephens/kiln"
@@ -26,6 +22,9 @@ pythonpath = ["python"]
 [dependency-groups]
 dev = [
     "build>=1.5.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.8.0",
 ]
 
 [tool.uv.build-backend]

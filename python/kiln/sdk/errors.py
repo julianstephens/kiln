@@ -37,3 +37,10 @@ class StdoutUnavailableError(RuntimeProcessError):
 
     def __init__(self) -> None:
         super().__init__("runtime stdout is unavailable")
+
+
+class MissingRuntimeBinaryError(RuntimeProcessError):
+    """Raised when the runtime binary is missing."""
+
+    def __init__(self) -> None:
+        super().__init__("runtime binary is missing")

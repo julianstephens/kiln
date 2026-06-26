@@ -1,7 +1,7 @@
 SHELL := /usr/bin/env bash
 
 PYTHON ?= python
-RUFF ?= ruff
+RUFF ?= uvx ruff
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
