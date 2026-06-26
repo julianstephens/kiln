@@ -66,7 +66,7 @@
         "alternative_representations": {
             "type": "array",
             "items": {
-                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/alternative-representation.schema.json"
             }
         }
     }
