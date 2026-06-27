@@ -5,8 +5,18 @@
     "title": "Kiln budget limits",
     "type": "object",
     "additionalProperties": false,
-    "required": [],
+    "required": [
+        "mode"
+    ],
     "properties": {
+        "mode": {
+            "type": "string",
+            "enum": [
+                "installation_default",
+                "unlimited",
+                "custom"
+            ]
+        },
         "model_input_tokens": {
             "type": "integer",
             "minimum": 0

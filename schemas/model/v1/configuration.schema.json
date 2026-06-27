@@ -11,8 +11,6 @@
         "tool_call_mode",
         "tokenizer_strategy",
         "generation_parameters",
-        "allowed_endpoint",
-        "credential_reference",
         "streaming_preference"
     ],
     "oneOf": [
@@ -50,14 +48,6 @@
         },
         "generation_parameters": {
             "type": "object"
-        },
-        "allowed_endpoint": {
-            "type": "string",
-            "minLength": 1
-        },
-        "credential_reference": {
-            "type": "string",
-            "minLength": 1
         },
         "streaming_preference": {
             "type": "string",

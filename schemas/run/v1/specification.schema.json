@@ -6,18 +6,33 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
-        "repository",
+        "repository_id",
+        "workspace_id",
+        "repository_version_id",
+        "workspace_version_id",
         "task_specification",
         "model_configuration",
         "budget_limits",
         "security_profile",
-        "validation",
         "output_mode",
         "caller_metadata"
     ],
     "properties": {
-        "repository": {
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source.schema.json"
+        "repository_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "workspace_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "repository_version_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "workspace_version_id": {
+            "type": "string",
+            "minLength": 1
         },
         "task_specification": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/task-specification.schema.json"
@@ -50,16 +65,13 @@
             }
         },
         "output_mode": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "enum": [
-                    "answer",
-                    "patch",
-                    "answer_with_patch",
-                    "report"
-                ]
-            }
+            "type": "string",
+            "enum": [
+                "answer",
+                "patch",
+                "answer_with_patch",
+                "report"
+            ]
         },
         "caller_metadata": {
             "type": "object"

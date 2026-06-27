@@ -20,7 +20,6 @@
         "requirement_kind": {
             "type": "string",
             "enum": [
-                "command",
                 "schema",
                 "policy",
                 "approval",

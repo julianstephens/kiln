@@ -9,48 +9,56 @@
     "properties": {
         "filesystem_read_scopes": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/scope.schema.json"
             }
         },
         "filesystem_write_scopes": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/scope.schema.json"
             }
         },
         "process_execution_rules": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "#/$defs/rule"
             }
         },
         "network_rules": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "#/$defs/rule"
             }
         },
         "model_egress_rules": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "#/$defs/rule"
             }
         },
         "external_integration_rules": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "#/$defs/rule"
             }
         },
         "artifact_access_rules": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "#/$defs/rule"
             }
         },
         "validation_rules": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "$ref": "#/$defs/rule"
             }
@@ -86,6 +94,53 @@
             }
         }
     },
+    "anyOf": [
+        {
+            "required": [
+                "default_deny_settings"
+            ]
+        },
+        {
+            "required": [
+                "filesystem_read_scopes"
+            ]
+        },
+        {
+            "required": [
+                "filesystem_write_scopes"
+            ]
+        },
+        {
+            "required": [
+                "process_execution_rules"
+            ]
+        },
+        {
+            "required": [
+                "network_rules"
+            ]
+        },
+        {
+            "required": [
+                "model_egress_rules"
+            ]
+        },
+        {
+            "required": [
+                "external_integration_rules"
+            ]
+        },
+        {
+            "required": [
+                "artifact_access_rules"
+            ]
+        },
+        {
+            "required": [
+                "validation_rules"
+            ]
+        }
+    ],
     "$defs": {
         "rule": {
             "type": "object",

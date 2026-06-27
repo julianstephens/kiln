@@ -1,4 +1,5 @@
 {
+    "mode": "custom",
     "model_input_tokens": 1000,
     "model_output_tokens": 500,
     "model_calls": 5,

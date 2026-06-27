@@ -36,6 +36,7 @@
         "repository/usage",
         "repository/validity",
         "run/specification",
+        "run/task-provenance",
         "run/task-specification",
         "validation/approval-requirement",
         "validation/citation-requirement",
