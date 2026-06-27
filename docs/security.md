@@ -39,7 +39,7 @@ It does not define:
 
 ---
 
-# 1. Security goals
+## 1. Security goals
 
 Kiln should:
 
@@ -56,7 +56,7 @@ Kiln should:
 
 ---
 
-# 2. Non-goals
+## 2. Non-goals
 
 Kiln does not claim to:
 
@@ -70,15 +70,15 @@ Kiln does not claim to:
 
 ---
 
-# 3. Security principles
+## 3. Security principles
 
-## 3.1 Default deny
+### 3.1 Default deny
 
 Capabilities not explicitly granted are unavailable.
 
 Absence of a denial rule is not permission.
 
-## 3.2 Least authority
+### 3.2 Least authority
 
 Each component receives only the authority required for its role.
 
@@ -89,7 +89,7 @@ Examples:
 - publisher can publish validated artifacts but cannot execute generated code;
 - model gateway can invoke an approved provider but cannot read arbitrary files.
 
-## 3.3 Separation of proposal and execution
+### 3.3 Separation of proposal and execution
 
 The model proposes.
 
@@ -99,13 +99,13 @@ The capability broker authorizes.
 
 A controlled adapter or worker executes.
 
-## 3.4 No ambient credentials
+### 3.4 No ambient credentials
 
 Credentials are not inherited broadly through environment variables or global configuration.
 
 Credential use is explicit and mediated.
 
-## 3.5 Narrow, typed operations
+### 3.5 Narrow, typed operations
 
 Effects use structured requests.
 
@@ -117,23 +117,23 @@ Kiln does not expose generic:
 - arbitrary HTTP clients;
 - dynamic tool-discovery trust.
 
-## 3.6 Security decisions are observable
+### 3.6 Security decisions are observable
 
 Capability grants, checks, denials, egress decisions, sensitive artifact access, and publication actions are recorded.
 
-## 3.7 Embedded does not mean single process
+### 3.7 Embedded does not mean single process
 
 The Python API owns the lifecycle, but the Go runtime and risky workers execute in private child processes.
 
-## 3.8 Validation is independent
+### 3.8 Validation is independent
 
 The component that generates a change does not decide whether it is safe to publish.
 
 ---
 
-# 4. Trust classification
+## 4. Trust classification
 
-## 4.1 Trusted components
+### 4.1 Trusted components
 
 Trusted components include:
 
@@ -147,7 +147,7 @@ Trusted components include:
 
 A defect in these components may compromise Kiln's security guarantees.
 
-## 4.2 Semi-trusted components
+### 4.2 Semi-trusted components
 
 Semi-trusted components include:
 
@@ -159,7 +159,7 @@ Semi-trusted components include:
 
 Their inputs and outputs are validated by the runtime.
 
-## 4.3 Untrusted inputs and components
+### 4.3 Untrusted inputs and components
 
 Untrusted elements include:
 
@@ -182,7 +182,7 @@ Untrusted data may affect reasoning but does not grant authority.
 
 ---
 
-# 5. Primary trust boundaries
+## 5. Primary trust boundaries
 
 Kiln has these major trust boundaries:
 
@@ -212,9 +212,9 @@ Hosted deployments add:
 
 ---
 
-# 6. Capability model
+## 6. Capability model
 
-## 6.1 Capability definition
+### 6.1 Capability definition
 
 A capability is an explicit, runtime-recognized grant of authority.
 
@@ -230,7 +230,7 @@ A capability includes:
 - expiration;
 - revocation state.
 
-## 6.2 Capability categories
+### 6.2 Capability categories
 
 Core categories include:
 
@@ -247,7 +247,7 @@ Core categories include:
 - publication execute;
 - credential use.
 
-## 6.3 Non-transitivity
+### 6.3 Non-transitivity
 
 Capabilities do not imply one another.
 
@@ -260,7 +260,7 @@ repository.read ≠ git.push
 validation.execute ≠ publication.execute
 ```
 
-## 6.4 Scope
+### 6.4 Scope
 
 Capability scope may include:
 
@@ -276,7 +276,7 @@ Capability scope may include:
 - artifact identities;
 - operation classes.
 
-## 6.5 Lifetime
+### 6.5 Lifetime
 
 Capabilities may be:
 
@@ -286,7 +286,7 @@ Capabilities may be:
 - single-use;
 - revocable.
 
-## 6.6 Authority source
+### 6.6 Authority source
 
 A capability records where authority came from.
 
@@ -300,7 +300,7 @@ Examples:
 
 Model output is never an authority source.
 
-## 6.7 Capability decision
+### 6.7 Capability decision
 
 Every effectful operation is checked by the capability broker before execution.
 
@@ -311,7 +311,7 @@ The decision is one of:
 - deny;
 - require approval.
 
-## 6.8 Capability invariants
+### 6.8 Capability invariants
 
 1. No effect occurs without a capability decision.
 2. Grants are denied by default.
@@ -324,7 +324,7 @@ The decision is one of:
 
 ---
 
-# 7. Security profiles
+## 7. Security profiles
 
 A security profile is trusted configuration that declares effective authority for a run.
 
@@ -364,13 +364,13 @@ Security profiles are not supplied or weakened by the model.
 
 ---
 
-# 8. Runtime process security
+## 8. Runtime process security
 
-## 8.1 Private supervision
+### 8.1 Private supervision
 
 The Python SDK starts the Go runtime as a privately supervised child process.
 
-## 8.2 Communication
+### 8.2 Communication
 
 Communication uses:
 
@@ -381,19 +381,19 @@ Communication uses:
 
 The runtime does not expose a public listening port in embedded mode.
 
-## 8.3 Session ownership
+### 8.3 Session ownership
 
 The runtime channel is bound to one owning SDK session.
 
 Unrelated local processes must not be able to submit requests.
 
-## 8.4 Runtime environment
+### 8.4 Runtime environment
 
 The runtime should receive a controlled environment.
 
 Avoid inheriting unrelated secrets.
 
-## 8.5 Runtime crash behavior
+### 8.5 Runtime crash behavior
 
 On unexpected exit:
 
@@ -404,7 +404,7 @@ On unexpected exit:
 
 ---
 
-# 9. Worker isolation
+## 9. Worker isolation
 
 Risky or extensible components run outside the authoritative runtime process.
 
@@ -417,7 +417,7 @@ Examples:
 - command runner;
 - validator.
 
-## 9.1 Worker authority
+### 9.1 Worker authority
 
 Workers receive:
 
@@ -428,7 +428,7 @@ Workers receive:
 
 Workers do not receive the full runtime state or raw database access.
 
-## 9.2 Worker protocol
+### 9.2 Worker protocol
 
 Worker protocols are:
 
@@ -439,11 +439,11 @@ Worker protocols are:
 - correlated;
 - cancellable.
 
-## 9.3 Worker output
+### 9.3 Worker output
 
 Worker output is untrusted and validated.
 
-## 9.4 Worker discovery
+### 9.4 Worker discovery
 
 Kiln does not dynamically trust arbitrary discovered workers.
 
@@ -451,7 +451,7 @@ Extensions must be explicitly registered by the host.
 
 ---
 
-# 10. MCP posture
+## 10. MCP posture
 
 Kiln does not use MCP as its internal trust model.
 
@@ -475,9 +475,9 @@ An MCP adapter would:
 
 ---
 
-# 11. Repository access security
+## 11. Repository access security
 
-## 11.1 Scoped repository sessions
+### 11.1 Scoped repository sessions
 
 Repository access occurs through a session bound to:
 
@@ -487,15 +487,15 @@ Repository access occurs through a session bound to:
 - one workspace version;
 - one allowed operation set.
 
-## 11.2 No generic SQL
+### 11.2 No generic SQL
 
 The repository worker exposes typed operations, not generic SQL.
 
-## 11.3 Path scope
+### 11.3 Path scope
 
 All paths are normalized and repository-relative.
 
-## 11.4 Escape prevention
+### 11.4 Escape prevention
 
 The repository layer must defend against:
 
@@ -507,13 +507,13 @@ The repository layer must defend against:
 - race conditions;
 - hard-link surprises where relevant.
 
-## 11.5 Repository metadata
+### 11.5 Repository metadata
 
 Access to `.git` and repository metadata is separately scoped.
 
 Reading source does not imply permission to alter Git state.
 
-## 11.6 Revision binding
+### 11.6 Revision binding
 
 All evidence is bound to repository and workspace versions.
 
@@ -521,9 +521,9 @@ Stale evidence cannot be treated as current.
 
 ---
 
-# 12. Filesystem security
+## 12. Filesystem security
 
-## 12.1 Root separation
+### 12.1 Root separation
 
 Execution should conceptually separate:
 
@@ -535,7 +535,7 @@ Execution should conceptually separate:
 /secrets      inaccessible to workers
 ```
 
-## 12.2 Read operations
+### 12.2 Read operations
 
 Read capabilities specify:
 
@@ -545,7 +545,7 @@ Read capabilities specify:
 - maximum bytes;
 - content classes.
 
-## 12.3 Write operations
+### 12.3 Write operations
 
 Write capabilities specify:
 
@@ -555,7 +555,7 @@ Write capabilities specify:
 - maximum bytes;
 - whether create/delete/rename are permitted.
 
-## 12.4 Protected paths
+### 12.4 Protected paths
 
 Protected paths commonly include:
 
@@ -567,15 +567,15 @@ Protected paths commonly include:
 - production infrastructure;
 - dependency lock files, depending on policy.
 
-## 12.5 Time-of-check/time-of-use
+### 12.5 Time-of-check/time-of-use
 
 The filesystem adapter should validate scope at operation time, not only during request parsing.
 
 ---
 
-# 13. Command execution security
+## 13. Command execution security
 
-## 13.1 Structured commands
+### 13.1 Structured commands
 
 Commands are represented as:
 
@@ -588,17 +588,17 @@ Commands are represented as:
 
 Arbitrary shell expressions are unavailable by default.
 
-## 13.2 Executable allowlist
+### 13.2 Executable allowlist
 
 The security profile lists allowed executables and optionally allowed subcommands or argument patterns.
 
-## 13.3 Environment
+### 13.3 Environment
 
 Command workers start with a minimal environment.
 
 Secrets are not inherited.
 
-## 13.4 Resource limits
+### 13.4 Resource limits
 
 Command execution should support:
 
@@ -610,11 +610,11 @@ Command execution should support:
 - file-write limit;
 - network policy.
 
-## 13.5 Network
+### 13.5 Network
 
 Command execution has no network access unless separately granted.
 
-## 13.6 Effect uncertainty
+### 13.6 Effect uncertainty
 
 If a command fails or is interrupted, the runtime records whether side effects are:
 
@@ -627,13 +627,13 @@ Indeterminate effects block unsafe automatic retry.
 
 ---
 
-# 14. Network security
+## 14. Network security
 
-## 14.1 Default
+### 14.1 Default
 
 Network access is denied by default.
 
-## 14.2 Destination scope
+### 14.2 Destination scope
 
 A network capability specifies:
 
@@ -646,7 +646,7 @@ A network capability specifies:
 - maximum bytes;
 - expiration.
 
-## 14.3 DNS and redirects
+### 14.3 DNS and redirects
 
 Adapters should defend against:
 
@@ -656,15 +656,15 @@ Adapters should defend against:
 - metadata-service access;
 - alternate IP encodings.
 
-## 14.4 Network mediation
+### 14.4 Network mediation
 
 Workers should not receive arbitrary sockets when a runtime-mediated client can enforce policy more safely.
 
 ---
 
-# 15. Model invocation security
+## 15. Model invocation security
 
-## 15.1 Model access is a capability
+### 15.1 Model access is a capability
 
 Model invocation is not ordinary network access.
 
@@ -678,11 +678,11 @@ A model capability specifies:
 - allowed data classes;
 - local or remote mode.
 
-## 15.2 Egress controller
+### 15.2 Egress controller
 
 Every remote model call passes through the model egress controller.
 
-## 15.3 Egress inputs
+### 15.3 Egress inputs
 
 The controller evaluates:
 
@@ -696,14 +696,14 @@ The controller evaluates:
 - secret-scan results;
 - byte and token limits.
 
-## 15.4 Egress outcomes
+### 15.4 Egress outcomes
 
 - allow;
 - redact;
 - deny;
 - require approval.
 
-## 15.5 Egress audit
+### 15.5 Egress audit
 
 The runtime records:
 
@@ -714,27 +714,27 @@ The runtime records:
 - policy decision;
 - artifact references.
 
-## 15.6 Local models
+### 15.6 Local models
 
 Local models may avoid remote data egress, but their worker process remains untrusted and isolated.
 
 ---
 
-# 16. Secret handling
+## 16. Secret handling
 
-## 16.1 No inherited secret environment
+### 16.1 No inherited secret environment
 
 Workers do not inherit the host's full environment.
 
-## 16.2 Secret references
+### 16.2 Secret references
 
 Credentials are represented by references, not embedded values.
 
-## 16.3 Credential broker
+### 16.3 Credential broker
 
 A credential broker resolves secrets only for authorized operations.
 
-## 16.4 Direct versus mediated use
+### 16.4 Direct versus mediated use
 
 Prefer runtime-mediated API requests where possible.
 
@@ -746,7 +746,7 @@ When a worker must use a secret directly:
 - artifact and event output is scanned;
 - secret is revoked or discarded after use.
 
-## 16.5 Persistence
+### 16.5 Persistence
 
 Secrets must not be persisted in:
 
@@ -759,11 +759,11 @@ Secrets must not be persisted in:
 
 ---
 
-# 17. Prompt injection model
+## 17. Prompt injection model
 
 Prompt injection is treated as an authorization problem, not merely a prompting problem.
 
-## 17.1 Untrusted instruction sources
+### 17.1 Untrusted instruction sources
 
 Potential instruction-bearing content includes:
 
@@ -776,7 +776,7 @@ Potential instruction-bearing content includes:
 - web content;
 - generated files.
 
-## 17.2 Evidence labeling
+### 17.2 Evidence labeling
 
 Rendered context distinguishes:
 
@@ -787,7 +787,7 @@ Rendered context distinguishes:
 - model-authored content;
 - external content.
 
-## 17.3 Authority separation
+### 17.3 Authority separation
 
 Untrusted content cannot:
 
@@ -798,15 +798,15 @@ Untrusted content cannot:
 - authorize publication;
 - access credentials.
 
-## 17.4 Runtime enforcement
+### 17.4 Runtime enforcement
 
 Even if the model follows malicious repository instructions, unauthorized operations remain structurally unavailable.
 
 ---
 
-# 18. Tool security
+## 18. Tool security
 
-## 18.1 Tool definition
+### 18.1 Tool definition
 
 A tool definition contains:
 
@@ -818,23 +818,23 @@ A tool definition contains:
 - worker identity;
 - risk classification.
 
-## 18.2 Tool registration
+### 18.2 Tool registration
 
 Tools are explicitly registered by trusted host configuration.
 
-## 18.3 Tool availability versus authority
+### 18.3 Tool availability versus authority
 
 A tool may be visible but unavailable if the current run lacks the required capability.
 
 Prefer not exposing unavailable high-risk tools to the model.
 
-## 18.4 Result handling
+### 18.4 Result handling
 
 Tool results are untrusted candidates.
 
 They pass through result processing and context policy before model admission.
 
-## 18.5 Third-party tools
+### 18.5 Third-party tools
 
 Third-party tools run out of process with:
 
@@ -846,21 +846,21 @@ Third-party tools run out of process with:
 
 ---
 
-# 19. Policy security
+## 19. Policy security
 
-## 19.1 Built-in policies
+### 19.1 Built-in policies
 
 Built-in deterministic policies may run inside the trusted runtime.
 
-## 19.2 Third-party policies
+### 19.2 Third-party policies
 
 Third-party or experimental Python policies run in isolated workers.
 
-## 19.3 Policy inputs
+### 19.3 Policy inputs
 
 Policies receive immutable structured views, not raw runtime handles.
 
-## 19.4 Policy outputs
+### 19.4 Policy outputs
 
 Policies return declarative plans.
 
@@ -872,45 +872,45 @@ They cannot:
 - grant capabilities;
 - access credentials.
 
-## 19.5 Plan validation
+### 19.5 Plan validation
 
 The runtime validates every plan.
 
 ---
 
-# 20. Persistence security
+## 20. Persistence security
 
-## 20.1 Installation database permissions
+### 20.1 Installation database permissions
 
 The local database should be accessible only to the owning user or service identity.
 
-## 20.2 Logical scope
+### 20.2 Logical scope
 
 Every data object has explicit scope.
 
-## 20.3 Raw database access
+### 20.3 Raw database access
 
 Workers and plugins do not receive general database handles.
 
 They receive scoped persistence APIs or artifact references.
 
-## 20.4 Artifact access
+### 20.4 Artifact access
 
 Artifact reads require scope and purpose checks.
 
-## 20.5 Database blobs
+### 20.5 Database blobs
 
 Database-backed artifacts increase the impact of database compromise.
 
 Retention, redaction, and local file permissions are therefore critical.
 
-## 20.6 Encryption
+### 20.6 Encryption
 
 Local encryption may rely initially on OS-level disk protection.
 
 Hosted deployments require managed encryption and key controls.
 
-## 20.7 Multi-tenancy
+### 20.7 Multi-tenancy
 
 One shared database file is not sufficient for hostile tenant isolation.
 
@@ -918,7 +918,7 @@ Hosted deployments should separate databases or execution domains by tenant or s
 
 ---
 
-# 21. Event and audit security
+## 21. Event and audit security
 
 Security-relevant events include:
 
@@ -944,13 +944,13 @@ Raw sensitive content remains artifact-backed and access-controlled.
 
 ---
 
-# 22. Validation security
+## 22. Validation security
 
-## 22.1 Separate process
+### 22.1 Separate process
 
 Validation runs outside the agent runtime.
 
-## 22.2 Immutable inputs
+### 22.2 Immutable inputs
 
 Validation receives:
 
@@ -959,25 +959,25 @@ Validation receives:
 - trusted validation profile;
 - trusted security profile.
 
-## 22.3 No model authority
+### 22.3 No model authority
 
 The validator does not receive model credentials or context.
 
-## 22.4 Clean workspace
+### 22.4 Clean workspace
 
 Validation materializes a clean workspace rather than reusing the agent's live environment.
 
-## 22.5 Command restrictions
+### 22.5 Command restrictions
 
 Validation commands are controlled by the validation profile.
 
-## 22.6 Network
+### 22.6 Network
 
 Validation has no network by default.
 
 Dependency access, when required, must be explicitly mediated.
 
-## 22.7 Output
+### 22.7 Output
 
 Validation returns a structured report and artifact references.
 
@@ -985,15 +985,15 @@ It does not publish.
 
 ---
 
-# 23. Publication security
+## 23. Publication security
 
 Publication is outside the agent runtime.
 
-## 23.1 Credential isolation
+### 23.1 Credential isolation
 
 The agent runner never receives publication credentials.
 
-## 23.2 Required inputs
+### 23.2 Required inputs
 
 Publisher accepts:
 
@@ -1004,11 +1004,11 @@ Publisher accepts:
 - base revision;
 - publication metadata.
 
-## 23.3 Short-lived credentials
+### 23.3 Short-lived credentials
 
 Use short-lived, repository-scoped credentials.
 
-## 23.4 Protected operations
+### 23.4 Protected operations
 
 Publisher may:
 
@@ -1018,13 +1018,13 @@ Publisher may:
 
 It should not receive unnecessary administrative permissions.
 
-## 23.5 Validation binding
+### 23.5 Validation binding
 
 The publisher verifies that the patch hash matches the validated artifact.
 
 ---
 
-# 24. Local deployment security
+## 24. Local deployment security
 
 The local embedded product should:
 
@@ -1042,7 +1042,7 @@ Local security depends on the integrity of the host user account and operating s
 
 ---
 
-# 25. Hosted deployment security
+## 25. Hosted deployment security
 
 Hosted deployments add:
 
@@ -1054,7 +1054,7 @@ Hosted deployments add:
 - separate publisher;
 - cloud audit controls.
 
-## 25.1 Control plane versus execution plane
+### 25.1 Control plane versus execution plane
 
 The control plane owns:
 
@@ -1070,27 +1070,27 @@ The execution plane owns:
 - temporary workspace;
 - task artifacts.
 
-## 25.2 Repository credentials
+### 25.2 Repository credentials
 
 A trusted broker fetches the repository snapshot.
 
 The runner receives no GitHub credential.
 
-## 25.3 Model credentials
+### 25.3 Model credentials
 
 Prefer workload identity or a model proxy.
 
-## 25.4 Network
+### 25.4 Network
 
 Runners have no general internet access.
 
-## 25.5 Account separation
+### 25.5 Account separation
 
 High-assurance deployments may place execution in a separate cloud account or project.
 
 ---
 
-# 26. Security failure behavior
+## 26. Security failure behavior
 
 Security failures should fail closed.
 
@@ -1113,27 +1113,27 @@ A security failure produces:
 
 ---
 
-# 27. Recovery security
+## 27. Recovery security
 
-## 27.1 Recovery ownership
+### 27.1 Recovery ownership
 
 Only one runtime may claim a recoverable run.
 
-## 27.2 Lease validation
+### 27.2 Lease validation
 
 Recovery requires a persisted ownership lease.
 
-## 27.3 Transient grants
+### 27.3 Transient grants
 
 Transient grants do not automatically survive restart.
 
 They must be re-established from trusted configuration.
 
-## 27.4 Recoverable states
+### 27.4 Recoverable states
 
 Repository preparation and validation may resume because their checkpoints and inputs are durable and bounded.
 
-## 27.5 Non-recoverable states
+### 27.5 Non-recoverable states
 
 Active agent execution does not resume automatically in the initial architecture.
 
@@ -1141,7 +1141,7 @@ This avoids reusing uncertain capabilities, model calls, or effects.
 
 ---
 
-# 28. Security events
+## 28. Security events
 
 Required security event types include:
 
@@ -1163,7 +1163,7 @@ Required security event types include:
 
 ---
 
-# 29. Initial vertical-slice security
+## 29. Initial vertical-slice security
 
 The first read-only milestone requires:
 
@@ -1183,7 +1183,7 @@ The first read-only milestone requires:
 - no MCP integrations;
 - no third-party callbacks.
 
-## 29.1 Initial security profile
+### 29.1 Initial security profile
 
 Conceptually:
 
@@ -1214,9 +1214,9 @@ publication:
 
 ---
 
-# 30. Threat scenarios
+## 30. Threat scenarios
 
-## 30.1 Malicious repository instructions
+### 30.1 Malicious repository instructions
 
 Threat:
 
@@ -1230,7 +1230,7 @@ Control:
 - network is denied except approved provider;
 - credentials are not in context.
 
-## 30.2 Model requests arbitrary shell
+### 30.2 Model requests arbitrary shell
 
 Threat:
 
@@ -1242,7 +1242,7 @@ Control:
 - process capability absent;
 - capability broker denies request.
 
-## 30.3 Tool returns malicious instructions
+### 30.3 Tool returns malicious instructions
 
 Threat:
 
@@ -1254,7 +1254,7 @@ Control:
 - no authority is conveyed;
 - later effects still require capability checks.
 
-## 30.4 Cross-repository query
+### 30.4 Cross-repository query
 
 Threat:
 
@@ -1266,7 +1266,7 @@ Control:
 - no generic repository ID queries;
 - runtime validates session ownership.
 
-## 30.5 Stale evidence after write
+### 30.5 Stale evidence after write
 
 Threat:
 
@@ -1278,7 +1278,7 @@ Control:
 - evidence invalidated synchronously;
 - stale evidence cannot be admitted as current.
 
-## 30.6 Database artifact leak
+### 30.6 Database artifact leak
 
 Threat:
 
@@ -1291,7 +1291,7 @@ Control:
 - run ownership checks;
 - audit event.
 
-## 30.7 Compromised validator
+### 30.7 Compromised validator
 
 Threat:
 
@@ -1303,7 +1303,7 @@ Control:
 - no publication credentials;
 - separate publisher verifies validated artifact hash.
 
-## 30.8 Compromised publisher
+### 30.8 Compromised publisher
 
 Threat:
 
@@ -1317,7 +1317,7 @@ Control:
 
 ---
 
-# 31. Security invariants
+## 31. Security invariants
 
 1. Capabilities are denied by default.
 2. Every effectful operation requires a capability decision.
@@ -1352,7 +1352,7 @@ Control:
 
 ---
 
-# 32. Open security questions
+## 32. Open security questions
 
 The security model is sufficient for implementation planning. Remaining details include:
 

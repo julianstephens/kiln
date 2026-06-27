@@ -43,9 +43,9 @@ It does not define:
 
 ---
 
-# 1. Event principles
+## 1. Event principles
 
-## 1.1 Events record facts
+### 1.1 Events record facts
 
 An event records a fact that has occurred.
 
@@ -67,25 +67,25 @@ Examples:
 - a budget reservation was committed;
 - validation completed.
 
-## 1.2 Events are immutable
+### 1.2 Events are immutable
 
 Once committed, an event cannot be edited or deleted individually as part of normal runtime behavior.
 
 Corrections are represented by later events.
 
-## 1.3 Events are append-oriented
+### 1.3 Events are append-oriented
 
 Events are appended in run order.
 
 The event store may compact physical storage, but logical event history remains append-only.
 
-## 1.4 Events store first-class facts
+### 1.4 Events store first-class facts
 
 Events contain enough structured facts to understand what happened.
 
 Large content is stored as artifacts and referenced by identity.
 
-## 1.5 Events are not state
+### 1.5 Events are not state
 
 The event stream answers:
 
@@ -97,7 +97,7 @@ The state store answers:
 
 Current state may be reconstructed from events, but Kiln may maintain materialized state for efficient access.
 
-## 1.6 Events must support replay
+### 1.6 Events must support replay
 
 The event history must preserve enough information to reconstruct:
 
@@ -112,7 +112,7 @@ The event history must preserve enough information to reconstruct:
 
 Replay may still require referenced artifacts.
 
-## 1.7 Events are security-sensitive
+### 1.7 Events are security-sensitive
 
 Event payloads may reveal:
 
@@ -127,15 +127,15 @@ The event store must apply the same installation or tenant scope as the run.
 
 ---
 
-# 2. Event ownership
+## 2. Event ownership
 
-## 2.1 Runtime ownership
+### 2.1 Runtime ownership
 
 The Go runtime owns the authoritative event stream.
 
 Workers and adapters return structured facts, but they do not append directly to the authoritative store.
 
-## 2.2 Component responsibilities
+### 2.2 Component responsibilities
 
 Components produce event facts for the runtime.
 
@@ -149,7 +149,7 @@ Examples:
 
 The runtime validates and persists the event.
 
-## 2.3 External systems
+### 2.3 External systems
 
 Hosted infrastructure may emit operational telemetry separately.
 
@@ -157,11 +157,11 @@ External telemetry does not replace Kiln's domain event stream.
 
 ---
 
-# 3. Event envelope
+## 3. Event envelope
 
 Every event uses a common envelope.
 
-## 3.1 Required fields
+### 3.1 Required fields
 
 An event contains:
 
@@ -196,13 +196,13 @@ Event
 └── artifact_references?
 ```
 
-## 3.2 Event identity
+### 3.2 Event identity
 
 Event identity is globally unique within the installation or tenant scope.
 
 It is stable and immutable.
 
-## 3.3 Run sequence
+### 3.3 Run sequence
 
 Every event in a run has a monotonically increasing sequence number.
 
@@ -210,13 +210,13 @@ Sequence defines authoritative ordering within a run.
 
 Wall-clock timestamps do not define ordering.
 
-## 3.4 Event timestamp
+### 3.4 Event timestamp
 
 `occurred_at` records when the event fact occurred according to the runtime.
 
 Component-local timestamps may be included in payloads for diagnostics.
 
-## 3.5 Producer
+### 3.5 Producer
 
 The producer identifies the logical component that supplied the event fact.
 
@@ -235,13 +235,13 @@ Examples:
 
 Producer identity does not grant authority.
 
-## 3.6 Payload
+### 3.6 Payload
 
 The payload contains event-type-specific first-class facts.
 
 Payload schemas are versioned by event type.
 
-## 3.7 Artifact references
+### 3.7 Artifact references
 
 Events may reference zero or more artifacts.
 
@@ -249,25 +249,25 @@ The event does not assume artifact bytes are embedded.
 
 ---
 
-# 4. Ordering model
+## 4. Ordering model
 
-## 4.1 Per-run total order
+### 4.1 Per-run total order
 
 Events are totally ordered within one run.
 
 The runtime serializes event commits.
 
-## 4.2 Cross-run ordering
+### 4.2 Cross-run ordering
 
 Kiln does not require a total order across runs.
 
 Cross-run analysis may use timestamps, installation sequence, or correlation identifiers.
 
-## 4.3 Atomic transition events
+### 4.3 Atomic transition events
 
 A lifecycle state transition and its primary lifecycle event are committed atomically.
 
-## 4.4 Operation ordering
+### 4.4 Operation ordering
 
 Operation events should follow:
 
@@ -281,7 +281,7 @@ planned
 
 Not every operation requires every intermediate event, but actual history must remain internally consistent.
 
-## 4.5 Out-of-order worker responses
+### 4.5 Out-of-order worker responses
 
 Workers may complete concurrently or return responses out of order.
 
@@ -291,9 +291,9 @@ Causation and operation identities preserve logical relationships.
 
 ---
 
-# 5. Causation and correlation
+## 5. Causation and correlation
 
-## 5.1 Causation
+### 5.1 Causation
 
 `causation_id` identifies the event or operation that directly caused this event.
 
@@ -304,7 +304,7 @@ Examples:
 - a workspace mutation causes invalidation;
 - a completion proposal causes output production.
 
-## 5.2 Correlation
+### 5.2 Correlation
 
 `correlation_id` groups events belonging to one larger activity.
 
@@ -317,17 +317,17 @@ Examples:
 - one refresh operation;
 - one hosted workflow.
 
-## 5.3 Operation identity
+### 5.3 Operation identity
 
 `operation_id` identifies a bounded runtime operation.
 
 All attempts of one logical operation may share a parent correlation while having distinct attempt identities.
 
-## 5.4 Turn identity
+### 5.4 Turn identity
 
 Events occurring within an agent turn should carry the turn identity.
 
-## 5.5 Relationship invariants
+### 5.5 Relationship invariants
 
 - causation must refer to an earlier committed event or known operation;
 - correlation may span components;
@@ -337,7 +337,7 @@ Events occurring within an agent turn should carry the turn identity.
 
 ---
 
-# 6. Event schema versioning
+## 6. Event schema versioning
 
 Every event includes an event schema version.
 
@@ -354,9 +354,9 @@ Event taxonomy versioning is separate from runtime package versioning.
 
 ---
 
-# 7. Payload versus artifact policy
+## 7. Payload versus artifact policy
 
-## 7.1 Inline event facts
+### 7.1 Inline event facts
 
 Store inline when the data is necessary to understand, query, or index the event.
 
@@ -376,7 +376,7 @@ Examples:
 - validation outcome;
 - artifact identities and hashes.
 
-## 7.2 Artifact content
+### 7.2 Artifact content
 
 Store as artifact blobs when content is:
 
@@ -400,7 +400,7 @@ Examples:
 - validation report details;
 - final result bundle.
 
-## 7.3 Thresholds
+### 7.3 Thresholds
 
 Implementations may use configurable inline-size thresholds.
 
@@ -413,13 +413,13 @@ A consumer must be able to determine whether content is:
 - truncated;
 - omitted by policy.
 
-## 7.4 Content hashes
+### 7.4 Content hashes
 
 Artifact references include content hashes.
 
 Where useful, inline content may also include a hash for integrity and deduplication.
 
-## 7.5 No silent truncation
+### 7.5 No silent truncation
 
 If event payload data is truncated:
 
@@ -430,7 +430,7 @@ If event payload data is truncated:
 
 ---
 
-# 8. Event categories
+## 8. Event categories
 
 Kiln defines these top-level categories:
 
@@ -455,9 +455,9 @@ Publication events may live in a separate workflow stream because publication is
 
 ---
 
-# 9. Run lifecycle events
+## 9. Run lifecycle events
 
-## 9.1 `run.created`
+### 9.1 `run.created`
 
 Records acceptance of a run specification.
 
@@ -474,7 +474,7 @@ Payload includes:
 
 Large task content may be artifact-backed.
 
-## 9.2 `run.initialization_started`
+### 9.2 `run.initialization_started`
 
 Payload includes:
 
@@ -482,7 +482,7 @@ Payload includes:
 - selected runtime session;
 - requested adapters.
 
-## 9.3 `run.initialization_completed`
+### 9.3 `run.initialization_completed`
 
 Payload includes:
 
@@ -492,7 +492,7 @@ Payload includes:
 - deadline;
 - initialization duration.
 
-## 9.4 `run.execution_started`
+### 9.4 `run.execution_started`
 
 Payload includes:
 
@@ -501,7 +501,7 @@ Payload includes:
 - workspace version;
 - initial turn identity.
 
-## 9.5 `run.output_production_started`
+### 9.5 `run.output_production_started`
 
 Payload includes:
 
@@ -509,7 +509,7 @@ Payload includes:
 - output requirements;
 - expected artifacts.
 
-## 9.6 `run.output_production_completed`
+### 9.6 `run.output_production_completed`
 
 Payload includes:
 
@@ -519,7 +519,7 @@ Payload includes:
 - usage summary;
 - validation requirement.
 
-## 9.7 `run.completed`
+### 9.7 `run.completed`
 
 Payload includes:
 
@@ -528,7 +528,7 @@ Payload includes:
 - final usage summary;
 - validation report reference, when applicable.
 
-## 9.8 `run.failed`
+### 9.8 `run.failed`
 
 Payload includes:
 
@@ -539,7 +539,7 @@ Payload includes:
 - partial result references;
 - cleanup status.
 
-## 9.9 `run.cancellation_requested`
+### 9.9 `run.cancellation_requested`
 
 Payload includes:
 
@@ -548,7 +548,7 @@ Payload includes:
 - requested timestamp;
 - affected operation identities.
 
-## 9.10 `run.cancellation_accepted`
+### 9.10 `run.cancellation_accepted`
 
 Payload includes:
 
@@ -556,7 +556,7 @@ Payload includes:
 - cancellation mode;
 - in-flight operations.
 
-## 9.11 `run.cancelled`
+### 9.11 `run.cancelled`
 
 Payload includes:
 
@@ -566,7 +566,7 @@ Payload includes:
 - partial result references;
 - final usage summary.
 
-## 9.12 `run.exhausted`
+### 9.12 `run.exhausted`
 
 Payload includes:
 
@@ -579,11 +579,11 @@ Payload includes:
 
 ---
 
-# 10. Runtime session events
+## 10. Runtime session events
 
 The privately supervised Go child process has a runtime-session lifecycle distinct from a run.
 
-## 10.1 `runtime.session_started`
+### 10.1 `runtime.session_started`
 
 Payload includes:
 
@@ -594,7 +594,7 @@ Payload includes:
 - database identity;
 - startup timestamp.
 
-## 10.2 `runtime.session_ready`
+### 10.2 `runtime.session_ready`
 
 Payload includes:
 
@@ -602,7 +602,7 @@ Payload includes:
 - loaded database schema version;
 - available adapters.
 
-## 10.3 `runtime.session_stopping`
+### 10.3 `runtime.session_stopping`
 
 Payload includes:
 
@@ -610,7 +610,7 @@ Payload includes:
 - active runs;
 - shutdown deadline.
 
-## 10.4 `runtime.session_stopped`
+### 10.4 `runtime.session_stopped`
 
 Payload includes:
 
@@ -618,7 +618,7 @@ Payload includes:
 - interrupted run identities;
 - shutdown completeness.
 
-## 10.5 `runtime.session_failed`
+### 10.5 `runtime.session_failed`
 
 Payload includes:
 
@@ -630,9 +630,9 @@ Runtime-session events may be stored in an installation-level stream and referen
 
 ---
 
-# 11. Turn events
+## 11. Turn events
 
-## 11.1 `turn.started`
+### 11.1 `turn.started`
 
 Payload includes:
 
@@ -643,7 +643,7 @@ Payload includes:
 - workspace version;
 - remaining budget snapshot.
 
-## 11.2 `turn.completed`
+### 11.2 `turn.completed`
 
 Payload includes:
 
@@ -655,7 +655,7 @@ Payload includes:
 - turn usage;
 - stop-controller outcome.
 
-## 11.3 `turn.failed`
+### 11.3 `turn.failed`
 
 Payload includes:
 
@@ -666,9 +666,9 @@ Payload includes:
 
 ---
 
-# 12. Repository events
+## 12. Repository events
 
-## 12.1 `repository.registration_started`
+### 12.1 `repository.registration_started`
 
 Payload includes:
 
@@ -676,7 +676,7 @@ Payload includes:
 - workspace identity;
 - registration operation.
 
-## 12.2 `repository.registered`
+### 12.2 `repository.registered`
 
 Payload includes:
 
@@ -685,7 +685,7 @@ Payload includes:
 - canonical source identity;
 - whether existing registration was reused.
 
-## 12.3 `repository.preparation_started`
+### 12.3 `repository.preparation_started`
 
 Payload includes:
 
@@ -695,7 +695,7 @@ Payload includes:
 - indexing configuration identity;
 - requested refresh policy.
 
-## 12.4 `repository.preparation_checkpointed`
+### 12.4 `repository.preparation_checkpointed`
 
 Payload includes:
 
@@ -704,7 +704,7 @@ Payload includes:
 - checkpoint identity;
 - current index status.
 
-## 12.5 `repository.version_pinned`
+### 12.5 `repository.version_pinned`
 
 Payload includes:
 
@@ -712,7 +712,7 @@ Payload includes:
 - source revision;
 - content digest.
 
-## 12.6 `repository.preparation_completed`
+### 12.6 `repository.preparation_completed`
 
 Payload includes:
 
@@ -723,7 +723,7 @@ Payload includes:
 - preparation usage;
 - diagnostics summary.
 
-## 12.7 `repository.session_opened`
+### 12.7 `repository.session_opened`
 
 Payload includes:
 
@@ -733,7 +733,7 @@ Payload includes:
 - workspace version;
 - allowed operation set.
 
-## 12.8 `repository.session_advanced`
+### 12.8 `repository.session_advanced`
 
 Payload includes:
 
@@ -742,7 +742,7 @@ Payload includes:
 - new workspace version;
 - refresh operation identity.
 
-## 12.9 `repository.session_closed`
+### 12.9 `repository.session_closed`
 
 Payload includes:
 
@@ -750,7 +750,7 @@ Payload includes:
 - close reason;
 - outstanding-operation disposition.
 
-## 12.10 `repository.query_started`
+### 12.10 `repository.query_started`
 
 Payload includes:
 
@@ -761,7 +761,7 @@ Payload includes:
 - requested limits;
 - budget reservation.
 
-## 12.11 `repository.query_completed`
+### 12.11 `repository.query_completed`
 
 Payload includes:
 
@@ -772,7 +772,7 @@ Payload includes:
 - repository usage;
 - candidate-batch artifact reference, where applicable.
 
-## 12.12 `repository.query_failed`
+### 12.12 `repository.query_failed`
 
 Payload includes:
 
@@ -781,7 +781,7 @@ Payload includes:
 - retryability;
 - diagnostics.
 
-## 12.13 `repository.invalidated`
+### 12.13 `repository.invalidated`
 
 Payload includes:
 
@@ -791,7 +791,7 @@ Payload includes:
 - stale content identities or bounded summary;
 - invalidation reason.
 
-## 12.14 `repository.refresh_started`
+### 12.14 `repository.refresh_started`
 
 Payload includes:
 
@@ -800,7 +800,7 @@ Payload includes:
 - stale evidence summary;
 - budget reservation.
 
-## 12.15 `repository.refresh_completed`
+### 12.15 `repository.refresh_completed`
 
 Payload includes:
 
@@ -812,7 +812,7 @@ Payload includes:
 - resulting index status;
 - usage.
 
-## 12.16 `repository.refresh_failed`
+### 12.16 `repository.refresh_failed`
 
 Payload includes:
 
@@ -821,7 +821,7 @@ Payload includes:
 - partial progress;
 - whether full rebuild is required.
 
-## 12.17 `repository.worker_started`
+### 12.17 `repository.worker_started`
 
 Payload includes:
 
@@ -830,7 +830,7 @@ Payload includes:
 - parser and index versions;
 - supported operations.
 
-## 12.18 `repository.worker_failed`
+### 12.18 `repository.worker_failed`
 
 Payload includes:
 
@@ -841,9 +841,9 @@ Payload includes:
 
 ---
 
-# 13. Context events
+## 13. Context events
 
-## 13.1 `context.plan_requested`
+### 13.1 `context.plan_requested`
 
 Payload includes:
 
@@ -853,7 +853,7 @@ Payload includes:
 - candidate identities;
 - remaining budgets.
 
-## 13.2 `context.plan_produced`
+### 13.2 `context.plan_produced`
 
 Payload includes:
 
@@ -864,7 +864,7 @@ Payload includes:
 - estimated cost;
 - plan artifact reference, when large.
 
-## 13.3 `context.plan_rejected`
+### 13.3 `context.plan_rejected`
 
 Payload includes:
 
@@ -873,7 +873,7 @@ Payload includes:
 - invalid actions;
 - budget or version conflicts.
 
-## 13.4 `context.plan_applied`
+### 13.4 `context.plan_applied`
 
 Payload includes:
 
@@ -882,7 +882,7 @@ Payload includes:
 - admitted, evicted, compressed, and preserved item identities;
 - resulting estimated token total.
 
-## 13.5 `context.item_available`
+### 13.5 `context.item_available`
 
 Payload includes:
 
@@ -892,7 +892,7 @@ Payload includes:
 - repository and workspace versions;
 - estimated tokens.
 
-## 13.6 `context.item_admitted`
+### 13.6 `context.item_admitted`
 
 Payload includes:
 
@@ -903,7 +903,7 @@ Payload includes:
 - active-context position or class;
 - estimated tokens.
 
-## 13.7 `context.item_rejected`
+### 13.7 `context.item_rejected`
 
 Payload includes:
 
@@ -911,7 +911,7 @@ Payload includes:
 - rejection reason;
 - policy identity.
 
-## 13.8 `context.item_evicted`
+### 13.8 `context.item_evicted`
 
 Payload includes:
 
@@ -920,7 +920,7 @@ Payload includes:
 - last-used turn;
 - estimated tokens released.
 
-## 13.9 `context.item_compressed`
+### 13.9 `context.item_compressed`
 
 Payload includes:
 
@@ -930,7 +930,7 @@ Payload includes:
 - estimated token reduction;
 - compression provenance.
 
-## 13.10 `context.item_invalidated`
+### 13.10 `context.item_invalidated`
 
 Payload includes:
 
@@ -939,7 +939,7 @@ Payload includes:
 - invalidation reason;
 - whether item was active.
 
-## 13.11 `context.rendered`
+### 13.11 `context.rendered`
 
 Payload includes:
 
@@ -952,9 +952,9 @@ Payload includes:
 
 ---
 
-# 14. Policy events
+## 14. Policy events
 
-## 14.1 `policy.invocation_started`
+### 14.1 `policy.invocation_started`
 
 Payload includes:
 
@@ -963,7 +963,7 @@ Payload includes:
 - input artifact or input identity references;
 - deadline.
 
-## 14.2 `policy.invocation_completed`
+### 14.2 `policy.invocation_completed`
 
 Payload includes:
 
@@ -972,7 +972,7 @@ Payload includes:
 - duration;
 - output summary.
 
-## 14.3 `policy.invocation_failed`
+### 14.3 `policy.invocation_failed`
 
 Payload includes:
 
@@ -980,7 +980,7 @@ Payload includes:
 - retryability;
 - fallback policy, when used.
 
-## 14.4 `policy.retrieval_proposed`
+### 14.4 `policy.retrieval_proposed`
 
 Payload includes:
 
@@ -993,9 +993,9 @@ Policy events do not imply that proposed actions were authorized or performed.
 
 ---
 
-# 15. Model events
+## 15. Model events
 
-## 15.1 `model.request_rendered`
+### 15.1 `model.request_rendered`
 
 Payload includes:
 
@@ -1006,7 +1006,7 @@ Payload includes:
 - reserved output tokens;
 - request artifact reference.
 
-## 15.2 `model.egress_evaluated`
+### 15.2 `model.egress_evaluated`
 
 Payload includes:
 
@@ -1018,7 +1018,7 @@ Payload includes:
 - security-policy identity;
 - byte and token estimates.
 
-## 15.3 `model.invocation_started`
+### 15.3 `model.invocation_started`
 
 Payload includes:
 
@@ -1029,7 +1029,7 @@ Payload includes:
 - request artifact reference;
 - attempt number.
 
-## 15.4 `model.invocation_completed`
+### 15.4 `model.invocation_completed`
 
 Payload includes:
 
@@ -1042,7 +1042,7 @@ Payload includes:
 - response artifact reference;
 - duration.
 
-## 15.5 `model.invocation_failed`
+### 15.5 `model.invocation_failed`
 
 Payload includes:
 
@@ -1052,7 +1052,7 @@ Payload includes:
 - usage known before failure;
 - attempt number.
 
-## 15.6 `model.response_interpreted`
+### 15.6 `model.response_interpreted`
 
 Payload includes:
 
@@ -1067,9 +1067,9 @@ Model response content remains artifact-backed when large.
 
 ---
 
-# 16. Budget events
+## 16. Budget events
 
-## 16.1 `budget.initialized`
+### 16.1 `budget.initialized`
 
 Payload includes:
 
@@ -1077,7 +1077,7 @@ Payload includes:
 - effective limits;
 - source configuration identity.
 
-## 16.2 `budget.reserved`
+### 16.2 `budget.reserved`
 
 Payload includes:
 
@@ -1087,7 +1087,7 @@ Payload includes:
 - operation identity;
 - remaining unreserved amount.
 
-## 16.3 `budget.committed`
+### 16.3 `budget.committed`
 
 Payload includes:
 
@@ -1098,7 +1098,7 @@ Payload includes:
 - operation identity;
 - remaining amount.
 
-## 16.4 `budget.released`
+### 16.4 `budget.released`
 
 Payload includes:
 
@@ -1106,7 +1106,7 @@ Payload includes:
 - released amount;
 - release reason.
 
-## 16.5 `budget.denied`
+### 16.5 `budget.denied`
 
 Payload includes:
 
@@ -1115,7 +1115,7 @@ Payload includes:
 - operation identity;
 - denial reason.
 
-## 16.6 `budget.exhausted`
+### 16.6 `budget.exhausted`
 
 Payload includes:
 
@@ -1125,7 +1125,7 @@ Payload includes:
 - reserved usage;
 - triggering operation.
 
-## 16.7 `budget.reconciled`
+### 16.7 `budget.reconciled`
 
 Payload includes:
 
@@ -1137,9 +1137,9 @@ Payload includes:
 
 ---
 
-# 17. Capability events
+## 17. Capability events
 
-## 17.1 `capability.granted`
+### 17.1 `capability.granted`
 
 Payload includes:
 
@@ -1150,7 +1150,7 @@ Payload includes:
 - source of authority;
 - expiration.
 
-## 17.2 `capability.narrowed`
+### 17.2 `capability.narrowed`
 
 Payload includes:
 
@@ -1158,7 +1158,7 @@ Payload includes:
 - narrowed grant;
 - narrowing reason.
 
-## 17.3 `capability.checked`
+### 17.3 `capability.checked`
 
 Payload includes:
 
@@ -1169,7 +1169,7 @@ Payload includes:
 
 High-volume installations may omit successful low-risk checks from the first-class stream only if an equivalent aggregated audit event is retained. The initial implementation should record them.
 
-## 17.4 `capability.denied`
+### 17.4 `capability.denied`
 
 Payload includes:
 
@@ -1179,7 +1179,7 @@ Payload includes:
 - denial reason;
 - model or tool proposal identity.
 
-## 17.5 `capability.revoked`
+### 17.5 `capability.revoked`
 
 Payload includes:
 
@@ -1190,9 +1190,9 @@ Payload includes:
 
 ---
 
-# 18. Tool events
+## 18. Tool events
 
-## 18.1 `tool.call_proposed`
+### 18.1 `tool.call_proposed`
 
 Payload includes:
 
@@ -1202,7 +1202,7 @@ Payload includes:
 - model response identity;
 - required capabilities.
 
-## 18.2 `tool.call_validated`
+### 18.2 `tool.call_validated`
 
 Payload includes:
 
@@ -1211,7 +1211,7 @@ Payload includes:
 - validation outcome;
 - normalized arguments reference.
 
-## 18.3 `tool.execution_started`
+### 18.3 `tool.execution_started`
 
 Payload includes:
 
@@ -1220,7 +1220,7 @@ Payload includes:
 - budget reservation;
 - sandbox or worker identity.
 
-## 18.4 `tool.execution_completed`
+### 18.4 `tool.execution_completed`
 
 Payload includes:
 
@@ -1231,7 +1231,7 @@ Payload includes:
 - result artifact references;
 - result candidate identities.
 
-## 18.5 `tool.execution_failed`
+### 18.5 `tool.execution_failed`
 
 Payload includes:
 
@@ -1240,7 +1240,7 @@ Payload includes:
 - partial result references;
 - effect certainty.
 
-## 18.6 `tool.execution_cancelled`
+### 18.6 `tool.execution_cancelled`
 
 Payload includes:
 
@@ -1250,9 +1250,9 @@ Payload includes:
 
 ---
 
-# 19. Workspace events
+## 19. Workspace events
 
-## 19.1 `workspace.mutation_proposed`
+### 19.1 `workspace.mutation_proposed`
 
 Payload includes:
 
@@ -1261,7 +1261,7 @@ Payload includes:
 - mutation kinds;
 - source model or tool proposal.
 
-## 19.2 `workspace.mutation_authorized`
+### 19.2 `workspace.mutation_authorized`
 
 Payload includes:
 
@@ -1270,7 +1270,7 @@ Payload includes:
 - allowed paths;
 - denied paths.
 
-## 19.3 `workspace.mutation_applied`
+### 19.3 `workspace.mutation_applied`
 
 Payload includes:
 
@@ -1280,7 +1280,7 @@ Payload includes:
 - prior and new content hashes;
 - patch artifact reference.
 
-## 19.4 `workspace.mutation_failed`
+### 19.4 `workspace.mutation_failed`
 
 Payload includes:
 
@@ -1288,7 +1288,7 @@ Payload includes:
 - effect certainty;
 - rollback status.
 
-## 19.5 `workspace.patch_created`
+### 19.5 `workspace.patch_created`
 
 Payload includes:
 
@@ -1300,11 +1300,11 @@ Payload includes:
 
 ---
 
-# 20. Artifact events
+## 20. Artifact events
 
 Artifacts are stored as blobs in the installation database.
 
-## 20.1 `artifact.created`
+### 20.1 `artifact.created`
 
 Payload includes:
 
@@ -1319,7 +1319,7 @@ Payload includes:
 - retention class;
 - access scope.
 
-## 20.2 `artifact.reused`
+### 20.2 `artifact.reused`
 
 Payload includes:
 
@@ -1327,7 +1327,7 @@ Payload includes:
 - matching content hash;
 - new logical reference.
 
-## 20.3 `artifact.accessed`
+### 20.3 `artifact.accessed`
 
 Payload includes:
 
@@ -1338,7 +1338,7 @@ Payload includes:
 
 Artifact access events may be aggregated for low-risk internal reads, but security-sensitive reads should remain explicit.
 
-## 20.4 `artifact.deleted`
+### 20.4 `artifact.deleted`
 
 Payload includes:
 
@@ -1349,7 +1349,7 @@ Payload includes:
 
 Logical deletion or garbage collection does not alter prior events referencing the artifact. Those events indicate that the artifact is no longer retained.
 
-## 20.5 `artifact.exported`
+### 20.5 `artifact.exported`
 
 Payload includes:
 
@@ -1361,9 +1361,9 @@ Payload includes:
 
 ---
 
-# 21. Validation events
+## 21. Validation events
 
-## 21.1 `validation.request_created`
+### 21.1 `validation.request_created`
 
 Payload includes:
 
@@ -1376,7 +1376,7 @@ Payload includes:
 - security profile;
 - validation budget.
 
-## 21.2 `validation.started`
+### 21.2 `validation.started`
 
 Payload includes:
 
@@ -1385,7 +1385,7 @@ Payload includes:
 - validator identity;
 - execution environment identity.
 
-## 21.3 `validation.workspace_materialized`
+### 21.3 `validation.workspace_materialized`
 
 Payload includes:
 
@@ -1394,7 +1394,7 @@ Payload includes:
 - patch applicability;
 - temporary workspace identity, if safe.
 
-## 21.4 `validation.check_started`
+### 21.4 `validation.check_started`
 
 Payload includes:
 
@@ -1403,7 +1403,7 @@ Payload includes:
 - command or policy identity;
 - timeout.
 
-## 21.5 `validation.check_completed`
+### 21.5 `validation.check_completed`
 
 Payload includes:
 
@@ -1413,7 +1413,7 @@ Payload includes:
 - bounded summary;
 - output artifact references.
 
-## 21.6 `validation.report_received`
+### 21.6 `validation.report_received`
 
 Payload includes:
 
@@ -1423,7 +1423,7 @@ Payload includes:
 - approval requirement;
 - report artifact reference.
 
-## 21.7 `validation.completed`
+### 21.7 `validation.completed`
 
 Payload includes:
 
@@ -1434,7 +1434,7 @@ Payload includes:
 - report reference;
 - total usage.
 
-## 21.8 `validation.failed`
+### 21.8 `validation.failed`
 
 Payload includes:
 
@@ -1443,7 +1443,7 @@ Payload includes:
 - failed checks;
 - report reference.
 
-## 21.9 `validation.error`
+### 21.9 `validation.error`
 
 Payload includes:
 
@@ -1454,9 +1454,9 @@ Payload includes:
 
 ---
 
-# 22. Recovery events
+## 22. Recovery events
 
-## 22.1 `run.recovery_claimed`
+### 22.1 `run.recovery_claimed`
 
 Payload includes:
 
@@ -1466,7 +1466,7 @@ Payload includes:
 - persisted lifecycle state;
 - recovery lease identity.
 
-## 22.2 `run.recovery_started`
+### 22.2 `run.recovery_started`
 
 Payload includes:
 
@@ -1474,7 +1474,7 @@ Payload includes:
 - checkpoint identity;
 - recovery strategy.
 
-## 22.3 `repository.preparation_resumed`
+### 22.3 `repository.preparation_resumed`
 
 Payload includes:
 
@@ -1482,7 +1482,7 @@ Payload includes:
 - first resumed stage;
 - worker identity.
 
-## 22.4 `validation.resumed`
+### 22.4 `validation.resumed`
 
 Payload includes:
 
@@ -1490,7 +1490,7 @@ Payload includes:
 - prior attempt status;
 - next attempt number.
 
-## 22.5 `run.recovery_completed`
+### 22.5 `run.recovery_completed`
 
 Payload includes:
 
@@ -1498,7 +1498,7 @@ Payload includes:
 - restored session identities;
 - duration.
 
-## 22.6 `run.recovery_failed`
+### 22.6 `run.recovery_failed`
 
 Payload includes:
 
@@ -1508,9 +1508,9 @@ Payload includes:
 
 ---
 
-# 23. Error and diagnostic events
+## 23. Error and diagnostic events
 
-## 23.1 `error.occurred`
+### 23.1 `error.occurred`
 
 Used for material errors that do not already have a more specific event type.
 
@@ -1525,7 +1525,7 @@ Payload includes:
 - message safe for logs;
 - detail artifact reference.
 
-## 23.2 `diagnostic.recorded`
+### 23.2 `diagnostic.recorded`
 
 Used for non-terminal structured diagnostics.
 
@@ -1539,7 +1539,7 @@ Payload includes:
 - message;
 - detail artifact reference.
 
-## 23.3 Error privacy
+### 23.3 Error privacy
 
 Raw stack traces, provider responses, and command output should normally be artifact-backed.
 
@@ -1547,7 +1547,7 @@ Event payloads contain sanitized, bounded summaries.
 
 ---
 
-# 24. Publication events
+## 24. Publication events
 
 Publication is outside the run lifecycle.
 
@@ -1569,13 +1569,13 @@ The source run remains terminal and unchanged.
 
 ---
 
-# 25. Event persistence
+## 25. Event persistence
 
-## 25.1 Installation database
+### 25.1 Installation database
 
 The default local deployment stores events in the installation database.
 
-## 25.2 Transaction boundaries
+### 25.2 Transaction boundaries
 
 At minimum, the following should commit atomically:
 
@@ -1586,19 +1586,19 @@ At minimum, the following should commit atomically:
 - workspace-version advancement and mutation/invalidation events;
 - artifact creation metadata and artifact event.
 
-## 25.3 Artifact blobs
+### 25.3 Artifact blobs
 
 Artifact metadata and blob bytes are stored in the database.
 
 Large artifacts may be compressed.
 
-## 25.4 Deduplication
+### 25.4 Deduplication
 
 Artifacts may be deduplicated by content hash.
 
 Events retain logical artifact references even when physical bytes are shared.
 
-## 25.5 Database growth
+### 25.5 Database growth
 
 Implementations must support:
 
@@ -1613,9 +1613,9 @@ Event metadata should normally be retained longer than large artifact blobs.
 
 ---
 
-# 26. Replay requirements
+## 26. Replay requirements
 
-## 26.1 Audit replay
+### 26.1 Audit replay
 
 Audit replay reconstructs what happened without re-executing external operations.
 
@@ -1626,7 +1626,7 @@ It requires:
 - schema interpretation;
 - state transition rules.
 
-## 26.2 Context replay
+### 26.2 Context replay
 
 Context replay reconstructs what the model saw for each invocation.
 
@@ -1638,7 +1638,7 @@ It requires:
 - provenance-map artifacts;
 - repository candidate identities and representations.
 
-## 26.3 Policy replay
+### 26.3 Policy replay
 
 Policy replay evaluates a different context policy against recorded candidate sets.
 
@@ -1651,7 +1651,7 @@ It requires:
 
 Policy replay does not claim to reproduce the original model trajectory unless model outputs are fixed.
 
-## 26.4 Model replay
+### 26.4 Model replay
 
 Model replay may use stored responses rather than invoking the provider.
 
@@ -1662,7 +1662,7 @@ It requires:
 - provider metadata;
 - usage.
 
-## 26.5 Full execution replay
+### 26.5 Full execution replay
 
 Full execution replay may be impossible when:
 
@@ -1679,7 +1679,7 @@ Kiln should distinguish:
 - partial replay;
 - live re-execution.
 
-## 26.6 Replay completeness
+### 26.6 Replay completeness
 
 A run records a replay-completeness classification:
 
@@ -1692,7 +1692,7 @@ A run records a replay-completeness classification:
 
 ---
 
-# 27. Evaluation requirements
+## 27. Evaluation requirements
 
 Evaluation consumes events and artifacts without participating in the agent loop.
 
@@ -1717,9 +1717,9 @@ Evaluation outputs are separate artifacts or reports and do not rewrite source e
 
 ---
 
-# 28. Privacy and redaction
+## 28. Privacy and redaction
 
-## 28.1 Sensitive fields
+### 28.1 Sensitive fields
 
 Potentially sensitive fields include:
 
@@ -1732,7 +1732,7 @@ Potentially sensitive fields include:
 - user or tenant identity;
 - security-policy details.
 
-## 28.2 Redaction
+### 28.2 Redaction
 
 Redaction should occur before event commit when policy requires it.
 
@@ -1743,7 +1743,7 @@ The event records:
 - affected content categories;
 - redacted artifact identity, when retained.
 
-## 28.3 Secrets
+### 28.3 Secrets
 
 Secrets must not be written to events or artifacts.
 
@@ -1751,7 +1751,7 @@ Secret scanning applies before persistence where practical.
 
 Detected secrets produce security events and redacted output.
 
-## 28.4 Access control
+### 28.4 Access control
 
 Event and artifact access is scoped by:
 
@@ -1764,9 +1764,9 @@ Event and artifact access is scoped by:
 
 ---
 
-# 29. Retention
+## 29. Retention
 
-## 29.1 Retention classes
+### 29.1 Retention classes
 
 Suggested classes:
 
@@ -1776,13 +1776,13 @@ Suggested classes:
 - `security`;
 - `user_pinned`.
 
-## 29.2 Metadata versus artifacts
+### 29.2 Metadata versus artifacts
 
 Kiln may retain event metadata after deleting large artifact blobs.
 
 The event then records artifact-retention status.
 
-## 29.3 Deletion
+### 29.3 Deletion
 
 Deletion must preserve consistency:
 
@@ -1793,7 +1793,7 @@ Deletion must preserve consistency:
 
 ---
 
-# 30. Event query model
+## 30. Event query model
 
 The event store should support queries by:
 
@@ -1813,11 +1813,11 @@ The event store should not expose arbitrary unscoped database access through pub
 
 ---
 
-# 31. Initial vertical-slice events
+## 31. Initial vertical-slice events
 
 The first read-only milestone requires these events.
 
-## Runtime and lifecycle
+### Runtime and lifecycle
 
 - `runtime.session_started`;
 - `runtime.session_ready`;
@@ -1829,7 +1829,7 @@ The first read-only milestone requires these events.
 - `run.output_production_completed`;
 - one terminal run event.
 
-## Repository
+### Repository
 
 - `repository.preparation_started`;
 - `repository.version_pinned`;
@@ -1840,7 +1840,7 @@ The first read-only milestone requires these events.
 - `repository.query_completed` or `repository.query_failed`;
 - `repository.session_closed`.
 
-## Context and policy
+### Context and policy
 
 - `context.plan_requested`;
 - `context.plan_produced`;
@@ -1850,7 +1850,7 @@ The first read-only milestone requires these events.
 - `context.item_evicted`, when applicable;
 - `context.rendered`.
 
-## Model
+### Model
 
 - `model.request_rendered`;
 - `model.egress_evaluated`;
@@ -1858,7 +1858,7 @@ The first read-only milestone requires these events.
 - `model.invocation_completed` or `model.invocation_failed`;
 - `model.response_interpreted`.
 
-## Budget
+### Budget
 
 - `budget.initialized`;
 - `budget.reserved`;
@@ -1866,12 +1866,12 @@ The first read-only milestone requires these events.
 - `budget.denied` or `budget.exhausted`, when applicable;
 - `budget.reconciled`.
 
-## Turn
+### Turn
 
 - `turn.started`;
 - `turn.completed` or `turn.failed`.
 
-## Artifacts
+### Artifacts
 
 - `artifact.created` for model request and response payloads;
 - `artifact.created` for candidate batches when large;
@@ -1879,7 +1879,7 @@ The first read-only milestone requires these events.
 
 ---
 
-# 32. Initial artifact kinds
+## 32. Initial artifact kinds
 
 The first milestone should support these artifact kinds:
 
@@ -1904,7 +1904,7 @@ Later milestones add:
 
 ---
 
-# 33. Event invariants
+## 33. Event invariants
 
 1. Events are immutable once committed.
 2. Events are append-oriented.
@@ -1939,7 +1939,7 @@ Later milestones add:
 
 ---
 
-# 34. Open event questions
+## 34. Open event questions
 
 The event model is sufficient for implementation planning. Remaining details include:
 

@@ -33,9 +33,9 @@ Those artifacts must conform to the lifecycle semantics defined here.
 
 ---
 
-# 1. Lifecycle principles
+### 1. Lifecycle principles
 
-## 1.1 The run coordinator owns lifecycle state
+#### 1.1 The run coordinator owns lifecycle state
 
 The run coordinator is the only component that may change a run's top-level lifecycle state.
 
@@ -51,7 +51,7 @@ Examples:
 
 The run coordinator evaluates those outcomes and performs the corresponding legal transition.
 
-## 1.2 Every transition is explicit
+#### 1.2 Every transition is explicit
 
 A run never changes state implicitly because a component returned.
 
@@ -64,7 +64,7 @@ Each transition must have:
 - a persisted state update;
 - at least one lifecycle event.
 
-## 1.3 State changes and lifecycle events are atomic
+#### 1.3 State changes and lifecycle events are atomic
 
 The persisted state transition and its primary lifecycle event must be committed atomically.
 
@@ -73,7 +73,7 @@ The system must not expose:
 - a new lifecycle state without its transition event;
 - a transition event without the corresponding lifecycle state.
 
-## 1.4 Exactly one active top-level state
+#### 1.4 Exactly one active top-level state
 
 At any point, a run has exactly one top-level lifecycle state.
 
@@ -81,19 +81,19 @@ Sub-operations may have their own states, but they do not replace or overlap the
 
 For example, while a run is `running`, a model call may be `pending` and a repository request may later be `completed`. The run itself remains `running`.
 
-## 1.5 Terminal states are immutable
+#### 1.5 Terminal states are immutable
 
 Once a run enters a terminal state, no further lifecycle transition is legal.
 
 Post-run operations such as export, inspection, replay, or publication are separate workflows. They do not reopen the run.
 
-## 1.6 External effects do not define lifecycle state
+#### 1.6 External effects do not define lifecycle state
 
 The runtime must persist intent before starting an external or worker operation and persist the outcome after it completes.
 
 A child process exit, model response, or validation result is an input to the state machine, not a state transition by itself.
 
-## 1.7 Recovery is state-specific
+#### 1.7 Recovery is state-specific
 
 Only lifecycle states explicitly marked recoverable may resume after runtime interruption.
 
@@ -106,7 +106,7 @@ Interrupted runs in other non-terminal states transition to `failed`.
 
 ---
 
-# 2. Lifecycle states
+### 2. Lifecycle states
 
 Kiln uses the following top-level states:
 
@@ -134,24 +134,24 @@ cancelled
 exhausted
 ```
 
-## 2.1 State categories
+#### 2.1 State categories
 
-### Pre-execution states
+##### Pre-execution states
 
 - `created`
 - `initializing`
 - `preparing_repository`
 
-### Active execution states
+##### Active execution states
 
 - `running`
 - `producing_output`
 
-### Post-execution state
+##### Post-execution state
 
 - `validating`
 
-### Terminal states
+##### Terminal states
 
 - `completed`
 - `failed`
@@ -160,27 +160,27 @@ exhausted
 
 ---
 
-# 3. Transition overview
+### 3. Transition overview
 
-| Source | Target | Trigger |
-|---|---|---|
-| — | `created` | Valid run specification accepted |
-| `created` | `initializing` | Coordinator begins runtime setup |
-| `initializing` | `preparing_repository` | Runtime dependencies initialized |
-| `preparing_repository` | `running` | Repository session is ready |
-| `running` | `producing_output` | Completion proposal accepted |
-| `producing_output` | `validating` | Output assembled and validation required |
-| `producing_output` | `completed` | Output assembled and validation not required |
-| `validating` | `completed` | Validation passed and run result finalized |
-| any non-terminal | `cancelled` | Authorized cancellation accepted |
-| any non-terminal | `exhausted` | Hard budget or deadline exhausted |
-| any non-terminal | `failed` | Unrecoverable runtime or component failure |
+| Source                 | Target                 | Trigger                                      |
+| ---------------------- | ---------------------- | -------------------------------------------- |
+| —                      | `created`              | Valid run specification accepted             |
+| `created`              | `initializing`         | Coordinator begins runtime setup             |
+| `initializing`         | `preparing_repository` | Runtime dependencies initialized             |
+| `preparing_repository` | `running`              | Repository session is ready                  |
+| `running`              | `producing_output`     | Completion proposal accepted                 |
+| `producing_output`     | `validating`           | Output assembled and validation required     |
+| `producing_output`     | `completed`            | Output assembled and validation not required |
+| `validating`           | `completed`            | Validation passed and run result finalized   |
+| any non-terminal       | `cancelled`            | Authorized cancellation accepted             |
+| any non-terminal       | `exhausted`            | Hard budget or deadline exhausted            |
+| any non-terminal       | `failed`               | Unrecoverable runtime or component failure   |
 
 Transitions not listed above are illegal.
 
 ---
 
-# 4. Common transition contract
+### 4. Common transition contract
 
 Every lifecycle transition records the following semantic fields:
 
@@ -195,7 +195,7 @@ Every lifecycle transition records the following semantic fields:
 - resulting run-state version;
 - related error, budget, validation, or artifact references.
 
-## 4.1 Transition ordering
+#### 4.1 Transition ordering
 
 Lifecycle transitions are totally ordered within a run.
 
@@ -203,7 +203,7 @@ Each successful transition advances a monotonic run-state version or sequence.
 
 Concurrent components may propose outcomes, but the coordinator serializes transition decisions.
 
-## 4.2 Transition conflicts
+#### 4.2 Transition conflicts
 
 When competing terminal conditions arrive concurrently, the coordinator resolves them using persisted ordering and the following precedence rules:
 
@@ -217,19 +217,19 @@ No run may acquire multiple terminal reasons.
 
 ---
 
-# 5. State specification
+### 5. State specification
 
-## 5.1 `created`
+#### 5.1 `created`
 
-### Meaning
+##### Meaning
 
 The run specification has been accepted and assigned a run identity, but runtime initialization has not begun.
 
-### Entered from
+##### Entered from
 
 - run creation only.
 
-### Required persisted state
+##### Required persisted state
 
 - run identity;
 - immutable run specification;
@@ -242,36 +242,36 @@ The run specification has been accepted and assigned a run identity, but runtime
 - validation requirement;
 - lifecycle state `created`.
 
-### Entry preconditions
+##### Entry preconditions
 
 - the run specification is structurally valid;
 - referenced configuration is resolvable;
 - the caller is authorized to create the run;
 - the run identity does not already exist.
 
-### Entry actions
+##### Entry actions
 
 - persist the run specification;
 - initialize run-state version;
 - create the first lifecycle event.
 
-### Required events
+##### Required events
 
 - `run.created`.
 
-### Permitted operations
+##### Permitted operations
 
 - inspect run metadata;
 - cancel;
 - begin initialization.
 
-### Exit transitions
+##### Exit transitions
 
 - `initializing`;
 - `cancelled`;
 - `failed`.
 
-### Failure examples
+##### Failure examples
 
 - persistence failure;
 - invalid durable configuration reference;
@@ -279,22 +279,22 @@ The run specification has been accepted and assigned a run identity, but runtime
 
 ---
 
-## 5.2 `initializing`
+#### 5.2 `initializing`
 
-### Meaning
+##### Meaning
 
 The coordinator is establishing the trusted runtime dependencies required to execute the run.
 
-### Entered from
+##### Entered from
 
 - `created`.
 
-### Entry preconditions
+##### Entry preconditions
 
 - the run specification is durably stored;
 - no terminal transition has been committed.
 
-### Entry actions
+##### Entry actions
 
 The coordinator begins establishing:
 
@@ -309,7 +309,7 @@ The coordinator begins establishing:
 - worker supervision;
 - run-scoped security context.
 
-### Required persisted state
+##### Required persisted state
 
 - initialized or pending budget ledger;
 - effective capability grants;
@@ -317,12 +317,12 @@ The coordinator begins establishing:
 - selected adapters;
 - initialization operation identities.
 
-### Required events
+##### Required events
 
 - `run.initialization_started`;
 - component-specific initialization events as applicable.
 
-### Completion condition
+##### Completion condition
 
 Initialization succeeds only when:
 
@@ -332,14 +332,14 @@ Initialization succeeds only when:
 - event and artifact persistence are writable;
 - the runtime can begin repository preparation.
 
-### Exit transitions
+##### Exit transitions
 
 - `preparing_repository`;
 - `cancelled`;
 - `exhausted`;
 - `failed`.
 
-### Failure behavior
+##### Failure behavior
 
 Initialization failures are not recoverable in the initial architecture.
 
@@ -351,35 +351,35 @@ Examples:
 - database migration failure;
 - artifact store unavailable.
 
-### Required completion event
+##### Required completion event
 
 - `run.initialization_completed`.
 
-### Required failure event
+##### Required failure event
 
 - `run.initialization_failed`.
 
 ---
 
-## 5.3 `preparing_repository`
+#### 5.3 `preparing_repository`
 
-### Meaning
+##### Meaning
 
 Kiln is resolving, pinning, indexing, and opening the repository state required by the run.
 
-### Entered from
+##### Entered from
 
 - `initializing`;
 - recovery of an interrupted `preparing_repository` state.
 
-### Entry preconditions
+##### Entry preconditions
 
 - initialization completed;
 - repository read capability exists;
 - repository reference is available;
 - repository preparation budget can be reserved where applicable.
 
-### Preparation stages
+##### Preparation stages
 
 Repository preparation is modeled as a series of idempotent stages:
 
@@ -397,7 +397,7 @@ Repository preparation is modeled as a series of idempotent stages:
 
 Each stage records completion before the next stage begins.
 
-### Required persisted state
+##### Required persisted state
 
 - workspace identity;
 - repository identity;
@@ -409,7 +409,7 @@ Each stage records completion before the next stage begins.
 - repository-worker operation identity;
 - repository-session identity when opened.
 
-### Required events
+##### Required events
 
 At minimum:
 
@@ -428,7 +428,7 @@ Additional events may record:
 - preparation retry;
 - worker restart.
 
-### Completion condition
+##### Completion condition
 
 The run may enter `running` only when:
 
@@ -441,14 +441,14 @@ The run may enter `running` only when:
 - required read-only repository operations are available;
 - no cancellation or exhaustion condition is pending.
 
-### Exit transitions
+##### Exit transitions
 
 - `running`;
 - `cancelled`;
 - `exhausted`;
 - `failed`.
 
-### Recovery
+##### Recovery
 
 `preparing_repository` is recoverable.
 
@@ -463,13 +463,13 @@ After runtime restart, the coordinator:
 
 Transient process identities are never assumed to survive restart.
 
-### Recovery events
+##### Recovery events
 
 - `run.recovery_started`;
 - `repository.preparation_resumed`;
 - `run.recovery_completed` or `run.recovery_failed`.
 
-### Failure examples
+##### Failure examples
 
 - repository no longer available;
 - pinned content digest mismatch;
@@ -479,17 +479,17 @@ Transient process identities are never assumed to survive restart.
 
 ---
 
-## 5.4 `running`
+#### 5.4 `running`
 
-### Meaning
+##### Meaning
 
 The agent loop is active and may reason, retrieve evidence, invoke the model, and request authorized tools.
 
-### Entered from
+##### Entered from
 
 - `preparing_repository`.
 
-### Entry preconditions
+##### Entry preconditions
 
 - repository preparation completed;
 - repository session is healthy;
@@ -498,13 +498,13 @@ The agent loop is active and may reason, retrieve evidence, invoke the model, an
 - initial task and context state exist;
 - no stale evidence is active as current context.
 
-### Entry actions
+##### Entry actions
 
 - initialize or confirm turn state;
 - create initial context-planning operation;
 - begin the agent loop.
 
-### Required persisted state
+##### Required persisted state
 
 - current turn;
 - task state;
@@ -517,13 +517,13 @@ The agent loop is active and may reason, retrieve evidence, invoke the model, an
 - pending operation, if any;
 - conversation or model-interaction references.
 
-### Required entry event
+##### Required entry event
 
 - `run.execution_started`.
 
-### Permitted operation cycles
+##### Permitted operation cycles
 
-#### Context planning
+###### Context planning
 
 ```text
 create plan input
@@ -532,7 +532,7 @@ create plan input
 → context manager applies approved actions
 ```
 
-#### Repository retrieval
+###### Repository retrieval
 
 ```text
 reserve repository-query budget
@@ -542,7 +542,7 @@ reserve repository-query budget
 → expose candidates to policy
 ```
 
-#### Model invocation
+###### Model invocation
 
 ```text
 render active context
@@ -553,7 +553,7 @@ render active context
 → normalize response
 ```
 
-#### Tool execution
+###### Tool execution
 
 ```text
 validate tool call
@@ -563,7 +563,7 @@ validate tool call
 → process result into candidates
 ```
 
-#### Workspace mutation
+###### Workspace mutation
 
 When write capabilities exist in later milestones:
 
@@ -575,7 +575,7 @@ authorize write
 → refresh before stale evidence is reused
 ```
 
-### Turn semantics
+##### Turn semantics
 
 A turn is a runtime-defined reasoning unit.
 
@@ -583,7 +583,7 @@ A turn begins when the runtime prepares a model request and ends when the result
 
 The exact number of repository requests or internal context-policy operations per turn may vary.
 
-### Completion proposal
+##### Completion proposal
 
 The model may propose completion, but this does not change lifecycle state.
 
@@ -596,14 +596,14 @@ The stop controller evaluates:
 - whether validation inputs can be produced;
 - whether a terminal budget or cancellation condition has occurred.
 
-### Exit transitions
+##### Exit transitions
 
 - `producing_output`;
 - `cancelled`;
 - `exhausted`;
 - `failed`.
 
-### Non-recoverability
+##### Non-recoverability
 
 `running` is not recoverable in the initial architecture.
 
@@ -615,7 +615,7 @@ After unexpected runtime termination:
 - partial artifacts and events remain inspectable;
 - no agent-loop continuation is attempted.
 
-### Failure examples
+##### Failure examples
 
 - model gateway fails beyond retry policy;
 - repository session becomes irrecoverably invalid;
@@ -626,17 +626,17 @@ After unexpected runtime termination:
 
 ---
 
-## 5.5 `producing_output`
+#### 5.5 `producing_output`
 
-### Meaning
+##### Meaning
 
 The agent loop has stopped, and the runtime is assembling the immutable proposed result.
 
-### Entered from
+##### Entered from
 
 - `running`.
 
-### Entry preconditions
+##### Entry preconditions
 
 - the stop controller accepts a completion proposal;
 - no model or tool operation remains in flight;
@@ -644,7 +644,7 @@ The agent loop has stopped, and the runtime is assembling the immutable proposed
 - required current evidence is synchronized;
 - the task state contains a final output proposal.
 
-### Entry actions
+##### Entry actions
 
 The runtime assembles:
 
@@ -657,7 +657,7 @@ The runtime assembles:
 - model and tool execution summary;
 - validation request inputs where validation is required.
 
-### Required persisted state
+##### Required persisted state
 
 - output-production operation identity;
 - final answer artifact or inline reference;
@@ -667,13 +667,13 @@ The runtime assembles:
 - changed-file manifest, when applicable;
 - validation requirement and profile.
 
-### Required events
+##### Required events
 
 - `run.output_production_started`;
 - artifact creation events;
 - `run.output_production_completed`.
 
-### Validation branch
+##### Validation branch
 
 If validation is required, the runtime must persist all immutable validation inputs before entering `validating`.
 
@@ -687,7 +687,7 @@ These include:
 - security profile;
 - validation budgets.
 
-### Exit transitions
+##### Exit transitions
 
 - `validating`, when validation is required;
 - `completed`, when validation is not required;
@@ -695,7 +695,7 @@ These include:
 - `exhausted`;
 - `failed`.
 
-### Non-recoverability
+##### Non-recoverability
 
 `producing_output` is not recoverable in the initial architecture.
 
@@ -703,7 +703,7 @@ An unexpected interruption transitions the run to `failed`.
 
 The runtime may retain already committed output artifacts, but it does not infer that output production completed.
 
-### Failure examples
+##### Failure examples
 
 - patch generation fails;
 - final artifact cannot be stored;
@@ -712,18 +712,18 @@ The runtime may retain already committed output artifacts, but it does not infer
 
 ---
 
-## 5.6 `validating`
+#### 5.6 `validating`
 
-### Meaning
+##### Meaning
 
 The separate validation package is evaluating the proposed output in a clean execution environment.
 
-### Entered from
+##### Entered from
 
 - `producing_output`;
 - recovery of an interrupted `validating` state.
 
-### Entry preconditions
+##### Entry preconditions
 
 - immutable validation request is persisted;
 - referenced artifacts exist and hashes are verified;
@@ -731,7 +731,7 @@ The separate validation package is evaluating the proposed output in a clean exe
 - validation budget can be reserved;
 - no publication occurs before validation completes.
 
-### Validation request
+##### Validation request
 
 The persisted request includes:
 
@@ -747,7 +747,7 @@ The persisted request includes:
 - validation budgets;
 - expected report contract.
 
-### Validation execution
+##### Validation execution
 
 The run coordinator:
 
@@ -770,7 +770,7 @@ The validator:
 7. returns a structured report;
 8. destroys temporary state.
 
-### Required persisted state
+##### Required persisted state
 
 - validation identity;
 - immutable validation request;
@@ -780,7 +780,7 @@ The validator:
 - budget reservation;
 - validation report reference when complete.
 
-### Required events
+##### Required events
 
 At minimum:
 
@@ -790,39 +790,39 @@ At minimum:
 - `validation.report_received`;
 - `validation.completed`.
 
-### Validation outcomes
+##### Validation outcomes
 
-#### Passed
+###### Passed
 
 Validation ran successfully and all required checks passed.
 
 The run may enter `completed`.
 
-#### Failed
+###### Failed
 
 Validation ran successfully, but the proposed output did not satisfy requirements.
 
 The run enters `failed` with stop reason `validation_failed`.
 
-#### Error
+###### Error
 
 Validation could not produce a trustworthy result.
 
 The coordinator applies configured retry policy. After retries are exhausted, the run enters `failed` with stop reason `validation_error`.
 
-#### Exhausted
+###### Exhausted
 
 Validation exceeded a hard validation or run budget.
 
 The run enters `exhausted`.
 
-#### Cancelled
+###### Cancelled
 
 An authorized cancellation was accepted.
 
 The run enters `cancelled`.
 
-### Recovery
+##### Recovery
 
 `validating` is recoverable because its inputs are immutable.
 
@@ -838,14 +838,14 @@ After runtime restart, the coordinator:
 
 Validation attempts are distinct, but the validation request identity remains stable.
 
-### Recovery events
+##### Recovery events
 
 - `run.recovery_started`;
 - `validation.resumed`;
 - `validation.attempt_restarted`;
 - `run.recovery_completed` or `run.recovery_failed`.
 
-### Exit transitions
+##### Exit transitions
 
 - `completed`;
 - `cancelled`;
@@ -854,18 +854,18 @@ Validation attempts are distinct, but the validation request identity remains st
 
 ---
 
-## 5.7 `completed`
+#### 5.7 `completed`
 
-### Meaning
+##### Meaning
 
 The run finished successfully and has a finalized result.
 
-### Entered from
+##### Entered from
 
 - `producing_output` when validation is not required;
 - `validating` when validation passed.
 
-### Entry preconditions
+##### Entry preconditions
 
 - final answer or declared successful output exists;
 - all required artifacts are committed;
@@ -874,7 +874,7 @@ The run finished successfully and has a finalized result.
 - validation passed when required;
 - exactly one successful stop reason is assigned.
 
-### Required persisted state
+##### Required persisted state
 
 - terminal status `completed`;
 - terminal stop reason;
@@ -885,11 +885,11 @@ The run finished successfully and has a finalized result.
 - validation report when applicable;
 - completion timestamp.
 
-### Required events
+##### Required events
 
 - `run.completed`.
 
-### Post-terminal behavior
+##### Post-terminal behavior
 
 The following may read the run without changing its lifecycle:
 
@@ -904,23 +904,23 @@ Publication is not part of the run lifecycle.
 
 ---
 
-## 5.8 `failed`
+#### 5.8 `failed`
 
-### Meaning
+##### Meaning
 
 The run ended because Kiln could not complete it successfully and the condition was not classified as cancellation or hard resource exhaustion.
 
-### Entered from
+##### Entered from
 
 - any non-terminal state.
 
-### Entry preconditions
+##### Entry preconditions
 
 - an unrecoverable failure exists;
 - configured retries or recovery are unavailable or exhausted;
 - no prior terminal state is committed.
 
-### Failure classes
+##### Failure classes
 
 Examples include:
 
@@ -935,7 +935,7 @@ Examples include:
 - runtime interruption in a non-recoverable state;
 - internal invariant violation.
 
-### Required persisted state
+##### Required persisted state
 
 - terminal status `failed`;
 - one terminal stop reason;
@@ -946,12 +946,12 @@ Examples include:
 - final usage summary where available;
 - failure timestamp.
 
-### Required events
+##### Required events
 
 - component-specific failure event;
 - `run.failed`.
 
-### Cleanup
+##### Cleanup
 
 Before committing failure, the coordinator attempts to:
 
@@ -966,17 +966,17 @@ Cleanup failure does not replace the original terminal reason, but it is recorde
 
 ---
 
-## 5.9 `cancelled`
+#### 5.9 `cancelled`
 
-### Meaning
+##### Meaning
 
 An authorized actor requested cancellation and the coordinator accepted it before another terminal state was committed.
 
-### Entered from
+##### Entered from
 
 - any non-terminal state.
 
-### Cancellation sources
+##### Cancellation sources
 
 - Python SDK caller;
 - hosted workflow;
@@ -984,7 +984,7 @@ An authorized actor requested cancellation and the coordinator accepted it befor
 - deadline controller, when modeled as cancellation rather than exhaustion;
 - parent orchestration workflow.
 
-### Cancellation protocol
+##### Cancellation protocol
 
 1. persist cancellation request;
 2. verify authorization;
@@ -995,7 +995,7 @@ An authorized actor requested cancellation and the coordinator accepted it befor
 7. reconcile state and budgets;
 8. commit terminal transition.
 
-### Required persisted state
+##### Required persisted state
 
 - cancellation requester;
 - cancellation reason;
@@ -1004,14 +1004,14 @@ An authorized actor requested cancellation and the coordinator accepted it befor
 - interrupted operation identities;
 - final usage summary where available.
 
-### Required events
+##### Required events
 
 - `run.cancellation_requested`;
 - `run.cancellation_accepted`;
 - operation cancellation events;
 - `run.cancelled`.
 
-### Cancellation semantics
+##### Cancellation semantics
 
 Cancellation is best effort until the terminal transition is committed.
 
@@ -1019,17 +1019,17 @@ An external operation may complete concurrently. The coordinator still applies t
 
 ---
 
-## 5.10 `exhausted`
+#### 5.10 `exhausted`
 
-### Meaning
+##### Meaning
 
 The run ended because a hard budget, limit, or deadline prevented further progress.
 
-### Entered from
+##### Entered from
 
 - any non-terminal state.
 
-### Exhaustion sources
+##### Exhaustion sources
 
 - input-token budget;
 - output-token budget;
@@ -1043,13 +1043,13 @@ The run ended because a hard budget, limit, or deadline prevented further progre
 - validation budget;
 - artifact-size limit when classified as hard exhaustion.
 
-### Entry preconditions
+##### Entry preconditions
 
 - the applicable budget manager reports a hard limit reached or an operation cannot be safely reserved;
 - no prior terminal state is committed;
 - configured degradation or fallback strategy cannot continue within limits.
 
-### Required persisted state
+##### Required persisted state
 
 - exhausted budget domain;
 - configured limit;
@@ -1059,18 +1059,18 @@ The run ended because a hard budget, limit, or deadline prevented further progre
 - partial result reference where available;
 - final usage summary.
 
-### Required events
+##### Required events
 
 - budget-specific exhaustion event;
 - `run.exhausted`.
 
-### Partial output
+##### Partial output
 
 The run may preserve a partial answer or artifacts, but they are explicitly marked incomplete and do not change the terminal state.
 
 ---
 
-# 6. Internal operation lifecycle
+### 6. Internal operation lifecycle
 
 Top-level run state is supplemented by operation records.
 
@@ -1085,7 +1085,7 @@ An operation represents one bounded action such as:
 - output generation;
 - validation attempt.
 
-## 6.1 Operation states
+#### 6.1 Operation states
 
 ```text
 planned
@@ -1107,7 +1107,7 @@ exhausted
 
 Not every operation requires every intermediate state, but effects and budgeted operations should record authorization and reservation where applicable.
 
-## 6.2 Operation invariants
+#### 6.2 Operation invariants
 
 - An operation belongs to exactly one run.
 - An operation records its causal predecessor.
@@ -1119,11 +1119,11 @@ Not every operation requires every intermediate state, but effects and budgeted 
 
 ---
 
-# 7. Agent-loop lifecycle within `running`
+### 7. Agent-loop lifecycle within `running`
 
 The following sequence repeats while the run remains `running`.
 
-## 7.1 Prepare turn
+#### 7.1 Prepare turn
 
 Preconditions:
 
@@ -1138,7 +1138,7 @@ Actions:
 - snapshot task and context state;
 - emit `turn.started`.
 
-## 7.2 Plan context
+#### 7.2 Plan context
 
 Actions:
 
@@ -1160,7 +1160,7 @@ Required events may include:
 - `context.item_evicted`;
 - `context.plan_applied`.
 
-## 7.3 Invoke model
+#### 7.3 Invoke model
 
 Actions:
 
@@ -1183,7 +1183,7 @@ Required events may include:
 - `model.invocation_completed`;
 - `budget.committed`.
 
-## 7.4 Interpret response
+#### 7.4 Interpret response
 
 The runtime normalizes the response into zero or more proposals:
 
@@ -1195,13 +1195,13 @@ The runtime normalizes the response into zero or more proposals:
 
 The runtime rejects malformed or unsupported proposals without granting authority.
 
-## 7.5 Perform selected follow-up
+#### 7.5 Perform selected follow-up
 
 Each approved proposal follows its own operation lifecycle.
 
 Results become structured candidates or task-state updates. They do not enter model context directly.
 
-## 7.6 End turn
+#### 7.6 End turn
 
 Actions:
 
@@ -1219,30 +1219,30 @@ Possible outcomes:
 
 ---
 
-# 8. Cancellation behavior by state
+### 8. Cancellation behavior by state
 
-| State | Cancellation behavior |
-|---|---|
-| `created` | Cancel immediately after persisting request |
-| `initializing` | Stop adapter setup and clean initialized resources |
-| `preparing_repository` | Cancel worker/index operations; preserve reusable committed index work |
-| `running` | Cancel model/tool/repository operations; do not resume |
-| `producing_output` | Stop artifact assembly; preserve committed artifacts as partial |
-| `validating` | Cancel active validation attempt; preserve immutable request and prior attempt history |
+| State                  | Cancellation behavior                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `created`              | Cancel immediately after persisting request                                            |
+| `initializing`         | Stop adapter setup and clean initialized resources                                     |
+| `preparing_repository` | Cancel worker/index operations; preserve reusable committed index work                 |
+| `running`              | Cancel model/tool/repository operations; do not resume                                 |
+| `producing_output`     | Stop artifact assembly; preserve committed artifacts as partial                        |
+| `validating`           | Cancel active validation attempt; preserve immutable request and prior attempt history |
 
 Cancellation does not delete run history.
 
 ---
 
-# 9. Exhaustion behavior by state
+### 9. Exhaustion behavior by state
 
-## 9.1 Before execution
+#### 9.1 Before execution
 
 Exhaustion during `initializing` or `preparing_repository` produces no successful task output.
 
 Reusable repository index work may remain committed if it is installation-level state rather than run-private state.
 
-## 9.2 During execution
+#### 9.2 During execution
 
 Exhaustion during `running`:
 
@@ -1252,21 +1252,21 @@ Exhaustion during `running`:
 - preserves partial task state and artifacts;
 - emits an incomplete-result reference when useful.
 
-## 9.3 During output production
+#### 9.3 During output production
 
 If output artifacts cannot be completed within remaining limits, the run becomes `exhausted`.
 
-## 9.4 During validation
+#### 9.4 During validation
 
 Validation-budget exhaustion causes the overall run to become `exhausted`, not `failed`.
 
 ---
 
-# 10. Retry semantics
+### 10. Retry semantics
 
 Retries occur within a lifecycle state and do not themselves change top-level state.
 
-## 10.1 Retryable operations
+#### 10.1 Retryable operations
 
 Potentially retryable operations include:
 
@@ -1278,7 +1278,7 @@ Potentially retryable operations include:
 - validation attempts;
 - transient external-service requests.
 
-## 10.2 Non-retryable operations
+#### 10.2 Non-retryable operations
 
 Operations should not be retried automatically when completion is indeterminate and effects may have occurred.
 
@@ -1289,7 +1289,7 @@ Examples:
 - external integration write;
 - publication action.
 
-## 10.3 Retry records
+#### 10.3 Retry records
 
 Each attempt records:
 
@@ -1303,33 +1303,33 @@ Retries consume budget unless an explicit policy says otherwise.
 
 ---
 
-# 11. Recovery after runtime restart
+### 11. Recovery after runtime restart
 
-## 11.1 Restart detection
+#### 11.1 Restart detection
 
 When the Python SDK starts a new Go runtime against the installation database, the runtime scans for non-terminal runs whose owning runtime session is no longer active.
 
 Each such run is classified by persisted lifecycle state.
 
-## 11.2 Recovery matrix
+#### 11.2 Recovery matrix
 
-| Persisted state | Initial behavior |
-|---|---|
-| `created` | Mark `failed` unless creation is still owned by active submitter |
-| `initializing` | Mark `failed` |
-| `preparing_repository` | Resume from persisted preparation checkpoint |
-| `running` | Mark `failed` with `runtime_interrupted` |
-| `producing_output` | Mark `failed` with `runtime_interrupted` |
-| `validating` | Resume or restart validation from immutable request |
-| terminal state | No recovery action |
+| Persisted state        | Initial behavior                                                 |
+| ---------------------- | ---------------------------------------------------------------- |
+| `created`              | Mark `failed` unless creation is still owned by active submitter |
+| `initializing`         | Mark `failed`                                                    |
+| `preparing_repository` | Resume from persisted preparation checkpoint                     |
+| `running`              | Mark `failed` with `runtime_interrupted`                         |
+| `producing_output`     | Mark `failed` with `runtime_interrupted`                         |
+| `validating`           | Resume or restart validation from immutable request              |
+| terminal state         | No recovery action                                               |
 
-## 11.3 Recovery ownership
+#### 11.3 Recovery ownership
 
 Only one runtime process may claim recovery ownership for a run.
 
 Recovery claim must be persisted atomically to prevent concurrent resumption.
 
-## 11.4 Recovery completion
+#### 11.4 Recovery completion
 
 A successful recovery returns the run to the same recoverable lifecycle state and continues its normal transitions.
 
@@ -1337,9 +1337,9 @@ Recovery does not create a new run identity.
 
 ---
 
-# 12. Event requirements
+### 12. Event requirements
 
-## 12.1 Lifecycle events
+#### 12.1 Lifecycle events
 
 Required lifecycle event types:
 
@@ -1362,7 +1362,7 @@ Required lifecycle event types:
 - `run.recovery_completed`;
 - `run.recovery_failed`.
 
-## 12.2 Event facts versus artifacts
+#### 12.2 Event facts versus artifacts
 
 Lifecycle events store first-class facts:
 
@@ -1383,7 +1383,7 @@ Large content remains in artifact blobs:
 - validation details;
 - source snapshots.
 
-## 12.3 Event ordering
+#### 12.3 Event ordering
 
 Events have a monotonic sequence within a run.
 
@@ -1391,13 +1391,13 @@ Component-local timestamps assist diagnostics but do not replace run sequence or
 
 ---
 
-# 13. Terminal stop reasons
+### 13. Terminal stop reasons
 
 Terminal state and stop reason are separate concepts.
 
 The state gives the broad outcome. The stop reason gives the specific cause.
 
-## 13.1 Successful stop reasons
+#### 13.1 Successful stop reasons
 
 Examples:
 
@@ -1405,7 +1405,7 @@ Examples:
 - `answer_produced`;
 - `validated_change_produced`.
 
-## 13.2 Failure stop reasons
+#### 13.2 Failure stop reasons
 
 Examples:
 
@@ -1422,7 +1422,7 @@ Examples:
 - `runtime_interrupted`;
 - `internal_invariant_violation`.
 
-## 13.3 Cancellation stop reasons
+#### 13.3 Cancellation stop reasons
 
 Examples:
 
@@ -1430,7 +1430,7 @@ Examples:
 - `cancelled_by_workflow`;
 - `cancelled_by_operator`.
 
-## 13.4 Exhaustion stop reasons
+#### 13.4 Exhaustion stop reasons
 
 Examples:
 
@@ -1448,11 +1448,11 @@ Stop reasons should be a closed, versioned taxonomy with optional structured det
 
 ---
 
-# 14. Run result finalization
+### 14. Run result finalization
 
 A terminal run produces a `RunResult`.
 
-## 14.1 Common fields
+#### 14.1 Common fields
 
 Every terminal result includes:
 
@@ -1467,7 +1467,7 @@ Every terminal result includes:
 - artifact references;
 - validation reference when applicable.
 
-## 14.2 Completed result
+#### 14.2 Completed result
 
 A completed result additionally includes:
 
@@ -1476,7 +1476,7 @@ A completed result additionally includes:
 - validation report when required;
 - provenance summary.
 
-## 14.3 Failed result
+#### 14.3 Failed result
 
 A failed result additionally includes:
 
@@ -1485,7 +1485,7 @@ A failed result additionally includes:
 - last successful lifecycle state;
 - partial output references where available.
 
-## 14.4 Cancelled result
+#### 14.4 Cancelled result
 
 A cancelled result additionally includes:
 
@@ -1493,7 +1493,7 @@ A cancelled result additionally includes:
 - cancellation reason;
 - interrupted operation identities.
 
-## 14.5 Exhausted result
+#### 14.5 Exhausted result
 
 An exhausted result additionally includes:
 
@@ -1504,7 +1504,7 @@ An exhausted result additionally includes:
 
 ---
 
-# 15. Lifecycle invariants
+### 15. Lifecycle invariants
 
 1. The run coordinator is the only owner of top-level lifecycle state.
 2. A run has exactly one top-level state at a time.
@@ -1539,7 +1539,7 @@ An exhausted result additionally includes:
 
 ---
 
-# 16. Initial vertical-slice lifecycle
+### 16. Initial vertical-slice lifecycle
 
 The first vertical slice uses this reduced path:
 
@@ -1559,7 +1559,7 @@ completed
 
 Validation is architecturally defined but not required in the first read-only milestone.
 
-## 16.1 Vertical-slice success path
+#### 16.1 Vertical-slice success path
 
 1. Python SDK submits a valid read-only run specification.
 2. Runtime creates the run.
@@ -1572,7 +1572,7 @@ Validation is architecturally defined but not required in the first read-only mi
 9. Runtime assembles the answer, usage summary, context ledger, and event references.
 10. Run enters `completed`.
 
-## 16.2 Vertical-slice failure paths
+#### 16.2 Vertical-slice failure paths
 
 The first implementation must support:
 
@@ -1585,7 +1585,7 @@ The first implementation must support:
 - runtime interruption;
 - persistence failure.
 
-## 16.3 Vertical-slice recovery
+#### 16.3 Vertical-slice recovery
 
 The first implementation recovers only interrupted repository preparation.
 
@@ -1593,7 +1593,7 @@ Validation recovery becomes required when validation is implemented.
 
 ---
 
-# 17. Open lifecycle questions
+### 17. Open lifecycle questions
 
 The architecture-level lifecycle is complete enough for implementation planning. The following details remain for later protocol and implementation documents:
 
