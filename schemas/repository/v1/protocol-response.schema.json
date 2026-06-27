@@ -17,17 +17,8 @@
                     "type": "string",
                     "pattern": "^repository\\."
                 },
-                "repository_id": {
-                    "type": "string",
-                    "minLength": 1
-                },
-                "repository_version_id": {
-                    "type": "string",
-                    "minLength": 1
-                },
-                "workspace_version_id": {
-                    "type": "string",
-                    "minLength": 1
+                "repository": {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
                 },
                 "error": {
                     "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/error.schema.json"

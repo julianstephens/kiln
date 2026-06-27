@@ -8,9 +8,7 @@
     "required": [
         "alternative_representations",
         "content_id",
-        "repository_id",
-        "repository_version_id",
-        "workspace_version_id",
+        "repository",
         "semantic_kind",
         "representation_kind",
         "source",
@@ -25,17 +23,8 @@
             "type": "string",
             "minLength": 1
         },
-        "repository_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "repository_version_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "workspace_version_id": {
-            "type": "string",
-            "minLength": 1
+        "repository": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
         },
         "semantic_kind": {
             "type": "string",

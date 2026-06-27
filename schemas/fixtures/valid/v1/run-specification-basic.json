@@ -1,8 +1,10 @@
 {
-    "repository_id": "repo_abc123",
-    "workspace_id": "ws_def456",
-    "repository_version_id": "rev_111",
-    "workspace_version_id": "wsv_222",
+    "repository": {
+        "id": "repo_abc123",
+        "version_id": "rev_111",
+        "workspace_id": "ws_def456",
+        "workspace_version_id": "wsv_222"
+    },
     "task_specification": {
         "description": "Implement feature X",
         "success_criteria": [

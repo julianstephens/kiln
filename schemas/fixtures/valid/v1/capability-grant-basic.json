@@ -1,0 +1,14 @@
+{
+    "grant_id": "grant_123",
+    "capability_type": "tool",
+    "run_id": "run_abc",
+    "capability_scope": {},
+    "allowed_operations": [
+        "invoke"
+    ],
+    "creation_source": "system",
+    "approval_metadata": {},
+    "starts_at": "2026-06-26T00:00:00Z",
+    "expires_at": "2026-12-31T00:00:00Z",
+    "revoked": false
+}

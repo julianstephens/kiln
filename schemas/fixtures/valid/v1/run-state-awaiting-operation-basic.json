@@ -1,0 +1,40 @@
+{
+    "lifecycle_state": "awaiting_operation",
+    "current_turn": 4,
+    "current_task_state": {
+        "current_objective": "Add fixtures for new schemas",
+        "current_plan": "Create valid and invalid fixtures for each entrypoint",
+        "completed_steps": [
+            "Inspected schema requirements"
+        ],
+        "unresolved_questions": [],
+        "hypotheses": [],
+        "completion_evidence": [
+            "Schema validation passes"
+        ],
+        "state_revision": "rev_4"
+    },
+    "active_repository": {
+        "id": "repo_abc123",
+        "version_id": "rev_111",
+        "workspace_version_id": "wsv_222"
+    },
+    "current_context_ledger_summary": {
+        "current_token_estimate": 2048,
+        "model_context_limit": 8192,
+        "context_state_revision": 3
+    },
+    "budget_summary": {
+        "state_revision": 1,
+        "latest_transaction_sequence": 7,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "active_capability_grant_references": [
+        "grant_123"
+    ],
+    "pending_operation_reference": {
+        "kind": "tool_call",
+        "id": "op_123"
+    }
+}

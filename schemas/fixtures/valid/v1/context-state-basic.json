@@ -1,0 +1,11 @@
+{
+    "current_token_estimate": 2048,
+    "model_context_limit": 8192,
+    "context_state_revision": 3,
+    "active_item_ids": [
+        {
+            "item_id": "item_1",
+            "order": 0
+        }
+    ]
+}

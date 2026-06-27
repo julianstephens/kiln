@@ -6,10 +6,7 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
-        "repository_id",
-        "workspace_id",
-        "repository_version_id",
-        "workspace_version_id",
+        "repository",
         "task_specification",
         "model_configuration",
         "budget_limits",
@@ -18,21 +15,8 @@
         "caller_metadata"
     ],
     "properties": {
-        "repository_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "workspace_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "repository_version_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "workspace_version_id": {
-            "type": "string",
-            "minLength": 1
+        "repository": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
         },
         "task_specification": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/task-specification.schema.json"

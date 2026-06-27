@@ -1,0 +1,223 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/state.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run state",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "lifecycle_state",
+        "current_turn",
+        "current_task_state",
+        "active_repository",
+        "current_context_ledger_summary",
+        "budget_summary",
+        "active_capability_grant_references"
+    ],
+    "properties": {
+        "lifecycle_state": {
+            "type": "string",
+            "enum": [
+                "created",
+                "initializing",
+                "preparing_repository",
+                "running",
+                "awaiting_operation",
+                "producing_output",
+                "validating",
+                "completed",
+                "failed",
+                "canceled",
+                "exhausted"
+            ]
+        },
+        "current_turn": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "current_task_state": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/task-state.schema.json"
+        },
+        "active_repository": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
+        },
+        "current_context_ledger_summary": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/context/v1/state.schema.json"
+        },
+        "budget_summary": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "active_capability_grant_references": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true,
+            "minItems": 1
+        },
+        "pending_operation_reference": {
+            "description": "Reference to the asynchronous operation the run is currently waiting on.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "kind",
+                "id"
+            ],
+            "properties": {
+                "kind": {
+                    "description": "The kind of operation being awaited.",
+                    "type": "string",
+                    "enum": [
+                        "tool_call",
+                        "approval",
+                        "external_job",
+                        "timer",
+                        "callback"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the pending operation.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "correlation_id": {
+                    "description": "Optional correlation identifier used to match callbacks or provider responses.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "expires_at": {
+                    "description": "Optional deadline after which the operation should be treated as expired.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "last_committed_event_sequence": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "recovery_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "attempt": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "last_recovery_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "last_error_id": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "terminal_result_reference": {
+            "description": "Reference to the persisted final result associated with a terminal run state.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "kind",
+                "id"
+            ],
+            "properties": {
+                "kind": {
+                    "description": "The kind of terminal result being referenced.",
+                    "type": "string",
+                    "enum": [
+                        "output",
+                        "error",
+                        "canceled",
+                        "exhausted"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the persisted terminal result.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "created_at": {
+                    "description": "When the terminal result was recorded.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "lifecycle_state": {
+                        "enum": [
+                            "initializing",
+                            "preparing_repository",
+                            "running",
+                            "producing_output",
+                            "validating"
+                        ]
+                    }
+                },
+                "required": [
+                    "lifecycle_state"
+                ]
+            },
+            "then": {
+                "not": {
+                    "required": [
+                        "terminal_result_reference"
+                    ]
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "lifecycle_state": {
+                        "enum": [
+                            "completed",
+                            "failed",
+                            "cancelled",
+                            "exhausted"
+                        ]
+                    }
+                },
+                "required": [
+                    "lifecycle_state"
+                ]
+            },
+            "then": {
+                "required": [
+                    "terminal_result_reference"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "lifecycle_state": {
+                        "const": "awaiting_operation"
+                    }
+                },
+                "required": [
+                    "lifecycle_state"
+                ]
+            },
+            "then": {
+                "required": [
+                    "pending_operation_reference"
+                ]
+            },
+            "else": {
+                "not": {
+                    "required": [
+                        "pending_operation_reference"
+                    ]
+                }
+            }
+        }
+    ]
+}
