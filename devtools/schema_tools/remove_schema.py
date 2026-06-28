@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any
 
 NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+CONTRACT_PATH_PATTERN = re.compile(
+    r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
+)
 
 
 class SchemaRemovalError(Exception):
@@ -45,8 +48,27 @@ def validate_name(value: str, *, field: str) -> None:
         )
 
 
+def validate_contract_path(value: str) -> None:
+    if not CONTRACT_PATH_PATTERN.fullmatch(value):
+        raise SchemaRemovalError(
+            message=(
+                "contract must use lowercase kebab-case path segments "
+                f"separated by '/': {value!r}"
+            )
+        )
+
+
 def schema_key(domain: str, contract: str) -> str:
     return f"{domain}/{contract}"
+
+
+def contract_path(contract: str) -> Path:
+    parts = contract.split("/")
+    return Path(*parts[:-1]) / f"{parts[-1]}.schema.json"
+
+
+def fixture_contract_name(contract: str) -> str:
+    return contract.replace("/", "-")
 
 
 def schema_path(
@@ -56,11 +78,11 @@ def schema_path(
     contract: str,
     major: int,
 ) -> Path:
-    return schema_root / domain / f"v{major}" / f"{contract}.schema.json"
+    return schema_root / domain / f"v{major}" / contract_path(contract)
 
 
 def fixture_prefix(*, domain: str, contract: str) -> str:
-    return f"{domain}-{contract}-"
+    return f"{domain}-{fixture_contract_name(contract)}-"
 
 
 def remove_manifest_entry(
@@ -134,18 +156,16 @@ def remove_empty_schema_dirs(
     schema_root: Path,
 ) -> list[Path]:
     removed: list[Path] = []
-    candidate_dirs = (schema_path_to_remove.parent, schema_path_to_remove.parent.parent)
+    directory = schema_path_to_remove.parent
 
-    for directory in candidate_dirs:
-        if directory == schema_root or schema_root not in directory.parents:
-            continue
-
+    while directory != schema_root and schema_root in directory.parents:
         try:
             directory.rmdir()
         except OSError:
-            continue
+            break
 
         removed.append(directory)
+        directory = directory.parent
 
     return removed
 
@@ -162,7 +182,7 @@ def remove_schema(args: argparse.Namespace) -> None:
         )
 
     validate_name(args.domain, field="domain")
-    validate_name(args.contract, field="contract")
+    validate_contract_path(args.contract)
 
     key = schema_key(args.domain, args.contract)
     target = schema_path(
@@ -214,7 +234,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "contract",
-        help="Contract name in lowercase kebab-case.",
+        help=(
+            "Contract name or nested contract path using lowercase "
+            "kebab-case path segments, such as payload/run-created."
+        ),
     )
     parser.add_argument(
         "--schema-root",
