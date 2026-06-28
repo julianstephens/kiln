@@ -3,7 +3,9 @@ name = "kiln-sdk"
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pydantic>=2.13.4",
+]
 
 [project.urls]
 Homepage = "https://github.com/julianstephens/kiln"

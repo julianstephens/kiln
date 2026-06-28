@@ -3,9 +3,7 @@ name = "kiln"
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "pydantic>=2.13.4",
-]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/julianstephens/kiln"
@@ -27,12 +25,9 @@ pythonpath = ["python"]
 [dependency-groups]
 dev = [
     "build>=1.5.0",
-    "datamodel-code-generator[http]>=0.66.0",
-    "jsonschema[format]>=4.26.0",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "pytest-xdist>=3.8.0",
-    "referencing>=0.37.0",
     "kiln-devtools",
 ]
 

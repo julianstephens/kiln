@@ -35,3 +35,8 @@ jobs:
 
       - name: Validate code
         run: make check
+
+      - name: Check generated schema synchronization
+        run: |
+          uv run generatemodels
+          git diff --exit-code python/kiln/schemas

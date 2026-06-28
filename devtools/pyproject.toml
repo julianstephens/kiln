@@ -2,7 +2,11 @@
 name = "kiln-devtools"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "datamodel-code-generator[http]>=0.66.0",
+    "jsonschema[format]>=4.26.0",
+    "referencing>=0.37.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/julianstephens/kiln"

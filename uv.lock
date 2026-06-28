@@ -394,6 +394,48 @@ wheels = [
 name = "kiln"
 version = "0.1.0"
 source = { editable = "." }
+
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "kiln-devtools" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-xdist" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=1.5.0" },
+    { name = "kiln-devtools", editable = "devtools" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "pytest-xdist", specifier = ">=3.8.0" },
+]
+
+[[package]]
+name = "kiln-devtools"
+version = "0.1.0"
+source = { editable = "devtools" }
+dependencies = [
+    { name = "datamodel-code-generator", extra = ["http"] },
+    { name = "jsonschema", extra = ["format"] },
+    { name = "referencing" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "datamodel-code-generator", extras = ["http"], specifier = ">=0.66.0" },
+    { name = "jsonschema", extras = ["format"], specifier = ">=4.26.0" },
+    { name = "referencing", specifier = ">=0.37.0" },
+]
+
+[[package]]
+name = "kiln-sdk"
+version = "0.1.0"
+source = { virtual = "python/kiln" }
 dependencies = [
     { name = "pydantic" },
 ]
@@ -401,49 +443,13 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "build" },
-    { name = "datamodel-code-generator", extra = ["http"] },
-    { name = "jsonschema", extra = ["format"] },
-    { name = "kiln-devtools" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
-    { name = "referencing" },
 ]
 
 [package.metadata]
 requires-dist = [{ name = "pydantic", specifier = ">=2.13.4" }]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "build", specifier = ">=1.5.0" },
-    { name = "datamodel-code-generator", extras = ["http"], specifier = ">=0.66.0" },
-    { name = "jsonschema", extras = ["format"], specifier = ">=4.26.0" },
-    { name = "kiln-devtools", editable = "devtools" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "pytest-xdist", specifier = ">=3.8.0" },
-    { name = "referencing", specifier = ">=0.37.0" },
-]
-
-[[package]]
-name = "kiln-devtools"
-version = "0.1.0"
-source = { editable = "devtools" }
-
-[[package]]
-name = "kiln-sdk"
-version = "0.1.0"
-source = { virtual = "python/kiln" }
-
-[package.dev-dependencies]
-dev = [
-    { name = "build" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-xdist" },
-]
-
-[package.metadata]
 
 [package.metadata.requires-dev]
 dev = [
