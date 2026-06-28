@@ -1,0 +1,21 @@
+{
+    "model_invocation_id": "model_invocation_001",
+    "response_artifact_reference": {
+        "artifact_id": "art_model_response_001",
+        "scope": "tenant",
+        "artifact_kind": "answer",
+        "content_type": "application/json",
+        "content_hash": "sha256:resp001",
+        "uncompressed_size": 4096,
+        "stored_size": 1800,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "finish_reason": "stop",
+    "usage": {
+        "input_tokens": 512,
+        "output_tokens": 128
+    },
+    "completed_at": "2026-06-28T00:00:00Z"
+}

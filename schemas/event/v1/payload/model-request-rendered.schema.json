@@ -1,0 +1,69 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-request-rendered.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload model request rendered",
+    "description": "Payload for model.request_rendered events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "model_invocation_id",
+        "render_id",
+        "model_configuration",
+        "rendered_token_estimate",
+        "rendered_at"
+    ],
+    "properties": {
+        "model_invocation_id": {
+            "description": "Operation-local identity for the model invocation this rendered request belongs to.",
+            "type": "string",
+            "minLength": 1
+        },
+        "render_id": {
+            "description": "Context render identity used to produce the model request.",
+            "type": "string",
+            "minLength": 1
+        },
+        "model_configuration": {
+            "description": "Model configuration selected for the invocation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/model/v1/configuration.schema.json"
+        },
+        "request_kind": {
+            "description": "Logical kind of model request being rendered.",
+            "type": "string",
+            "enum": [
+                "initial_response",
+                "turn_response",
+                "tool_selection",
+                "tool_result_followup",
+                "output_production",
+                "validation",
+                "recovery"
+            ]
+        },
+        "rendered_messages_count": {
+            "description": "Number of messages rendered into the model request.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "rendered_tool_count": {
+            "description": "Number of tool definitions rendered into the model request.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "rendered_token_estimate": {
+            "description": "Estimated number of input tokens in the rendered model request.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "request_artifact_reference": {
+            "description": "Optional artifact reference for the rendered model request.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "rendered_at": {
+            "description": "When the model request was rendered.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

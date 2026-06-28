@@ -1,0 +1,58 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-invocation-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload model invocation started",
+    "description": "Payload for model.invocation_started events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "model_invocation_id",
+        "model_configuration",
+        "request_artifact_reference",
+        "input_token_estimate",
+        "started_at"
+    ],
+    "properties": {
+        "model_invocation_id": {
+            "description": "Operation-local identity for this model invocation.",
+            "type": "string",
+            "minLength": 1
+        },
+        "model_configuration": {
+            "description": "Model configuration used for the invocation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/model/v1/configuration.schema.json"
+        },
+        "request_artifact_reference": {
+            "description": "Artifact reference for the rendered model request sent to the model adapter or provider.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "request_kind": {
+            "description": "Logical kind of model request being invoked.",
+            "type": "string",
+            "enum": [
+                "initial_response",
+                "turn_response",
+                "tool_selection",
+                "tool_result_followup",
+                "output_production",
+                "validation",
+                "recovery"
+            ]
+        },
+        "input_token_estimate": {
+            "description": "Estimated input tokens sent to the model.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "streaming_enabled": {
+            "description": "Whether this invocation requested streaming output.",
+            "type": "boolean"
+        },
+        "started_at": {
+            "description": "When the model invocation started.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

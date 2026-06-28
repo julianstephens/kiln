@@ -1,0 +1,86 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-egress-evaluated.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload model egress evaluated",
+    "description": "Payload for model.egress_evaluated events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "model_invocation_id",
+        "egress_decision",
+        "evaluated_at"
+    ],
+    "properties": {
+        "model_invocation_id": {
+            "description": "Model invocation whose rendered request was evaluated for egress.",
+            "type": "string",
+            "minLength": 1
+        },
+        "request_artifact_reference": {
+            "description": "Optional artifact reference for the rendered request that was evaluated.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "egress_decision": {
+            "description": "Decision produced by egress policy evaluation.",
+            "type": "string",
+            "enum": [
+                "allowed",
+                "denied",
+                "redacted",
+                "requires_approval"
+            ]
+        },
+        "policy_decision_reference": {
+            "description": "Optional capability decision produced by the egress policy check.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/decision.schema.json"
+        },
+        "redaction_summary": {
+            "description": "Summary of request changes made before model egress.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "redaction_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "redacted_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "uniqueItems": true
+                },
+                "reason": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "evaluated_at": {
+            "description": "When egress was evaluated.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "egress_decision": {
+                        "const": "redacted"
+                    }
+                },
+                "required": [
+                    "egress_decision"
+                ]
+            },
+            "then": {
+                "required": [
+                    "redaction_summary"
+                ]
+            }
+        }
+    ]
+}

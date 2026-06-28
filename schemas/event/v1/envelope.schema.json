@@ -63,7 +63,13 @@
                 "context.item_available",
                 "context.item_admitted",
                 "context.item_evicted",
-                "context.rendered"
+                "context.rendered",
+                "model.request_rendered",
+                "model.egress_evaluated",
+                "model.invocation_started",
+                "model.invocation_completed",
+                "model.invocation_failed",
+                "model.response_interpreted"
             ]
         },
         "occurred_at": {
@@ -603,6 +609,120 @@
                 "properties": {
                     "payload": {
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/context-rendered.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "model.request_rendered"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-request-rendered.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "model.egress_evaluated"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-egress-evaluated.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "model.invocation_started"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-invocation-started.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "model.invocation_completed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-invocation-completed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "model.invocation_failed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-invocation-failed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "model.response_interpreted"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-response-interpreted.schema.json"
                     }
                 }
             }

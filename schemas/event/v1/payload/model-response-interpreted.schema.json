@@ -1,0 +1,118 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-response-interpreted.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload model response interpreted",
+    "description": "Payload for model.response_interpreted events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "model_invocation_id",
+        "response_artifact_reference",
+        "interpretation_kind",
+        "interpreted_at"
+    ],
+    "properties": {
+        "model_invocation_id": {
+            "description": "Model invocation whose response was interpreted.",
+            "type": "string",
+            "minLength": 1
+        },
+        "response_artifact_reference": {
+            "description": "Artifact reference for the raw model response.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "interpretation_kind": {
+            "description": "Primary interpretation produced from the model response.",
+            "type": "string",
+            "enum": [
+                "assistant_message",
+                "tool_call_request",
+                "final_answer_candidate",
+                "patch_candidate",
+                "report_candidate",
+                "validation_judgment",
+                "unstructured"
+            ]
+        },
+        "interpreted_output_reference": {
+            "description": "Optional artifact reference for the normalized interpreted output.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "tool_call_requests": {
+            "description": "Tool calls requested by the interpreted response.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "tool_call_id",
+                    "tool_name"
+                ],
+                "properties": {
+                    "tool_call_id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "tool_name": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "arguments_artifact_reference": {
+                        "description": "Optional artifact reference for tool-call arguments.",
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+                    }
+                }
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "interpretation_warnings": {
+            "description": "Non-fatal warnings produced while interpreting the model response.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "code",
+                    "message"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "message": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            },
+            "minItems": 1
+        },
+        "interpreted_at": {
+            "description": "When the model response was interpreted.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "interpretation_kind": {
+                        "const": "tool_call_request"
+                    }
+                },
+                "required": [
+                    "interpretation_kind"
+                ]
+            },
+            "then": {
+                "required": [
+                    "tool_call_requests"
+                ]
+            }
+        }
+    ]
+}

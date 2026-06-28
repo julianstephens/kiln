@@ -1,0 +1,17 @@
+{
+    "model_invocation_id": "model_invocation_003",
+    "response_artifact_reference": {
+        "artifact_id": "art_model_response_003",
+        "scope": "tenant",
+        "artifact_kind": "answer",
+        "content_type": "application/json",
+        "content_hash": "sha256:resp003",
+        "uncompressed_size": 3072,
+        "stored_size": 1400,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "interpretation_kind": "assistant_message",
+    "interpreted_at": "2026-06-28T00:00:00Z"
+}
