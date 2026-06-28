@@ -10,6 +10,7 @@ Issues = "https://github.com/julianstephens/kiln/issues"
 
 [project.scripts]
 newschema = "schema_tools.new_schema:main"
+removeschema = "schema_tools.remove_schema:main"
 validateschemas = "schema_tools.validate:main"
 
 [tool.uv]
