@@ -22,7 +22,6 @@
                 "initializing",
                 "preparing_repository",
                 "running",
-                "awaiting_operation",
                 "producing_output",
                 "validating",
                 "completed",
@@ -164,29 +163,17 @@
             "then": {
                 "required": [
                     "terminal_result_reference"
-                ]
-            }
-        },
-        {
-            "if": {
-                "properties": {
-                    "lifecycle_state": {
-                        "const": "awaiting_operation"
-                    }
-                },
-                "required": [
-                    "lifecycle_state"
-                ]
-            },
-            "then": {
-                "required": [
-                    "pending_operation_reference"
-                ]
+                ],
+                "not": {
+                    "required": [
+                        "pending_operation_reference"
+                    ]
+                }
             },
             "else": {
                 "not": {
                     "required": [
-                        "pending_operation_reference"
+                        "terminal_result_reference"
                     ]
                 }
             }

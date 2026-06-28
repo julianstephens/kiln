@@ -1,5 +1,5 @@
 {
-    "lifecycle_state": "awaiting_operation",
+    "lifecycle_state": "running",
     "current_turn": 4,
     "current_task_state": {
         "current_objective": "Add fixtures for new schemas",
@@ -33,9 +33,5 @@
     },
     "active_capability_grant_references": [
         "grant_123"
-    ],
-    "pending_operation_reference": {
-        "kind": "tool_call",
-        "id": "op_123"
-    }
+    ]
 }

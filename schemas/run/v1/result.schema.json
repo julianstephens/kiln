@@ -9,14 +9,7 @@
         "run_id",
         "terminal_status",
         "stop_reason",
-        "answer",
-        "answer_artifact",
-        "patch_artifact",
-        "changed_file_manifest_reference",
-        "validation_report_reference",
         "usage",
-        "event_stream_range",
-        "event_stream_reference",
         "context_ledger_reference"
     ],
     "properties": {
@@ -71,10 +64,25 @@
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/validation-report-reference.schema.json"
         },
         "usage": {
-            "type": "object"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
         },
         "event_stream_range": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "first_sequence",
+                "last_sequence"
+            ],
+            "properties": {
+                "first_sequence": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "last_sequence": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
         },
         "event_stream_reference": {
             "type": "string",
@@ -93,6 +101,98 @@
         }
     },
     "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "stop_reason": {
+                        "properties": {
+                            "category": {
+                                "const": "completed"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "failed"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "stop_reason": {
+                        "properties": {
+                            "category": {
+                                "const": "failed"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "canceled"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "stop_reason": {
+                        "properties": {
+                            "category": {
+                                "const": "canceled"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "exhausted"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "stop_reason": {
+                        "properties": {
+                            "category": {
+                                "const": "exhausted"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         {
             "anyOf": [
                 {

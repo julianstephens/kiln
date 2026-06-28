@@ -18,8 +18,7 @@
                 "completed",
                 "failed",
                 "canceled",
-                "exhausted",
-                "interrupted"
+                "exhausted"
             ]
         },
         "code": {
@@ -44,9 +43,11 @@
                 "external_operation_failed",
                 "output_production_failed",
                 "internal_error",
+                "runtime_interrupted",
                 "worker_interrupted",
                 "shutdown_interrupted",
-                "lease_lost"
+                "lease_lost",
+                "validation_error"
             ]
         },
         "message": {
