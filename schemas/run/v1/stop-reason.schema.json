@@ -161,29 +161,6 @@
                     }
                 }
             }
-        },
-        {
-            "if": {
-                "properties": {
-                    "category": {
-                        "const": "interrupted"
-                    }
-                },
-                "required": [
-                    "category"
-                ]
-            },
-            "then": {
-                "properties": {
-                    "code": {
-                        "enum": [
-                            "worker_interrupted",
-                            "shutdown_interrupted",
-                            "lease_lost"
-                        ]
-                    }
-                }
-            }
         }
     ]
 }
