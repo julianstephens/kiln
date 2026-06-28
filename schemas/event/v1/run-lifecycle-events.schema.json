@@ -12,7 +12,6 @@
         "run.output_production_started",
         "run.output_production_completed",
         "run.completed",
-        "run.failed",
-        "run.canceled"
+        "run.failed"
     ]
 }

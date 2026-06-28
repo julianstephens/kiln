@@ -1,0 +1,82 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-session-closed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository session closed",
+    "description": "Payload for repository.session_closed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "close_reason",
+        "closed_at"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "description": "Repository session that was closed.",
+            "type": "string",
+            "minLength": 1
+        },
+        "close_reason": {
+            "description": "Reason the repository session was closed.",
+            "type": "string",
+            "enum": [
+                "completed",
+                "canceled",
+                "failed",
+                "expired",
+                "superseded",
+                "runtime_shutdown",
+                "unknown"
+            ]
+        },
+        "final_repository_version": {
+            "description": "Final repository version observed before closing the session.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/version.schema.json"
+        },
+        "final_preparation_status": {
+            "description": "Final preparation status observed before closing the session.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/preparation-status.schema.json"
+        },
+        "usage": {
+            "description": "Repository-specific telemetry accumulated for the session, when available.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/usage.schema.json"
+        },
+        "budget_usage": {
+            "description": "Budget usage committed for the repository session, when available.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "error": {
+            "description": "Repository error associated with the closed session, when the session closed because of failure.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/error.schema.json"
+        },
+        "diagnostic_log_reference": {
+            "description": "Optional diagnostic log artifact for the repository session.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/diagnostic-log-reference.schema.json"
+        },
+        "closed_at": {
+            "description": "When the repository session was closed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "close_reason": {
+                        "const": "failed"
+                    }
+                },
+                "required": [
+                    "close_reason"
+                ]
+            },
+            "then": {
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

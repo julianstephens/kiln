@@ -15,11 +15,13 @@
         "message": "Tool execution returned non-zero exit code",
         "occurred_at": "2026-06-28T00:00:00Z"
     },
-    "usage": {
-        "state_revision": 2,
-        "latest_transaction_sequence": 11,
-        "estimate_vs_actuals": {},
-        "mode": "custom"
+    "budget": {
+        "usage": {
+            "usage_scope": "run",
+            "run_id": "run_456",
+            "model_input_tokens": 128,
+            "recorded_at": "2026-06-28T00:00:00Z"
+        }
     },
     "event_stream_range": {
         "first_sequence": 1,

@@ -986,17 +986,8 @@
                         }
                     },
                     {
-                        "oneOf": [
-                            {
-                                "required": [
-                                    "run_id"
-                                ]
-                            },
-                            {
-                                "required": [
-                                    "artifact.run_id"
-                                ]
-                            }
+                        "required": [
+                            "run_id"
                         ]
                     }
                 ]

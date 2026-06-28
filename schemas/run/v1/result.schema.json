@@ -10,7 +10,7 @@
         "terminal_status",
         "stop_reason",
         "output_mode",
-        "usage",
+        "budget",
         "context_ledger_reference"
     ],
     "properties": {
@@ -73,8 +73,20 @@
         "validation_report_artifact": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/validation-report-reference.schema.json"
         },
-        "usage": {
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        "budget": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "usage"
+            ],
+            "properties": {
+                "usage": {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+                },
+                "state": {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+                }
+            }
         },
         "event_stream_range": {
             "type": "object",

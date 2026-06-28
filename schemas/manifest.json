@@ -58,6 +58,7 @@
         "event/payload/repository-query-completed",
         "event/payload/repository-query-failed",
         "event/payload/repository-query-started",
+        "event/payload/repository-session-closed",
         "event/payload/repository-session-opened",
         "event/payload/repository-version-pinned",
         "event/payload/repository-worker-started",

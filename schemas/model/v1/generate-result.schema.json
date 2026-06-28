@@ -36,17 +36,21 @@
                 ],
                 "properties": {
                     "tool_call_id": {
+                        "description": "Stable identity for this requested tool call.",
                         "type": "string",
                         "minLength": 1
                     },
                     "tool_name": {
+                        "description": "Name of the requested tool.",
                         "type": "string",
                         "minLength": 1
                     },
                     "arguments": {
+                        "description": "Inline tool-call arguments for small argument payloads.",
                         "type": "object"
                     },
                     "arguments_artifact_reference": {
+                        "description": "Artifact reference for large or sensitive tool-call arguments.",
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
                     }
                 },
@@ -97,20 +101,25 @@
                 ],
                 "properties": {
                     "citation_id": {
+                        "description": "Stable identity for this citation.",
                         "type": "string",
                         "minLength": 1
                     },
                     "source_reference": {
+                        "description": "Artifact reference for the cited source.",
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
                     },
                     "quoted_text": {
+                        "description": "Quoted text supporting the generated content, when retained.",
                         "type": "string",
                         "minLength": 1
                     },
                     "source_range": {
+                        "description": "Source range supporting the generated content, when applicable.",
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/source-range.schema.json"
                     },
                     "confidence": {
+                        "description": "Confidence that this citation supports the associated generated content.",
                         "type": "number",
                         "minimum": 0,
                         "maximum": 1
@@ -149,7 +158,7 @@
             }
         }
     },
-    "oneOf": [
+    "anyOf": [
         {
             "required": [
                 "answer"
@@ -169,6 +178,25 @@
             "required": [
                 "tool_call_requests"
             ]
+        }
+    ],
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "finish_reason": {
+                        "const": "tool_call"
+                    }
+                },
+                "required": [
+                    "finish_reason"
+                ]
+            },
+            "then": {
+                "required": [
+                    "tool_call_requests"
+                ]
+            }
         }
     ]
 }
