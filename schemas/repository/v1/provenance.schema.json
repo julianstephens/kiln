@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/provenance.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository provenance",
+    "description": "Provenance metadata describing how repository content or representations were extracted or generated.",
     "type": "object",
     "additionalProperties": false,
     "required": [
