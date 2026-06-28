@@ -1,0 +1,32 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/capability/v1/decision.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln capability decision",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "decision",
+        "reason",
+        "grant"
+    ],
+    "properties": {
+        "decision": {
+            "description": "The decision that was made for this capability request",
+            "type": "string",
+            "enum": [
+                "granted",
+                "denied"
+            ]
+        },
+        "grant": {
+            "description": "The grant that was issued for this capability request",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/grant.schema.json"
+        },
+        "reason": {
+            "description": "The reason that this capability request was granted or denied",
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

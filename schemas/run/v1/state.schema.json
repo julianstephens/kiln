@@ -15,19 +15,7 @@
     ],
     "properties": {
         "lifecycle_state": {
-            "type": "string",
-            "enum": [
-                "created",
-                "initializing",
-                "preparing_repository",
-                "running",
-                "producing_output",
-                "validating",
-                "completed",
-                "failed",
-                "canceled",
-                "exhausted"
-            ]
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/lifecycle-state.schema.json"
         },
         "current_turn": {
             "type": "integer",

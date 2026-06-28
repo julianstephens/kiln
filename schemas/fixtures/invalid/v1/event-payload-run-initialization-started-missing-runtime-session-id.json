@@ -1,0 +1,6 @@
+{
+    "init_operation_id": "init_001",
+    "requested_adapters": [
+        "adapter_a"
+    ]
+}

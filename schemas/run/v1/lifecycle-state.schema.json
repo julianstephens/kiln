@@ -1,0 +1,19 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/lifecycle-state.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run lifecycle state",
+    "type": "string",
+    "enum": [
+        "created",
+        "initializing",
+        "preparing_repository",
+        "running",
+        "producing_output",
+        "validating",
+        "completed",
+        "failed",
+        "canceled",
+        "exhausted"
+    ]
+}

@@ -169,7 +169,121 @@
             "then": {
                 "properties": {
                     "payload": {
-                        "$ref": "<TODO: Add reference to run.created payload schema>"
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-created.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.initialization_started"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-initialization-started.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.initialization_completed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-initialization-completed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.execution_started"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-execution-started.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.output_production_started"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-output-production-started.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.output_production_completed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-output-production-completed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.completed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-completed.schema.json"
                     }
                 }
             }

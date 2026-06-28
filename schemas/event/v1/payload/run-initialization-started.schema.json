@@ -1,0 +1,34 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-initialization-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run initialization started",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "init_operation_id",
+        "runtime_session_id"
+    ],
+    "properties": {
+        "init_operation_id": {
+            "type": "string",
+            "description": "The operation that is being performed to initialize this run",
+            "minLength": 1
+        },
+        "runtime_session_id": {
+            "type": "string",
+            "description": "The runtime session that is being used to initialize this run",
+            "minLength": 1
+        },
+        "requested_adapters": {
+            "description": "The adapters that were requested for this run",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    }
+}

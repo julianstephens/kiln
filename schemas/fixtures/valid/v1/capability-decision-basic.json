@@ -1,0 +1,22 @@
+{
+    "decision": "granted",
+    "reason": "Capability is permitted for this run",
+    "grant": {
+        "grant_id": "grant_decision_001",
+        "capability_type": "tool",
+        "run_id": "run_decision_001",
+        "capability_scope": {
+            "installation_id": "inst_001"
+        },
+        "allowed_operations": [
+            "invoke"
+        ],
+        "creation_source": "system",
+        "approval_metadata": {
+            "approval_required": false
+        },
+        "starts_at": "2026-06-28T00:00:00Z",
+        "expires_at": "2026-12-31T00:00:00Z",
+        "revoked": false
+    }
+}

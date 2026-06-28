@@ -1,0 +1,86 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/version.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository version",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "version_id",
+        "repository_id",
+        "content_digest",
+        "index_compatibility_metadata",
+        "creation_reason",
+        "preparation_status",
+        "created_at"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "source_revision"
+            ]
+        },
+        {
+            "required": [
+                "snapshot_id"
+            ]
+        }
+    ],
+    "properties": {
+        "version_id": {
+            "type": "string",
+            "description": "The unique identifier for this version of the repository",
+            "minLength": 1
+        },
+        "repository_id": {
+            "type": "string",
+            "description": "The unique identifier for the repository that this version belongs to",
+            "minLength": 1
+        },
+        "source_revision": {
+            "type": "string",
+            "description": "The source revision that this version of the repository was created from",
+            "minLength": 1
+        },
+        "snapshot_id": {
+            "type": "string",
+            "description": "The unique identifier for the snapshot that this version of the repository was created from",
+            "minLength": 1
+        },
+        "parent_repository_version_id": {
+            "type": "string",
+            "description": "The unique identifier for the parent version of the repository that this version was created from",
+            "minLength": 1
+        },
+        "content_digest": {
+            "type": "string",
+            "description": "The digest of the content of this version of the repository",
+            "minLength": 1
+        },
+        "index_compatibility_metadata": {
+            "type": "object",
+            "description": "The metadata that describes the compatibility of this version of the repository with the index",
+            "additionalProperties": true
+        },
+        "creation_reason": {
+            "type": "string",
+            "description": "The reason that this version of the repository was created",
+            "minLength": 1
+        },
+        "preparation_status": {
+            "type": "string",
+            "description": "The status of the preparation of this version of the repository",
+            "enum": [
+                "pending",
+                "preparing",
+                "prepared",
+                "failed"
+            ]
+        },
+        "created_at": {
+            "type": "string",
+            "description": "The timestamp when this version of the repository was created",
+            "format": "date-time"
+        }
+    }
+}

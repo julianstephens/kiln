@@ -1,0 +1,14 @@
+{
+    "final_answer_artifact_reference": {
+        "artifact_id": "art_answer_001",
+        "scope": "installation",
+        "artifact_kind": "answer",
+        "content_type": "text/markdown",
+        "content_hash": "sha256:abc123",
+        "uncompressed_size": 512,
+        "stored_size": 256,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    }
+}

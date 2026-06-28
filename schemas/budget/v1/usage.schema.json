@@ -1,0 +1,10 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln budget usage",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [],
+    "properties": {}
+}

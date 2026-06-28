@@ -27,7 +27,8 @@ class SchemaDefinition:
 
     @property
     def fixture_prefix(self) -> str:
-        return f"{self.domain}-{self.contract.replace('/', '-')}-"
+        normalized_contract = self.contract.replace("/", "-")
+        return f"{self.domain}-{normalized_contract}-"
 
 
 class ValidationFailureError(Exception):
@@ -69,7 +70,13 @@ def schema_local_path(
     major: int,
 ) -> Path:
     parts = contract.split("/")
-    return schema_root / domain / f"v{major}" / Path(*parts[:-1]) / f"{parts[-1]}.schema.json"
+    return (
+        schema_root
+        / domain
+        / f"v{major}"
+        / Path(*parts[:-1])
+        / f"{parts[-1]}.schema.json"
+    )
 
 
 def schema_local_suffix(*, domain: str, contract: str, major: int) -> Path:

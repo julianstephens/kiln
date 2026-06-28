@@ -1,0 +1,43 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-output-production-completed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run output production completed",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "final_answer_artifact_reference"
+    ],
+    "properties": {
+        "final_answer_artifact_reference": {
+            "description": "The artifact reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/answer-reference.schema.json"
+        },
+        "patch_reference": {
+            "description": "The patch reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/patch-reference.schema.json"
+        },
+        "changed_file_manifest_reference": {
+            "description": "The changed file manifest reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/changed-file-manifest-reference.schema.json"
+        },
+        "usage": {
+            "description": "The usage that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "validation_requirements": {
+            "description": "The validation requirements that were produced by this run",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/requirement.schema.json"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    },
+    "dependentRequired": {
+        "patch_reference": [
+            "changed_file_manifest_reference"
+        ]
+    }
+}

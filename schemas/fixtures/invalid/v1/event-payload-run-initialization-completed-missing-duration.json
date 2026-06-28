@@ -1,0 +1,10 @@
+{
+    "effective_budgets": {
+        "mode": "custom",
+        "model_input_tokens": 1000,
+        "estimate_vs_actuals": {}
+    },
+    "effective_capability_profile": {
+        "default_deny_settings": {}
+    }
+}

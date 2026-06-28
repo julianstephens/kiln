@@ -1,0 +1,12 @@
+{
+    "effective_budgets": {
+        "mode": "custom",
+        "state_revision": 1,
+        "latest_transaction_sequence": 7,
+        "estimate_vs_actuals": {}
+    },
+    "effective_capability_profile": {
+        "default_deny_settings": {}
+    },
+    "initialization_duration": "PT5S"
+}
