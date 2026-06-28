@@ -1,0 +1,217 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/budget/v1/exhaustion.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln budget exhaustion",
+    "description": "A durable record that budget capacity was exhausted for one or more budget dimensions.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "exhaustion_id",
+        "budget_id",
+        "exhaustion_scope",
+        "exhausted_dimensions",
+        "exhaustion_reason",
+        "state_at_exhaustion",
+        "exhausted_at"
+    ],
+    "properties": {
+        "exhaustion_id": {
+            "description": "Stable identity for this budget exhaustion record.",
+            "type": "string",
+            "minLength": 1
+        },
+        "budget_id": {
+            "description": "Budget ledger or accounting scope that became exhausted.",
+            "type": "string",
+            "minLength": 1
+        },
+        "exhaustion_scope": {
+            "description": "Scope in which budget exhaustion occurred.",
+            "type": "string",
+            "enum": [
+                "run",
+                "turn",
+                "operation",
+                "component"
+            ]
+        },
+        "run_id": {
+            "description": "Run associated with this exhaustion record, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_id": {
+            "description": "Turn associated with this exhaustion record, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "operation_id": {
+            "description": "Operation associated with this exhaustion record, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "component": {
+            "description": "Logical component associated with this exhaustion record, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "triggering_reservation_id": {
+            "description": "Reservation that caused or revealed exhaustion, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "triggering_commitment_id": {
+            "description": "Committed usage transaction that caused or revealed exhaustion, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "triggering_reconciliation_id": {
+            "description": "Reconciliation operation that caused or revealed exhaustion, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "requested_amounts": {
+            "description": "Budget amounts requested when exhaustion was detected, when applicable.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "committed_usage": {
+            "description": "Usage committed when exhaustion was detected, when applicable.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "exhausted_dimensions": {
+            "description": "Budget dimensions that were exhausted.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "model_input_tokens",
+                    "model_output_tokens",
+                    "model_calls",
+                    "tool_calls",
+                    "repository_requests",
+                    "elapsed_wall_time_seconds",
+                    "monetary_cost_usd",
+                    "command_time_seconds",
+                    "command_output_size_bytes",
+                    "artifact_size_bytes",
+                    "repeated_token_cost_usd"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "exhaustion_reason": {
+            "description": "Reason budget exhaustion was detected.",
+            "type": "string",
+            "enum": [
+                "reservation_exceeds_remaining",
+                "committed_usage_reached_limit",
+                "reconciliation_reached_limit",
+                "external_limit_reached",
+                "time_limit_reached",
+                "cost_limit_reached",
+                "unknown"
+            ]
+        },
+        "state_at_exhaustion": {
+            "description": "Budget state when exhaustion was detected.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "exhausted_at": {
+            "description": "When budget exhaustion was detected.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "exhaustion_scope": {
+                        "const": "run"
+                    }
+                },
+                "required": [
+                    "exhaustion_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "exhaustion_scope": {
+                        "const": "turn"
+                    }
+                },
+                "required": [
+                    "exhaustion_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "turn_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "exhaustion_scope": {
+                        "const": "operation"
+                    }
+                },
+                "required": [
+                    "exhaustion_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "operation_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "exhaustion_scope": {
+                        "const": "component"
+                    }
+                },
+                "required": [
+                    "exhaustion_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "component"
+                ]
+            }
+        },
+        {
+            "oneOf": [
+                {
+                    "required": [
+                        "triggering_reservation_id"
+                    ]
+                },
+                {
+                    "required": [
+                        "triggering_commitment_id"
+                    ]
+                },
+                {
+                    "required": [
+                        "triggering_reconciliation_id"
+                    ]
+                }
+            ]
+        }
+    ]
+}
