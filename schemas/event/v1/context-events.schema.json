@@ -7,14 +7,10 @@
     "enum": [
         "context.plan_requested",
         "context.plan_produced",
-        "context.plan_rejected",
         "context.plan_applied",
         "context.item_available",
         "context.item_admitted",
-        "context.item_rejected",
         "context.item_evicted",
-        "context.item_compressed",
-        "context.item_invalidated",
         "context.rendered"
     ]
 }

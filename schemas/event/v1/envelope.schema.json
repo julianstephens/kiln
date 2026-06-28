@@ -38,48 +38,31 @@
         "event_type": {
             "type": "string",
             "description": "The type of event being reported",
-            "enum": [
-                "run.created",
-                "run.initialization_started",
-                "run.initialization_completed",
-                "run.execution_started",
-                "run.output_production_started",
-                "run.output_production_completed",
-                "run.completed",
-                "run.failed",
-                "runtime.session_started",
-                "runtime.session_ready",
-                "repository.preparation_started",
-                "repository.version_pinned",
-                "repository.preparation_completed",
-                "repository.worker_started",
-                "repository.session_opened",
-                "repository.query_started",
-                "repository.query_completed",
-                "repository.query_failed",
-                "context.plan_requested",
-                "context.plan_produced",
-                "context.plan_applied",
-                "context.item_available",
-                "context.item_admitted",
-                "context.item_evicted",
-                "context.rendered",
-                "model.request_rendered",
-                "model.egress_evaluated",
-                "model.invocation_started",
-                "model.invocation_completed",
-                "model.invocation_failed",
-                "model.response_interpreted",
-                "budget.initialized",
-                "budget.reserved",
-                "budget.committed",
-                "budget.denied",
-                "budget.exhausted",
-                "budget.reconciled",
-                "turn.started",
-                "turn.completed",
-                "turn.failed",
-                "artifact.created"
+            "oneOf": [
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/run-lifecycle-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/runtime-session-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/repository-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/context-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/model-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/budget-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/turn-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/artifact-events.schema.json"
+                }
             ]
         },
         "occurred_at": {

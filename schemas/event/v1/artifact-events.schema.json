@@ -5,10 +5,6 @@
     "title": "Kiln event artifact events",
     "type": "string",
     "enum": [
-        "artifact.created",
-        "artifact.reused",
-        "artifact.accessed",
-        "artifact.deleted",
-        "artifact.exported"
+        "artifact.created"
     ]
 }

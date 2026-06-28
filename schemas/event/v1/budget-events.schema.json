@@ -8,7 +8,6 @@
         "budget.initialized",
         "budget.reserved",
         "budget.committed",
-        "budget.released",
         "budget.denied",
         "budget.exhausted",
         "budget.reconciled"

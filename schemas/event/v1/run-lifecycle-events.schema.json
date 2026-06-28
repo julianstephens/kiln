@@ -13,10 +13,6 @@
         "run.output_production_completed",
         "run.completed",
         "run.failed",
-        "run.cancellation_requested",
-        "run.cancellation_accepted",
-        "run.cancellation_rejected",
-        "run.canceled",
-        "run.exhausted"
+        "run.canceled"
     ]
 }

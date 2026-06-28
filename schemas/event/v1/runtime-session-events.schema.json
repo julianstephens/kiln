@@ -6,9 +6,6 @@
     "type": "string",
     "enum": [
         "runtime.session_started",
-        "runtime.session_ready",
-        "runtime.session_stopping",
-        "runtime.session_stopped",
-        "runtime.session_failed"
+        "runtime.session_ready"
     ]
 }

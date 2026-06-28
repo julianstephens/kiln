@@ -5,23 +5,14 @@
     "title": "Kiln event repository events",
     "type": "string",
     "enum": [
-        "repository.registration_started",
-        "repository.registered",
         "repository.preparation_started",
-        "repository.preparation_checkpointed",
         "repository.version_pinned",
         "repository.preparation_completed",
         "repository.session_opened",
-        "repository.session_advanced",
         "repository.session_closed",
         "repository.query_started",
         "repository.query_completed",
         "repository.query_failed",
-        "repository.invalidated",
-        "repository.refresh_started",
-        "repository.refresh_completed",
-        "repository.refresh_failed",
-        "repository.worker_started",
-        "repository.worker_failed"
+        "repository.worker_started"
     ]
 }
