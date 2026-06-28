@@ -1,0 +1,14 @@
+{
+    "model_invocation_id": "model_invocation_001",
+    "model_configuration": {
+        "model_id": "gpt-4.1",
+        "context_limit": 8192,
+        "tool_call_mode": "restricted",
+        "tokenizer_strategy": "default",
+        "generation_parameters": {},
+        "streaming_preference": "enabled",
+        "provider_id": "openai"
+    },
+    "input_token_estimate": 512,
+    "started_at": "2026-06-28T00:00:00Z"
+}

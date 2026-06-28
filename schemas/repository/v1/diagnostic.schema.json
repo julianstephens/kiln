@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository diagnostic",
+    "description": "Repository diagnostic emitted during parsing, indexing, search, graph, or representation operations.",
     "type": "object",
     "additionalProperties": false,
     "required": [
@@ -50,7 +51,6 @@
         },
         "related_artifacts": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
             }

@@ -1,0 +1,229 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln budget usage",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "usage_scope",
+        "recorded_at"
+    ],
+    "properties": {
+        "usage_scope": {
+            "type": "string",
+            "enum": [
+                "run",
+                "turn",
+                "operation",
+                "component"
+            ]
+        },
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "operation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "component": {
+            "type": "string",
+            "minLength": 1
+        },
+        "model_input_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_output_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_calls": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "tool_calls": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "repository_requests": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "elapsed_wall_time_seconds": {
+            "type": "number",
+            "minimum": 0
+        },
+        "monetary_cost_usd": {
+            "type": "number",
+            "minimum": 0
+        },
+        "command_time_seconds": {
+            "type": "number",
+            "minimum": 0
+        },
+        "command_output_size_bytes": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "artifact_size_bytes": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "repeated_token_cost_usd": {
+            "type": "number",
+            "minimum": 0
+        },
+        "measurement": {
+            "type": "string",
+            "enum": [
+                "estimated",
+                "actual",
+                "reconciled"
+            ]
+        },
+        "source": {
+            "type": "string",
+            "minLength": 1
+        },
+        "recorded_at": {
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "usage_scope": {
+                        "const": "run"
+                    }
+                },
+                "required": [
+                    "usage_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "usage_scope": {
+                        "const": "turn"
+                    }
+                },
+                "required": [
+                    "usage_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "turn_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "usage_scope": {
+                        "const": "operation"
+                    }
+                },
+                "required": [
+                    "usage_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "operation_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "usage_scope": {
+                        "const": "component"
+                    }
+                },
+                "required": [
+                    "usage_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "component"
+                ]
+            }
+        },
+        {
+            "anyOf": [
+                {
+                    "required": [
+                        "model_input_tokens"
+                    ]
+                },
+                {
+                    "required": [
+                        "model_output_tokens"
+                    ]
+                },
+                {
+                    "required": [
+                        "model_calls"
+                    ]
+                },
+                {
+                    "required": [
+                        "tool_calls"
+                    ]
+                },
+                {
+                    "required": [
+                        "repository_requests"
+                    ]
+                },
+                {
+                    "required": [
+                        "elapsed_wall_time_seconds"
+                    ]
+                },
+                {
+                    "required": [
+                        "monetary_cost_usd"
+                    ]
+                },
+                {
+                    "required": [
+                        "command_time_seconds"
+                    ]
+                },
+                {
+                    "required": [
+                        "command_output_size_bytes"
+                    ]
+                },
+                {
+                    "required": [
+                        "artifact_size_bytes"
+                    ]
+                },
+                {
+                    "required": [
+                        "repeated_token_cost_usd"
+                    ]
+                }
+            ]
+        }
+    ]
+}

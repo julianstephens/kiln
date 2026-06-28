@@ -1,0 +1,17 @@
+{
+    "exhaustion_id": "exhaust_001",
+    "budget_id": "budget_001",
+    "exhaustion_scope": "run",
+    "run_id": "run_001",
+    "exhausted_dimensions": [
+        "model_input_tokens"
+    ],
+    "exhaustion_reason": "committed_usage_reached_limit",
+    "state_at_exhaustion": {
+        "state_revision": 5,
+        "latest_transaction_sequence": 20,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "exhausted_at": "2026-06-28T00:00:00Z"
+}

@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/context-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event context events",
+    "type": "string",
+    "enum": [
+        "context.plan_requested",
+        "context.plan_produced",
+        "context.plan_applied",
+        "context.item_available",
+        "context.item_admitted",
+        "context.item_evicted",
+        "context.rendered"
+    ]
+}

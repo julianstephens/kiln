@@ -1,0 +1,5 @@
+{
+    "input_tokens": 128,
+    "output_tokens": 64,
+    "measurement": "actual"
+}

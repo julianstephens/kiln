@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/output-mode.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run output mode",
+    "type": "string",
+    "enum": [
+        "answer",
+        "patch",
+        "answer_with_patch",
+        "report"
+    ]
+}

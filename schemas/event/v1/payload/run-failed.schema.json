@@ -1,0 +1,66 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-failed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run failed",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "stop_reason",
+        "failure_category",
+        "last_successful_lifecycle_state",
+        "cleanup_status"
+    ],
+    "properties": {
+        "stop_reason": {
+            "description": "The reason that this run was stopped",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
+        },
+        "failure_category": {
+            "description": "The category of failure that caused this run to stop",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error-category.schema.json"
+        },
+        "last_successful_lifecycle_state": {
+            "description": "The last successful lifecycle state that this run was in before it failed",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/lifecycle-state.schema.json"
+        },
+        "failure_detail": {
+            "description": "Additional details about the failure that caused this run to stop",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error.schema.json"
+        },
+        "partial_result_references": {
+            "description": "The artifact references that contain partial results produced by this run before it failed",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            }
+        },
+        "cleanup_status": {
+            "description": "The status of the cleanup process for this run",
+            "type": "string",
+            "enum": [
+                "not_required",
+                "pending",
+                "completed",
+                "failed",
+                "unknown"
+            ]
+        }
+    },
+    "allOf": [
+        {
+            "properties": {
+                "stop_reason": {
+                    "properties": {
+                        "category": {
+                            "const": "failed"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "stop_reason"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/model-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event model events",
+    "type": "string",
+    "enum": [
+        "model.request_rendered",
+        "model.egress_evaluated",
+        "model.invocation_started",
+        "model.invocation_completed",
+        "model.invocation_failed",
+        "model.response_interpreted"
+    ]
+}

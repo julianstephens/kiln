@@ -1,0 +1,66 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_03",
+    "operation": "repository.get_source",
+    "status": "ok",
+    "result": {
+        "candidates": [
+            {
+                "content_id": "cnt_02",
+                "repository": {
+                    "id": "repo_01",
+                    "version_id": "rev_01",
+                    "workspace_version_id": "wsv_01"
+                },
+                "semantic_kind": "function",
+                "representation_kind": "source",
+                "source": {
+                    "repository_path": "src/lib.go",
+                    "source_digest": "sha256:cafe1234567890ab",
+                    "line_ranges": [],
+                    "byte_ranges": [],
+                    "language": "go"
+                },
+                "content": {
+                    "content_type": "inline",
+                    "inline": "func Bar() {}"
+                },
+                "cost": {
+                    "estimated_tokens": 32,
+                    "estimated_bytes": 128,
+                    "estimation_method": "tiktoken"
+                },
+                "relevance": {
+                    "lexical_score": 80,
+                    "semantic_score": 85,
+                    "hybrid_score": 82,
+                    "graph_distance": 1,
+                    "match_terms": [
+                        "Bar"
+                    ],
+                    "rank": 1,
+                    "score_explanation": "high semantic match"
+                },
+                "provenance": {
+                    "source_operation_id": "op_02",
+                    "query_id": "qry_02",
+                    "extraction_method": "tree-sitter",
+                    "parser_version": "0.22.0",
+                    "source_content_ids": [
+                        "cnt_02"
+                    ],
+                    "created_at": "2026-06-26T00:00:00Z",
+                    "creation_method": "extracted"
+                },
+                "validity": {
+                    "content_status": "current",
+                    "synchronization_status": "synchronized",
+                    "content_completeness": "complete"
+                },
+                "alternative_representations": []
+            }
+        ],
+        "truncated": false
+    },
+    "artifact_references": []
+}

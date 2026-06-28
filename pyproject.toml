@@ -27,6 +27,16 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-xdist>=3.8.0",
     "referencing>=0.37.0",
+    "kiln-devtools",
+]
+
+[tool.uv.sources]
+kiln-devtools = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+    "python/kiln",
+    "devtools",
 ]
 
 [tool.uv.build-backend]

@@ -1,0 +1,17 @@
+{
+    "budget_id": "budget_001",
+    "reservation_id": "reserve_001",
+    "reservation_scope": "run",
+    "run_id": "run_001",
+    "reserved_amounts": {
+        "mode": "custom",
+        "model_input_tokens": 500
+    },
+    "state_after": {
+        "state_revision": 1,
+        "latest_transaction_sequence": 1,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "reserved_at": "2026-06-28T00:00:00Z"
+}

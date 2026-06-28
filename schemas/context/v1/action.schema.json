@@ -1,0 +1,159 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/context/v1/action.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln context action",
+    "description": "A planned or applied context mutation such as admitting, evicting, pinning, unpinning, compressing, invalidating, or reordering context items.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "action_id",
+        "context_id",
+        "action_kind",
+        "item_id"
+    ],
+    "properties": {
+        "action_id": {
+            "description": "Stable identity for this context action.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_id": {
+            "description": "Context ledger this action applies to.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_plan_id": {
+            "description": "Context plan that produced this action, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "item_id": {
+            "description": "Context item affected by this action.",
+            "type": "string",
+            "minLength": 1
+        },
+        "action_kind": {
+            "description": "Kind of context mutation.",
+            "type": "string",
+            "enum": [
+                "make_available",
+                "admit",
+                "evict",
+                "pin",
+                "unpin",
+                "mark_stale",
+                "invalidate",
+                "compress",
+                "reorder"
+            ]
+        },
+        "reason": {
+            "description": "Planner-visible reason for the action.",
+            "type": "string",
+            "enum": [
+                "pinned",
+                "recent",
+                "relevant",
+                "required",
+                "dependency",
+                "token_budget",
+                "stale",
+                "superseded",
+                "low_relevance",
+                "manual",
+                "plan_applied",
+                "context_reset",
+                "compression_budget",
+                "invalid_source"
+            ]
+        },
+        "order": {
+            "description": "Active context order after this action, when applicable.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "previous_order": {
+            "description": "Previous active context order before this action, when applicable.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "estimated_tokens_before": {
+            "description": "Estimated token count for this item before the action.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "estimated_tokens_after": {
+            "description": "Estimated token count for this item after the action.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "replacement_item_id": {
+            "description": "Replacement context item produced by this action, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "artifact_reference": {
+            "description": "Artifact created or consumed by this action, when applicable.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "action_kind": {
+                        "enum": [
+                            "admit",
+                            "reorder"
+                        ]
+                    }
+                },
+                "required": [
+                    "action_kind"
+                ]
+            },
+            "then": {
+                "required": [
+                    "order"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "action_kind": {
+                        "const": "evict"
+                    }
+                },
+                "required": [
+                    "action_kind"
+                ]
+            },
+            "then": {
+                "required": [
+                    "reason"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "action_kind": {
+                        "const": "compress"
+                    }
+                },
+                "required": [
+                    "action_kind"
+                ]
+            },
+            "then": {
+                "required": [
+                    "replacement_item_id",
+                    "estimated_tokens_before",
+                    "estimated_tokens_after"
+                ]
+            }
+        }
+    ]
+}

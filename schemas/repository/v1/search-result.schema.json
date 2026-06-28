@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/search-result.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository search result",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "candidates",
+        "result_count",
+        "truncated"
+    ],
+    "properties": {
+        "candidates": {
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
+            }
+        },
+        "result_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "truncated": {
+            "type": "boolean"
+        }
+    }
+}

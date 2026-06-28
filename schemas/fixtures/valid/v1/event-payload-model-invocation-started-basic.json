@@ -1,0 +1,26 @@
+{
+    "model_invocation_id": "model_invocation_001",
+    "model_configuration": {
+        "model_id": "gpt-4.1",
+        "context_limit": 8192,
+        "tool_call_mode": "restricted",
+        "tokenizer_strategy": "default",
+        "generation_parameters": {},
+        "streaming_preference": "enabled",
+        "provider_id": "openai"
+    },
+    "request_artifact_reference": {
+        "artifact_id": "art_model_request_001",
+        "scope": "tenant",
+        "artifact_kind": "answer",
+        "content_type": "application/json",
+        "content_hash": "sha256:req001",
+        "uncompressed_size": 2048,
+        "stored_size": 1024,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "input_token_estimate": 512,
+    "started_at": "2026-06-28T00:00:00Z"
+}

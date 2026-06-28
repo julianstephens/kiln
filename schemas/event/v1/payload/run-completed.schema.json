@@ -1,0 +1,47 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-completed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run completed",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "stop_reason",
+        "final_result_reference",
+        "final_usage"
+    ],
+    "properties": {
+        "stop_reason": {
+            "description": "The reason that this run was stopped",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
+        },
+        "final_result_reference": {
+            "description": "The terminal result reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/terminal-result-reference.schema.json"
+        },
+        "final_usage": {
+            "description": "The usage summary that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "validation_report_reference": {
+            "description": "The validation report reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/validation-report-reference.schema.json"
+        }
+    },
+    "allOf": [
+        {
+            "properties": {
+                "stop_reason": {
+                    "properties": {
+                        "category": {
+                            "const": "completed"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "stop_reason"
+            ]
+        }
+    ]
+}

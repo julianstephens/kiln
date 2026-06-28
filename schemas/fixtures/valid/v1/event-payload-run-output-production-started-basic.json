@@ -1,0 +1,7 @@
+{
+    "completion_proposal_id": "proposal_001",
+    "output_mode": "answer",
+    "expected_artifact_kinds": [
+        "answer"
+    ]
+}

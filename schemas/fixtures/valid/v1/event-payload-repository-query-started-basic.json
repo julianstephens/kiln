@@ -1,0 +1,11 @@
+{
+    "repository_session_id": "repo_session_001",
+    "query_operation_id": "op_query_003",
+    "query_kind": "diagnostics",
+    "query_summary": {
+        "mode": "quick",
+        "target": "src/",
+        "limit": 20
+    },
+    "query_started_at": "2026-06-28T00:00:00Z"
+}

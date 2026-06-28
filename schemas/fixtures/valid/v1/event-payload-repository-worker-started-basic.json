@@ -1,0 +1,14 @@
+{
+    "repository_worker_id": "worker_001",
+    "runtime_session_id": "runtime_session_001",
+    "worker_kind": "local_git",
+    "supported_operations": [
+        "repository.open_session",
+        "repository.search"
+    ],
+    "supported_repository_kinds": [
+        "git"
+    ],
+    "worker_version": "1.0.0",
+    "started_at": "2026-06-28T00:00:00Z"
+}

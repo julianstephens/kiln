@@ -1,0 +1,43 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-initialization-completed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run initialization completed",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "effective_budgets",
+        "effective_capability_profile",
+        "initialization_duration"
+    ],
+    "properties": {
+        "effective_budgets": {
+            "description": "The budgets that were effective for this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "effective_capability_profile": {
+            "description": "The capability profile that was effective for this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/security-profile.schema.json"
+        },
+        "selected_adapter_ids": {
+            "description": "The adapters that were selected for this run",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "deadline": {
+            "description": "The deadline for this run, if any",
+            "type": "string",
+            "format": "date-time"
+        },
+        "initialization_duration": {
+            "description": "The duration of the initialization phase of this run",
+            "type": "integer",
+            "minimum": 0
+        }
+    }
+}

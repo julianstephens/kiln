@@ -1,0 +1,34 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-execution-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run execution started",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "repository_version",
+        "workspace_version",
+        "initial_turn_id"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "type": "string",
+            "description": "The repository session that is being used to execute this run",
+            "minLength": 1
+        },
+        "repository_version": {
+            "description": "The version of the repository that is being used to execute this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/version.schema.json"
+        },
+        "workspace_version": {
+            "description": "The version of the workspace that is being used to execute this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/workspace/v1/version.schema.json"
+        },
+        "initial_turn_id": {
+            "type": "string",
+            "description": "The turn that is being used to execute this run",
+            "minLength": 1
+        }
+    }
+}

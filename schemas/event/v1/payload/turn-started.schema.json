@@ -1,0 +1,69 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/turn-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload turn started",
+    "description": "Payload for turn.started events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "turn_id",
+        "turn_index",
+        "turn_kind",
+        "context_id",
+        "started_at"
+    ],
+    "properties": {
+        "turn_id": {
+            "description": "Identity for the turn that started.",
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_index": {
+            "description": "Zero-based index of this turn within the run.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "turn_kind": {
+            "description": "Kind of turn being started.",
+            "type": "string",
+            "enum": [
+                "initial",
+                "user_followup",
+                "tool_followup",
+                "recovery",
+                "validation",
+                "output_production"
+            ]
+        },
+        "parent_turn_id": {
+            "description": "Parent turn that caused this turn, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "input_reference": {
+            "description": "Optional artifact reference for the turn input.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "context_id": {
+            "description": "Context ledger used by this turn.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_state_revision": {
+            "description": "Context state revision observed at turn start.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "budget_id": {
+            "description": "Budget ledger used by this turn, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "started_at": {
+            "description": "When the turn started.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

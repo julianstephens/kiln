@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kiln.cyborgdev.cloud/schemas/model/v1/generate-payload.schema.json",
+  "x-kiln-schema-release": "1.0.0",
+  "title": "Kiln model generate payload",
+  "description": "Provider-neutral payload for model generation, including model identity, rendered context, user question, generation parameters, and response constraints.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_id",
+    "rendered_context",
+    "generation_parameters",
+    "response_constraints"
+  ],
+  "properties": {
+    "model_id": {
+      "description": "Provider-neutral or adapter-local model identifier requested for generation.",
+      "type": "string",
+      "minLength": 1
+    },
+    "provider_id": {
+      "description": "Provider identifier, when generation is routed through an external provider.",
+      "type": "string",
+      "minLength": 1
+    },
+    "local_adapter_id": {
+      "description": "Local adapter identifier, when generation is routed through a local model adapter.",
+      "type": "string",
+      "minLength": 1
+    },
+    "rendered_context": {
+      "description": "Rendered context consumed by this generation request.",
+      "$ref": "https://kiln.cyborgdev.cloud/schemas/context/v1/rendered.schema.json"
+    },
+    "user_question": {
+      "description": "User question or instruction for generation, when not already fully represented by rendered context.",
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_parameters": {
+      "description": "Provider-neutral generation parameters.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_output_tokens"
+      ],
+      "properties": {
+        "temperature": {
+          "description": "Sampling temperature.",
+          "type": "number",
+          "minimum": 0
+        },
+        "top_p": {
+          "description": "Nucleus sampling probability mass.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max_output_tokens": {
+          "description": "Maximum output tokens allowed for this generation request.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "stop_sequences": {
+          "description": "Stop sequences that should terminate generation.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "seed": {
+          "description": "Determinism seed, when supported by the model adapter.",
+          "type": "integer"
+        },
+        "reasoning_effort": {
+          "description": "Provider-neutral reasoning effort hint.",
+          "type": "string",
+          "enum": [
+            "minimal",
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    },
+    "response_constraints": {
+      "description": "Constraints on the response the model should produce.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "response_mode"
+      ],
+      "properties": {
+        "response_mode": {
+          "description": "Expected response shape.",
+          "type": "string",
+          "enum": [
+            "answer",
+            "patch",
+            "answer_with_patch",
+            "report",
+            "tool_call",
+            "structured_json"
+          ]
+        },
+        "required_content_type": {
+          "description": "Required response content type, when applicable.",
+          "type": "string",
+          "minLength": 1
+        },
+        "json_schema_reference": {
+          "description": "Artifact or schema reference for structured JSON output constraints.",
+          "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "citation_required": {
+          "description": "Whether citations are required in the generated result.",
+          "type": "boolean"
+        },
+        "max_answer_chars": {
+          "description": "Maximum answer length in characters.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "allow_tool_calls": {
+          "description": "Whether the response may request tool calls.",
+          "type": "boolean"
+        },
+        "allowed_tool_names": {
+          "description": "Tool names the model is allowed to request.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "response_mode": {
+                "const": "structured_json"
+              }
+            },
+            "required": [
+              "response_mode"
+            ]
+          },
+          "then": {
+            "required": [
+              "json_schema_reference"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "allow_tool_calls": {
+                "const": true
+              }
+            },
+            "required": [
+              "allow_tool_calls"
+            ]
+          },
+          "then": {
+            "required": [
+              "allowed_tool_names"
+            ]
+          }
+        }
+      ]
+    },
+    "request_artifact_reference": {
+      "description": "Artifact reference for the fully rendered provider request, when materialized.",
+      "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "provider_id"
+      ]
+    },
+    {
+      "required": [
+        "local_adapter_id"
+      ]
+    }
+  ]
+}

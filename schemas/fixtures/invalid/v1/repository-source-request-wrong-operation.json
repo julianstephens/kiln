@@ -1,0 +1,13 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_35",
+    "run_id": "run_35",
+    "session_id": "session_src6",
+    "operation": "repository.list-files",
+    "payload": {
+        "target_source": "src/main.ts",
+        "representation_preference": "source",
+        "max_result_size": 1000
+    },
+    "deadline": "2026-06-26T01:00:00Z"
+}

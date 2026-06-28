@@ -1,0 +1,18 @@
+{
+    "repository_session_id": "repo_session_001",
+    "query_operation_id": "op_query_002",
+    "query_kind": "source",
+    "error": {
+        "artifact_references": [],
+        "code": "source_not_found",
+        "category": "repository",
+        "diagnostics": [],
+        "message": "Requested source could not be found",
+        "retryable": false,
+        "operation_id": "op_query_002",
+        "repository_session_id": "repo_session_001",
+        "repository_version": {},
+        "workspace_version": {}
+    },
+    "failed_at": "2026-06-28T00:00:00Z"
+}

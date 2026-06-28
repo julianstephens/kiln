@@ -1,0 +1,156 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-reserved.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload budget reserved",
+    "description": "Payload for budget.reserved events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "budget_id",
+        "reservation_id",
+        "reservation_scope",
+        "reserved_amounts",
+        "state_after",
+        "reserved_at"
+    ],
+    "properties": {
+        "budget_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "reservation_id": {
+            "description": "Identity for this budget reservation.",
+            "type": "string",
+            "minLength": 1
+        },
+        "reservation_scope": {
+            "description": "Scope for the reservation.",
+            "type": "string",
+            "enum": [
+                "run",
+                "turn",
+                "operation",
+                "component"
+            ]
+        },
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "operation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "component": {
+            "type": "string",
+            "minLength": 1
+        },
+        "reserved_amounts": {
+            "description": "Amounts reserved by dimension.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "reservation_reason": {
+            "description": "Reason budget was reserved.",
+            "type": "string",
+            "enum": [
+                "model_invocation",
+                "tool_invocation",
+                "repository_operation",
+                "output_production",
+                "validation",
+                "runtime_operation",
+                "other"
+            ]
+        },
+        "expires_at": {
+            "description": "When this reservation expires if not committed or released.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "state_after": {
+            "description": "Budget state after applying the reservation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "reserved_at": {
+            "description": "When budget was reserved.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "run"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "turn"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "turn_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "operation"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "operation_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "component"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "component"
+                ]
+            }
+        }
+    ]
+}

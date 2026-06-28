@@ -1,0 +1,18 @@
+{
+    "repository_session_id": "rs_001",
+    "repository_version": {
+        "version_id": "rv_001",
+        "repository_id": "repo_001",
+        "source_revision": "rev_001",
+        "content_digest": "sha256:repo001",
+        "index_compatibility_metadata": {},
+        "creation_reason": "run_execution",
+        "preparation_status": "prepared",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "workspace_version": {
+        "version_id": "wv_001",
+        "repository_id": "repo_001"
+    },
+    "initial_turn_id": "turn_001"
+}

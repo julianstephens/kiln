@@ -1,0 +1,12 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/turn-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event turn events",
+    "type": "string",
+    "enum": [
+        "turn.started",
+        "turn.completed",
+        "turn.failed"
+    ]
+}

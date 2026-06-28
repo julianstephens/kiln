@@ -1,0 +1,389 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/result.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run result",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "run_id",
+        "terminal_status",
+        "stop_reason",
+        "output_mode",
+        "budget",
+        "context_ledger_reference"
+    ],
+    "properties": {
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "terminal_status": {
+            "type": "string",
+            "enum": [
+                "completed",
+                "failed",
+                "canceled",
+                "exhausted"
+            ]
+        },
+        "stop_reason": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
+        },
+        "output_mode": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/output-mode.schema.json"
+        },
+        "error": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error.schema.json"
+        },
+        "answer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "content_type": {
+                    "type": "string",
+                    "enum": [
+                        "text/plain",
+                        "text/markdown",
+                        "application/json"
+                    ]
+                },
+                "content": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "content_type",
+                "content"
+            ]
+        },
+        "answer_artifact": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/answer-reference.schema.json"
+        },
+        "report_artifact": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/report-reference.schema.json"
+        },
+        "patch_artifact": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/patch-reference.schema.json"
+        },
+        "changed_file_manifest_artifact": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/changed-file-manifest-reference.schema.json"
+        },
+        "validation_report_artifact": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/validation-report-reference.schema.json"
+        },
+        "budget": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "usage"
+            ],
+            "properties": {
+                "usage": {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+                },
+                "state": {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+                }
+            }
+        },
+        "event_stream_range": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "first_sequence",
+                "last_sequence"
+            ],
+            "properties": {
+                "first_sequence": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "last_sequence": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "event_stream_reference": {
+            "type": "string",
+            "minLength": 1
+        },
+        "context_ledger_reference": {
+            "type": "string",
+            "minLength": 1
+        },
+        "additional_artifact_references": {
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            },
+            "uniqueItems": true
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "answer"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "completed"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "answer"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "answer_artifact"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "not": {
+                            "anyOf": [
+                                {
+                                    "required": [
+                                        "patch_artifact"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "changed_file_manifest_artifact"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "patch"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "completed"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "required": [
+                            "patch_artifact",
+                            "changed_file_manifest_artifact"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "answer_with_patch"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "completed"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "answer"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "answer_artifact"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "required": [
+                            "patch_artifact",
+                            "changed_file_manifest_artifact"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "report"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "required": [
+                    "report_artifact"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "failed"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "failed"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "required": [
+                            "error"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "canceled"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "stop_reason": {
+                        "properties": {
+                            "category": {
+                                "const": "canceled"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "exhausted"
+                    }
+                },
+                "required": [
+                    "terminal_status"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "stop_reason": {
+                        "properties": {
+                            "category": {
+                                "const": "exhausted"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "anyOf": [
+                {
+                    "required": [
+                        "event_stream_range"
+                    ]
+                },
+                {
+                    "required": [
+                        "event_stream_reference"
+                    ]
+                }
+            ]
+        }
+    ]
+}

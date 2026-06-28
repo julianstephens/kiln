@@ -1,0 +1,85 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-worker-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository worker started",
+    "description": "Payload for repository.worker_started events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_worker_id",
+        "runtime_session_id",
+        "worker_kind",
+        "supported_operations",
+        "started_at"
+    ],
+    "properties": {
+        "repository_worker_id": {
+            "description": "Runtime-local identity for the repository worker.",
+            "type": "string",
+            "minLength": 1
+        },
+        "runtime_session_id": {
+            "description": "Runtime session that started this repository worker.",
+            "type": "string",
+            "minLength": 1
+        },
+        "worker_kind": {
+            "description": "Kind of repository worker.",
+            "type": "string",
+            "enum": [
+                "local_git",
+                "remote_git",
+                "index_service",
+                "mock",
+                "unknown"
+            ]
+        },
+        "supported_operations": {
+            "description": "Repository protocol operations supported by this repository worker.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "repository.open_session",
+                    "repository.close_session",
+                    "repository.prepare",
+                    "repository.get_preparation_status",
+                    "repository.get_version",
+                    "repository.search",
+                    "repository.get_source",
+                    "repository.get_content",
+                    "repository.get_diagnostics"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "supported_repository_kinds": {
+            "description": "Repository kinds this worker can handle.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "git",
+                    "github",
+                    "filesystem",
+                    "archive",
+                    "unknown"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "worker_version": {
+            "description": "Repository worker implementation version.",
+            "type": "string",
+            "minLength": 1
+        },
+        "started_at": {
+            "description": "When the repository worker started.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

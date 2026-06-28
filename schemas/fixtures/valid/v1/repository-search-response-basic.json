@@ -1,0 +1,12 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_09",
+    "operation": "repository.search",
+    "status": "ok",
+    "result": {
+        "candidates": [],
+        "result_count": 0,
+        "truncated": false
+    },
+    "artifact_references": []
+}

@@ -1,0 +1,9 @@
+{
+    "policy_id": "policy_001",
+    "policy_kind": "security",
+    "inputs": [
+        "artifact_hash",
+        "source_origin"
+    ],
+    "failure_code": "POLICY_VIOLATION_001"
+}

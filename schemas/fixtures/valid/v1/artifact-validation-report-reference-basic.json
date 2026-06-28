@@ -1,0 +1,12 @@
+{
+    "artifact_id": "art_validation_001",
+    "scope": "tenant",
+    "artifact_kind": "validation_report",
+    "content_type": "application/json",
+    "content_hash": "sha256:a1b2c3",
+    "uncompressed_size": 5000,
+    "stored_size": 1400,
+    "compression_method": "gzip",
+    "retention_class": "audit",
+    "created_at": "2026-06-28T00:00:00Z"
+}

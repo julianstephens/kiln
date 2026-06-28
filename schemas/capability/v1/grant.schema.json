@@ -1,0 +1,114 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/capability/v1/grant.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln capability grant",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "grant_id",
+        "capability_type",
+        "run_id",
+        "capability_scope",
+        "allowed_operations",
+        "creation_source",
+        "approval_metadata",
+        "starts_at",
+        "expires_at",
+        "revoked"
+    ],
+    "properties": {
+        "grant_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "capability_type": {
+            "type": "string",
+            "enum": [
+                "tool",
+                "workflow",
+                "resource",
+                "policy",
+                "credential",
+                "integration"
+            ]
+        },
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "capability_scope": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/scope.schema.json"
+        },
+        "allowed_operations": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "creation_source": {
+            "type": "string",
+            "enum": [
+                "system",
+                "user",
+                "policy",
+                "migration",
+                "import"
+            ]
+        },
+        "approval_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "approval_required"
+            ],
+            "properties": {
+                "approval_required": {
+                    "type": "boolean"
+                },
+                "approved_by": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "approved_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "approval_reference": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "if": {
+                "properties": {
+                    "approval_required": {
+                        "const": true
+                    }
+                },
+                "required": [
+                    "approval_required"
+                ]
+            },
+            "then": {
+                "required": [
+                    "approved_by",
+                    "approved_at",
+                    "approval_reference"
+                ]
+            }
+        },
+        "starts_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "expires_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "revoked": {
+            "type": "boolean"
+        }
+    }
+}

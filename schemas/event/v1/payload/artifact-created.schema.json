@@ -1,0 +1,269 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/artifact-created.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload artifact created",
+    "description": "Payload for artifact.created events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "artifact",
+        "creation_reason",
+        "created_by",
+        "created_at"
+    ],
+    "properties": {
+        "artifact": {
+            "description": "Reference to the artifact that was created.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "creation_reason": {
+            "description": "Reason this artifact was created.",
+            "type": "string",
+            "enum": [
+                "model_request_rendered",
+                "model_response_received",
+                "candidate_batch_materialized",
+                "final_result_bundle_created",
+                "output_production",
+                "validation",
+                "diagnostic",
+                "repository_snapshot",
+                "other"
+            ]
+        },
+        "created_by": {
+            "description": "Logical component that created the artifact.",
+            "type": "string",
+            "enum": [
+                "runtime",
+                "context_renderer",
+                "model_adapter",
+                "model_interpreter",
+                "repository_worker",
+                "artifact_store",
+                "output_producer",
+                "validator",
+                "test_harness",
+                "unknown"
+            ]
+        },
+        "producer_operation_id": {
+            "description": "Operation that produced the artifact, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "source_artifact_references": {
+            "description": "Artifacts used as inputs to create this artifact.",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "artifact_metadata": {
+            "description": "Kind-specific artifact creation metadata.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "model_invocation_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "render_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "candidate_batch_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "final_result_bundle_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "candidate_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "candidate_kind": {
+                    "type": "string",
+                    "enum": [
+                        "answer",
+                        "patch",
+                        "report",
+                        "tool_call",
+                        "validation_judgment",
+                        "mixed"
+                    ]
+                },
+                "bundle_kind": {
+                    "type": "string",
+                    "enum": [
+                        "answer",
+                        "patch",
+                        "answer_with_patch",
+                        "report",
+                        "failed",
+                        "canceled",
+                        "exhausted"
+                    ]
+                },
+                "contains_sensitive_content": {
+                    "type": "boolean"
+                },
+                "redacted": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "created_at": {
+            "description": "When the artifact was created.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "artifact": {
+                        "properties": {
+                            "artifact_kind": {
+                                "const": "model_request"
+                            }
+                        },
+                        "required": [
+                            "artifact_kind"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "creation_reason": {
+                        "const": "model_request_rendered"
+                    },
+                    "artifact_metadata": {
+                        "required": [
+                            "model_invocation_id",
+                            "render_id"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact_metadata"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "artifact": {
+                        "properties": {
+                            "artifact_kind": {
+                                "const": "model_response"
+                            }
+                        },
+                        "required": [
+                            "artifact_kind"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "creation_reason": {
+                        "const": "model_response_received"
+                    },
+                    "artifact_metadata": {
+                        "required": [
+                            "model_invocation_id"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact_metadata"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "artifact": {
+                        "properties": {
+                            "artifact_kind": {
+                                "const": "candidate_batch"
+                            }
+                        },
+                        "required": [
+                            "artifact_kind"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "creation_reason": {
+                        "const": "candidate_batch_materialized"
+                    },
+                    "artifact_metadata": {
+                        "required": [
+                            "candidate_batch_id",
+                            "candidate_count",
+                            "candidate_kind"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact_metadata"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "artifact": {
+                        "properties": {
+                            "artifact_kind": {
+                                "const": "final_result_bundle"
+                            }
+                        },
+                        "required": [
+                            "artifact_kind"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "creation_reason": {
+                        "const": "final_result_bundle_created"
+                    },
+                    "artifact_metadata": {
+                        "required": [
+                            "final_result_bundle_id",
+                            "bundle_kind"
+                        ]
+                    }
+                },
+                "required": [
+                    "artifact_metadata"
+                ]
+            }
+        }
+    ]
+}

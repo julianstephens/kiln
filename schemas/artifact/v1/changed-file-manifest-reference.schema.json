@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/changed-file-manifest-reference.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln artifact changed file manifest reference",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        }
+    ],
+    "properties": {
+        "artifact_kind": {
+            "const": "changed_file_manifest"
+        }
+    }
+}

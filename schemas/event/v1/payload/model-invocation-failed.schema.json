@@ -1,0 +1,64 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-invocation-failed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload model invocation failed",
+    "description": "Payload for model.invocation_failed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "model_invocation_id",
+        "failure_category",
+        "error",
+        "failed_at"
+    ],
+    "properties": {
+        "model_invocation_id": {
+            "description": "Model invocation that failed.",
+            "type": "string",
+            "minLength": 1
+        },
+        "failure_category": {
+            "description": "Normalized model invocation failure category.",
+            "type": "string",
+            "enum": [
+                "provider_error",
+                "timeout",
+                "rate_limited",
+                "quota_exceeded",
+                "content_filter",
+                "egress_denied",
+                "invalid_request",
+                "adapter_error",
+                "canceled",
+                "unknown"
+            ]
+        },
+        "error": {
+            "description": "Run-level error describing the failed model invocation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error.schema.json"
+        },
+        "partial_response_artifact_reference": {
+            "description": "Optional artifact reference for partial model output received before failure.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "budget_usage": {
+            "description": "Budget usage committed before this invocation failed.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "retryable": {
+            "description": "Whether this failure may be retried by the runtime.",
+            "type": "boolean"
+        },
+        "latency_ms": {
+            "description": "Elapsed invocation latency before failure in milliseconds.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "failed_at": {
+            "description": "When the model invocation failed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

@@ -1,0 +1,102 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln budget state",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "state_revision",
+        "latest_transaction_sequence",
+        "estimate_vs_actuals",
+        "mode"
+    ],
+    "properties": {
+        "state_revision": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "latest_transaction_sequence": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "estimate_vs_actuals": {
+            "type": "object"
+        },
+        "mode": {
+            "type": "string",
+            "enum": [
+                "installation_default",
+                "unlimited",
+                "custom"
+            ]
+        },
+        "model_input_tokens": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "model_output_tokens": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "model_calls": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "tool_calls": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "repository_requests": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "elapsed_wall_time_seconds": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "monetary_cost_usd": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "command_time_seconds": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "command_output_size_bytes": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "artifact_size_bytes": {
+            "$ref": "#/$defs/budgetDetails"
+        },
+        "repeated_token_cost_usd": {
+            "$ref": "#/$defs/budgetDetails"
+        }
+    },
+    "$defs": {
+        "budgetDetails": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "configured_limit",
+                "reserved_amount",
+                "committed_amount",
+                "remaining_amount",
+                "exhausted"
+            ],
+            "properties": {
+                "configured_limit": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "reserved_amount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "committed_amount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "remaining_amount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "exhausted": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

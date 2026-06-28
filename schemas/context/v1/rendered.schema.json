@@ -1,0 +1,183 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/context/v1/rendered.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln rendered context",
+    "description": "A rendered context instance produced from active context items for a model, tool, validation, output, diagnostic, or preview consumer.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "render_id",
+        "context_id",
+        "render_target",
+        "context_state_revision",
+        "rendered_item_ids",
+        "rendered_item_count",
+        "rendered_token_estimate",
+        "rendered_at"
+    ],
+    "properties": {
+        "render_id": {
+            "description": "Stable identity for this rendered context instance.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_id": {
+            "description": "Context ledger rendered from.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_plan_id": {
+            "description": "Context plan used to produce this render, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "render_target": {
+            "description": "Consumer or phase this context render was produced for.",
+            "type": "string",
+            "enum": [
+                "model_invocation",
+                "tool_invocation",
+                "output_production",
+                "validation",
+                "diagnostic",
+                "preview"
+            ]
+        },
+        "target_operation_id": {
+            "description": "Operation that consumed or requested this rendered context.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_state_revision": {
+            "description": "Context state revision rendered from.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "rendered_item_ids": {
+            "description": "Context items included in this render.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "rendered_items": {
+            "description": "Context items included in this render with render order and token estimates.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "item_id",
+                    "order"
+                ],
+                "properties": {
+                    "item_id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "estimated_tokens": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "render_role": {
+                        "type": "string",
+                        "enum": [
+                            "system",
+                            "developer",
+                            "user",
+                            "assistant",
+                            "tool",
+                            "context",
+                            "metadata"
+                        ]
+                    }
+                }
+            },
+            "uniqueItems": true
+        },
+        "rendered_item_count": {
+            "description": "Number of context items included in this render.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "rendered_token_estimate": {
+            "description": "Estimated token count for the rendered context.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_context_limit": {
+            "description": "Model context limit used when rendering, when applicable.",
+            "type": "integer",
+            "minimum": 1
+        },
+        "truncated": {
+            "description": "Whether rendered context was truncated.",
+            "type": "boolean"
+        },
+        "truncation_reason": {
+            "description": "Reason rendered context was truncated.",
+            "type": "string",
+            "enum": [
+                "model_context_limit",
+                "target_token_budget",
+                "item_size_limit",
+                "policy",
+                "manual"
+            ]
+        },
+        "render_artifact_reference": {
+            "description": "Artifact reference for rendered context content, when stored durably.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "content_hash": {
+            "description": "Content hash for the rendered context payload, when not stored as an artifact.",
+            "type": "string",
+            "minLength": 1
+        },
+        "rendered_at": {
+            "description": "When this context render was produced.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "truncated": {
+                        "const": true
+                    }
+                },
+                "required": [
+                    "truncated"
+                ]
+            },
+            "then": {
+                "required": [
+                    "truncation_reason"
+                ]
+            }
+        },
+        {
+            "oneOf": [
+                {
+                    "required": [
+                        "render_artifact_reference"
+                    ]
+                },
+                {
+                    "required": [
+                        "content_hash"
+                    ]
+                }
+            ]
+        }
+    ]
+}

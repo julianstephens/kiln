@@ -1,0 +1,5 @@
+{
+    "schema_id": "common/source-range",
+    "instance_ref": "$.source_range",
+    "mode": "strict"
+}

@@ -1,0 +1,35 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/validation/v1/citation-requirement.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln validation citation requirement",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "citation_model",
+        "allowed_source_kinds",
+        "minimum_support_level"
+    ],
+    "properties": {
+        "citation_model": {
+            "type": "string",
+            "minLength": 1
+        },
+        "allowed_source_kinds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "minimum_support_level": {
+            "type": "string",
+            "enum": [
+                "direct",
+                "indirect"
+            ]
+        }
+    }
+}

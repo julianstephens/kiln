@@ -1,0 +1,71 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-committed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload budget committed",
+    "description": "Payload for budget.committed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "budget_id",
+        "commitment_id",
+        "usage",
+        "state_after",
+        "committed_at"
+    ],
+    "properties": {
+        "budget_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "commitment_id": {
+            "description": "Identity for this committed budget transaction.",
+            "type": "string",
+            "minLength": 1
+        },
+        "reservation_id": {
+            "description": "Reservation this commitment consumes, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "usage": {
+            "description": "Usage committed to the budget ledger.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "measurement": {
+            "description": "How the committed usage was measured.",
+            "type": "string",
+            "enum": [
+                "estimated",
+                "actual",
+                "reconciled"
+            ]
+        },
+        "commitment_reason": {
+            "description": "Reason budget was committed.",
+            "type": "string",
+            "enum": [
+                "model_invocation_completed",
+                "model_invocation_failed",
+                "tool_invocation_completed",
+                "tool_invocation_failed",
+                "repository_operation_completed",
+                "repository_operation_failed",
+                "artifact_written",
+                "output_production_completed",
+                "validation_completed",
+                "runtime_operation_completed",
+                "other"
+            ]
+        },
+        "state_after": {
+            "description": "Budget state after committing usage.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "committed_at": {
+            "description": "When budget usage was committed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

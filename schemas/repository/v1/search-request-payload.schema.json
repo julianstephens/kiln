@@ -1,0 +1,52 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/search-request-payload.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository search request payload",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "query",
+        "mode",
+        "limit"
+    ],
+    "properties": {
+        "query": {
+            "type": "string",
+            "minLength": 1
+        },
+        "mode": {
+            "type": "string",
+            "enum": [
+                "lexical",
+                "full-text",
+                "symbol-name",
+                "qualified-name",
+                "semantic",
+                "hybrid"
+            ]
+        },
+        "limit": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "filters": {
+            "type": "array",
+            "items": {
+                "type": "object"
+            }
+        },
+        "representation_preference": {
+            "type": "string",
+            "minLength": 1
+        },
+        "minimum_score": {
+            "type": "number",
+            "minimum": 0
+        },
+        "result_size_limit": {
+            "type": "integer",
+            "minimum": 1
+        }
+    }
+}

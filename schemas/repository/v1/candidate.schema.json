@@ -3,13 +3,13 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository candidate",
+    "description": "Repository content candidate returned by search or source retrieval, with source, content, cost, relevance, provenance, and validity metadata.",
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "alternative_representations",
         "content_id",
-        "repository_id",
-        "repository_version_id",
-        "workspace_version_id",
+        "repository",
         "semantic_kind",
         "representation_kind",
         "source",
@@ -24,17 +24,8 @@
             "type": "string",
             "minLength": 1
         },
-        "repository_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "repository_version_id": {
-            "type": "string",
-            "minLength": 1
-        },
-        "workspace_version_id": {
-            "type": "string",
-            "minLength": 1
+        "repository": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
         },
         "semantic_kind": {
             "type": "string",
@@ -64,9 +55,8 @@
         },
         "alternative_representations": {
             "type": "array",
-            "minItems": 1,
             "items": {
-                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/alternative-representation.schema.json"
             }
         }
     }

@@ -1,0 +1,66 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-query-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository query started",
+    "description": "Payload for repository.query_started events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "query_operation_id",
+        "query_kind",
+        "query_started_at"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "description": "Repository session used for the query.",
+            "type": "string",
+            "minLength": 1
+        },
+        "query_operation_id": {
+            "description": "Operation identity for this repository query.",
+            "type": "string",
+            "minLength": 1
+        },
+        "query_kind": {
+            "description": "Kind of repository query being executed.",
+            "type": "string",
+            "enum": [
+                "search",
+                "source",
+                "content",
+                "version",
+                "diagnostics"
+            ]
+        },
+        "query_request_reference": {
+            "description": "Optional artifact reference for the query request when the request is stored durably.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "query_summary": {
+            "description": "Small non-sensitive summary of the query.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "mode": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "target": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "query_started_at": {
+            "description": "When the repository query started.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

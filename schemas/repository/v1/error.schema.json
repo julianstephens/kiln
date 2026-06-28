@@ -3,11 +3,14 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/error.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository error",
+    "description": "Repository-protocol error details including category, diagnostics, operation context, and related artifacts.",
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "artifact_references",
         "code",
         "category",
+        "diagnostics",
         "message",
         "retryable",
         "operation_id",
@@ -62,16 +65,14 @@
         },
         "diagnostics": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/diagnostic.schema.json"
             }
         },
         "artifact_references": {
             "type": "array",
-            "minItems": 1,
             "items": {
-                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/diagnostic-log-reference.schema.json"
             }
         },
         "cause_error_id": {

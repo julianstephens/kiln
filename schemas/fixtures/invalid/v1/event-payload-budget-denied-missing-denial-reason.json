@@ -1,0 +1,15 @@
+{
+    "budget_id": "budget_001",
+    "denial_id": "denial_001",
+    "requested_amounts": {
+        "mode": "custom",
+        "model_input_tokens": 1000
+    },
+    "state_at_denial": {
+        "state_revision": 3,
+        "latest_transaction_sequence": 11,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "denied_at": "2026-06-28T00:00:00Z"
+}

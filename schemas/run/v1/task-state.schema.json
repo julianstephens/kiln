@@ -1,0 +1,93 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/task-state.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run task state",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "current_objective",
+        "current_plan",
+        "completed_steps",
+        "unresolved_questions",
+        "hypotheses",
+        "completion_evidence",
+        "state_revision"
+    ],
+    "properties": {
+        "current_objective": {
+            "type": "string",
+            "minLength": 1
+        },
+        "current_plan": {
+            "type": "string",
+            "minLength": 1
+        },
+        "completed_steps": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "unresolved_questions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "hypotheses": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "proposed_changes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "add",
+                            "delete"
+                        ]
+                    },
+                    "target_range": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/source-range.schema.json"
+                    },
+                    "content": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "action",
+                    "target_range"
+                ]
+            }
+        },
+        "known_failures": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "completion_evidence": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "state_revision": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

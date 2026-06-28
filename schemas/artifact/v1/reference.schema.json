@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln artifact reference",
+    "description": "Stable reference to a stored artifact, including kind, scope, content identity, size, retention, and creation metadata.",
     "type": "object",
     "additionalProperties": false,
     "required": [
@@ -29,13 +30,24 @@
                 "tenant"
             ]
         },
-        "run_identity": {
+        "run_id": {
             "type": "string",
             "minLength": 1
         },
         "artifact_kind": {
             "type": "string",
-            "minLength": 1
+            "enum": [
+                "answer",
+                "changed_file_manifest",
+                "diagnostic_log",
+                "patch",
+                "repository_snapshot",
+                "validation_report",
+                "model_request",
+                "model_response",
+                "candidate_batch",
+                "final_result_bundle"
+            ]
         },
         "content_type": {
             "type": "string",

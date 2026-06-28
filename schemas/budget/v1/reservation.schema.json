@@ -1,0 +1,201 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/budget/v1/reservation.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln budget reservation",
+    "description": "A reservation of budget capacity for a run, turn, operation, or component before usage is committed or released.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "reservation_id",
+        "budget_id",
+        "reservation_scope",
+        "reserved_amounts",
+        "reservation_status",
+        "created_at"
+    ],
+    "properties": {
+        "reservation_id": {
+            "description": "Stable identity for this budget reservation.",
+            "type": "string",
+            "minLength": 1
+        },
+        "budget_id": {
+            "description": "Budget ledger or accounting scope this reservation belongs to.",
+            "type": "string",
+            "minLength": 1
+        },
+        "reservation_scope": {
+            "description": "Scope for which budget capacity was reserved.",
+            "type": "string",
+            "enum": [
+                "run",
+                "turn",
+                "operation",
+                "component"
+            ]
+        },
+        "run_id": {
+            "description": "Run associated with this reservation, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_id": {
+            "description": "Turn associated with this reservation, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "operation_id": {
+            "description": "Operation associated with this reservation, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "component": {
+            "description": "Logical component associated with this reservation, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "reserved_amounts": {
+            "description": "Budget amounts reserved by dimension.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "committed_usage": {
+            "description": "Usage already committed against this reservation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "reservation_status": {
+            "description": "Current status of the reservation.",
+            "type": "string",
+            "enum": [
+                "active",
+                "partially_committed",
+                "committed",
+                "released",
+                "expired",
+                "canceled"
+            ]
+        },
+        "reservation_reason": {
+            "description": "Reason the reservation was created.",
+            "type": "string",
+            "enum": [
+                "model_invocation",
+                "tool_invocation",
+                "repository_operation",
+                "output_production",
+                "validation",
+                "artifact_write",
+                "runtime_operation",
+                "other"
+            ]
+        },
+        "created_at": {
+            "description": "When the reservation was created.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "expires_at": {
+            "description": "When the reservation expires if not committed or released.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "closed_at": {
+            "description": "When the reservation reached a terminal status.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "run"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "turn"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "turn_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "operation"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "operation_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_scope": {
+                        "const": "component"
+                    }
+                },
+                "required": [
+                    "reservation_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "component"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "reservation_status": {
+                        "enum": [
+                            "committed",
+                            "released",
+                            "expired",
+                            "canceled"
+                        ]
+                    }
+                },
+                "required": [
+                    "reservation_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "closed_at"
+                ]
+            }
+        }
+    ]
+}

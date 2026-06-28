@@ -1,0 +1,6 @@
+{
+    "context_id": "ctx_001",
+    "item_id": "item_003",
+    "eviction_reason": "token_budget",
+    "context_state_revision": 2
+}

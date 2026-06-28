@@ -1,0 +1,59 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/context-item-admitted.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload context item admitted",
+    "description": "Payload for context.item_admitted events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "context_id",
+        "item_id",
+        "order",
+        "admission_reason",
+        "context_state_revision"
+    ],
+    "properties": {
+        "context_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "item_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "order": {
+            "description": "Position of the admitted item in active context order.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "admission_reason": {
+            "type": "string",
+            "enum": [
+                "pinned",
+                "recent",
+                "relevant",
+                "required",
+                "dependency",
+                "manual",
+                "plan_applied"
+            ]
+        },
+        "context_plan_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "current_token_estimate": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "context_state_revision": {
+            "type": "integer",
+            "minimum": 0
+        }
+    }
+}

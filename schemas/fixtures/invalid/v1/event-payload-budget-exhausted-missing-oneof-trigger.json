@@ -1,0 +1,13 @@
+{
+    "budget_id": "budget_001",
+    "exhausted_dimensions": [
+        "model_input_tokens"
+    ],
+    "state_at_exhaustion": {
+        "state_revision": 4,
+        "latest_transaction_sequence": 12,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "exhausted_at": "2026-06-28T00:00:00Z"
+}

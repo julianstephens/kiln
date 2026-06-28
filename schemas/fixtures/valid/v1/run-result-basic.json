@@ -1,0 +1,39 @@
+{
+    "run_id": "run_123",
+    "terminal_status": "completed",
+    "output_mode": "answer",
+    "stop_reason": {
+        "category": "completed",
+        "code": "completed_successfully"
+    },
+    "answer": {
+        "content_type": "text/markdown",
+        "content": "# Done"
+    },
+    "answer_artifact": {
+        "artifact_id": "art_answer_001",
+        "scope": "installation",
+        "artifact_kind": "answer",
+        "content_type": "text/markdown",
+        "content_hash": "sha256:abc123",
+        "uncompressed_size": 512,
+        "stored_size": 256,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "budget": {
+        "usage": {
+            "usage_scope": "run",
+            "run_id": "run_123",
+            "model_input_tokens": 100,
+            "recorded_at": "2026-06-28T00:00:00Z"
+        }
+    },
+    "event_stream_range": {
+        "first_sequence": 1,
+        "last_sequence": 42
+    },
+    "event_stream_reference": "events_123",
+    "context_ledger_reference": "context_ledger_123"
+}

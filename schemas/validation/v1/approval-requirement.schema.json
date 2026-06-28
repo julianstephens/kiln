@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/validation/v1/approval-requirement.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln validation approval requirement",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "approval_kind",
+        "approver_role",
+        "reason"
+    ],
+    "properties": {
+        "approval_kind": {
+            "type": "string",
+            "enum": [
+                "human",
+                "automated"
+            ]
+        },
+        "approver_role": {
+            "type": "string",
+            "minLength": 1
+        },
+        "reason": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

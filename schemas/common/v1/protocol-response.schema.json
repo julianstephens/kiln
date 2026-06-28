@@ -1,0 +1,104 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/common/v1/protocol-response.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln common protocol response",
+    "type": "object",
+    "required": [
+        "protocol_version",
+        "request_id",
+        "operation",
+        "status"
+    ],
+    "properties": {
+        "protocol_version": {
+            "type": "string",
+            "const": "1"
+        },
+        "request_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "operation": {
+            "type": "string",
+            "minLength": 1
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "ok",
+                "not_found",
+                "invalid_request",
+                "denied",
+                "stale_session",
+                "conflict",
+                "canceled",
+                "exhausted",
+                "retryable_error",
+                "fatal_error"
+            ]
+        },
+        "correlation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "result": {
+            "type": "object"
+        },
+        "error": {
+            "type": "object"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "status": {
+                        "const": "ok"
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "then": {
+                "not": {
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "status": {
+                        "enum": [
+                            "invalid_request",
+                            "denied",
+                            "stale_session",
+                            "conflict",
+                            "canceled",
+                            "exhausted",
+                            "retryable_error",
+                            "fatal_error"
+                        ]
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "error"
+                ],
+                "not": {
+                    "required": [
+                        "result"
+                    ]
+                }
+            }
+        }
+    ]
+}

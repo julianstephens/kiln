@@ -33,11 +33,11 @@ and produces:
 
 ---
 
-# 1. Architectural principles
+## 1. Architectural principles
 
 Kiln is built around the following principles.
 
-## 1.1 The runtime is authoritative
+### 1.1 The runtime is authoritative
 
 The model may propose actions, but it does not own execution state, permissions, budgets, or termination.
 
@@ -50,7 +50,7 @@ The runtime decides:
 - whether a result is complete;
 - whether an output is eligible for validation or publication.
 
-## 1.2 Repository evidence is structured
+### 1.2 Repository evidence is structured
 
 Repository content is not passed around as anonymous strings.
 
@@ -67,7 +67,7 @@ Every repository result is represented as structured evidence with:
 - relevance metadata;
 - alternative representations.
 
-## 1.3 Retrieval and context admission are separate
+### 1.3 Retrieval and context admission are separate
 
 The repository engine retrieves evidence.
 
@@ -79,13 +79,13 @@ The renderer produces model input.
 
 Retrieving an item does not imply that the model sees it.
 
-## 1.4 Effects require explicit capabilities
+### 1.4 Effects require explicit capabilities
 
 No component receives ambient authority.
 
 Repository writes, process execution, network access, model invocation, external integrations, artifact publication, and credential use are separately authorized capabilities.
 
-## 1.5 Model output is untrusted
+### 1.5 Model output is untrusted
 
 Model output is always treated as a proposal.
 
@@ -99,13 +99,13 @@ It may request:
 
 The runtime validates every request before acting.
 
-## 1.6 Repository content is untrusted
+### 1.6 Repository content is untrusted
 
 Source files, comments, documentation, configuration, test fixtures, generated code, and external issue content may contain instructions intended to influence the model.
 
 Repository content is evidence, not authority.
 
-## 1.7 Every important decision is observable
+### 1.7 Every important decision is observable
 
 Kiln records enough information to reconstruct:
 
@@ -118,19 +118,19 @@ Kiln records enough information to reconstruct:
 - what files changed;
 - why the run stopped.
 
-## 1.8 Validation is independent
+### 1.8 Validation is independent
 
 The agent may run tests during execution, but final validation is a separate subsystem and package that shares Kiln's core contracts.
 
 A model or agent cannot declare its own output safe for publication.
 
-## 1.9 Embedded ownership does not imply a single process
+### 1.9 Embedded ownership does not imply a single process
 
 The public product behaves as an embedded Python library, but the authoritative Go runtime executes as a privately supervised child process.
 
 Risky or extensible components may run in additional isolated workers.
 
-## 1.10 Repository state is versioned
+### 1.10 Repository state is versioned
 
 Every repository candidate is tied to a repository version and workspace version.
 
@@ -138,7 +138,7 @@ Workspace mutations synchronously invalidate affected evidence. Stale evidence c
 
 ---
 
-# 2. System context
+## 2. System context
 
 Kiln has four primary architectural domains.
 
@@ -168,9 +168,9 @@ The runtime control plane is the authoritative center of the system.
 
 ---
 
-# 3. Major components
+## 3. Major components
 
-## 3.1 Product interface
+### 3.1 Product interface
 
 The product interface converts developer intent into a normalized run specification.
 
@@ -183,7 +183,7 @@ Possible interfaces include:
 - notebook client;
 - CI integration.
 
-### Consumes
+#### Consumes
 
 - repository reference;
 - task description;
@@ -194,14 +194,14 @@ Possible interfaces include:
 - validation requirements;
 - metadata.
 
-### Produces
+#### Produces
 
 - validated run specification;
 - run identifier;
 - event stream;
 - final result handle.
 
-### Does not own
+#### Does not own
 
 - context selection;
 - tool authorization;
@@ -211,18 +211,18 @@ Possible interfaces include:
 
 ---
 
-## 3.2 Runtime process supervisor
+### 3.2 Runtime process supervisor
 
 The Python SDK privately supervises the Go runtime as a child process.
 
-### Consumes
+#### Consumes
 
 - runtime binary location;
 - runtime configuration;
 - run requests;
 - cancellation requests.
 
-### Produces
+#### Produces
 
 - private runtime channel;
 - runtime health state;
@@ -230,7 +230,7 @@ The Python SDK privately supervises the Go runtime as a child process.
 - runtime results;
 - lifecycle control.
 
-### Responsibilities
+#### Responsibilities
 
 - start the runtime without creating a public listening port;
 - establish a private pipe, socket pair, Unix socket, or named pipe;
@@ -244,27 +244,27 @@ The Python SDK presents an embedded API even though execution occurs in a separa
 
 ---
 
-## 3.3 Run coordinator
+### 3.3 Run coordinator
 
 The run coordinator owns the lifecycle of one run.
 
 It creates the run, initializes dependencies, supervises execution, handles cancellation, and produces the final result.
 
-### Consumes
+#### Consumes
 
 - run specification;
 - available adapters;
 - repository reference;
 - runtime configuration.
 
-### Produces
+#### Produces
 
 - initialized run state;
 - component sessions;
 - lifecycle events;
 - terminal run result.
 
-### Responsibilities
+#### Responsibilities
 
 - assign run identity;
 - initialize state;
@@ -280,11 +280,11 @@ It creates the run, initializes dependencies, supervises execution, handles canc
 
 ---
 
-## 3.4 Agent loop
+### 3.4 Agent loop
 
 The agent loop is the repeated reasoning and action cycle.
 
-### Consumes
+#### Consumes
 
 - task state;
 - active context;
@@ -295,7 +295,7 @@ The agent loop is the repeated reasoning and action cycle.
 - tool results;
 - repository results.
 
-### Produces
+#### Produces
 
 - context-planning requests;
 - model requests;
@@ -305,7 +305,7 @@ The agent loop is the repeated reasoning and action cycle.
 - completion proposals;
 - state transitions.
 
-### Core cycle
+#### Core cycle
 
 ```text
 Read current state
@@ -329,11 +329,11 @@ The loop does not directly access the filesystem, invoke external models, or exe
 
 ---
 
-## 3.5 Task state manager
+### 3.5 Task state manager
 
 The task state manager tracks structured task progress independently of message history.
 
-### Consumes
+#### Consumes
 
 - original task;
 - task constraints;
@@ -341,7 +341,7 @@ The task state manager tracks structured task progress independently of message 
 - tool outcomes;
 - validation outcomes.
 
-### Produces
+#### Produces
 
 - current objective;
 - current plan;
@@ -354,11 +354,11 @@ The task state should remain compact and structured where possible.
 
 ---
 
-## 3.6 Context manager
+### 3.6 Context manager
 
 The context manager owns the lifecycle of all information that may be shown to the model.
 
-### Context classes
+#### Context classes
 
 - **Pinned**: system instructions, task, security constraints.
 - **Available**: retrieved but not admitted.
@@ -369,7 +369,7 @@ The context manager owns the lifecycle of all information that may be shown to t
 - **Transient**: short-lived tool output or diagnostics.
 - **Stale**: evidence invalidated by a later repository or workspace version.
 
-### Consumes
+#### Consumes
 
 - context candidates;
 - tool-result candidates;
@@ -379,7 +379,7 @@ The context manager owns the lifecycle of all information that may be shown to t
 - model context limits;
 - repository-version validity information.
 
-### Produces
+#### Produces
 
 - active context set;
 - context transitions;
@@ -391,11 +391,11 @@ The context manager is authoritative about what the model actually sees.
 
 ---
 
-## 3.7 Context policy engine
+### 3.7 Context policy engine
 
 The context policy decides what evidence is worth retrieving, admitting, compressing, preserving, or evicting.
 
-### Consumes
+#### Consumes
 
 - task state;
 - current turn;
@@ -407,7 +407,7 @@ The context policy decides what evidence is worth retrieving, admitting, compres
 - graph metadata;
 - model reflection signals.
 
-### Produces
+#### Produces
 
 A declarative context plan containing actions such as:
 
@@ -449,11 +449,11 @@ The runtime validates every plan before applying it.
 
 ---
 
-## 3.8 Context renderer
+### 3.8 Context renderer
 
 The context renderer converts active structured state into provider-neutral model messages.
 
-### Consumes
+#### Consumes
 
 - active context items;
 - task state;
@@ -462,7 +462,7 @@ The context renderer converts active structured state into provider-neutral mode
 - model capabilities;
 - rendering rules.
 
-### Produces
+#### Produces
 
 - ordered model messages;
 - model-visible tool definitions;
@@ -473,11 +473,11 @@ The renderer decides presentation, not selection.
 
 ---
 
-## 3.9 Budget manager
+### 3.9 Budget manager
 
 The budget manager tracks, reserves, commits, reconciles, and denies resource usage.
 
-### Budget domains
+#### Budget domains
 
 - input tokens;
 - output tokens;
@@ -490,7 +490,7 @@ The budget manager tracks, reserves, commits, reconciles, and denies resource us
 - output size;
 - context duplication or churn.
 
-### Consumes
+#### Consumes
 
 - configured limits;
 - repository-engine candidate estimates;
@@ -501,7 +501,7 @@ The budget manager tracks, reserves, commits, reconciles, and denies resource us
 - proposed model calls;
 - proposed tool calls.
 
-### Produces
+#### Produces
 
 - budget reservations;
 - committed usage;
@@ -511,7 +511,7 @@ The budget manager tracks, reserves, commits, reconciles, and denies resource us
 - exhaustion signals;
 - estimation-error metrics.
 
-### Token accounting model
+#### Token accounting model
 
 Kiln uses a three-stage token model:
 
@@ -533,7 +533,7 @@ The runtime records:
 - provider-counted or provider-reported input tokens;
 - actual output tokens.
 
-### Reservation lifecycle
+#### Reservation lifecycle
 
 ```text
 Estimate
@@ -551,11 +551,11 @@ No operation should begin if the runtime cannot reserve enough budget to complet
 
 ---
 
-## 3.10 Model gateway
+### 3.10 Model gateway
 
 The model gateway is the provider-neutral model boundary.
 
-### Consumes
+#### Consumes
 
 - rendered model request;
 - approved model configuration;
@@ -563,7 +563,7 @@ The model gateway is the provider-neutral model boundary.
 - output budget reservation;
 - credentials through a controlled broker.
 
-### Produces
+#### Produces
 
 - normalized model response;
 - proposed tool calls;
@@ -577,11 +577,11 @@ The model gateway does not control context selection or tool authority.
 
 ---
 
-## 3.11 Model egress controller
+### 3.11 Model egress controller
 
 The model egress controller decides what repository and task data may leave the environment.
 
-### Consumes
+#### Consumes
 
 - rendered model request;
 - content provenance;
@@ -591,7 +591,7 @@ The model egress controller decides what repository and task data may leave the 
 - secret-scan results;
 - egress limits.
 
-### Produces
+#### Produces
 
 - allow;
 - deny;
@@ -609,11 +609,11 @@ The controller must make it possible to answer:
 
 ---
 
-## 3.12 Repository session manager
+### 3.12 Repository session manager
 
 The repository session manager binds the run to one repository identity, repository version, and workspace version.
 
-### Consumes
+#### Consumes
 
 - repository path or snapshot;
 - expected revision;
@@ -621,7 +621,7 @@ The repository session manager binds the run to one repository identity, reposit
 - repository security scope;
 - workspace mutations.
 
-### Produces
+#### Produces
 
 - repository session identity;
 - pinned repository version;
@@ -650,13 +650,13 @@ A repository session carries:
 
 ---
 
-## 3.13 Repository consistency and refresh manager
+### 3.13 Repository consistency and refresh manager
 
 The consistency manager coordinates invalidation, incremental refresh, and full rebuilds.
 
 These mechanisms are complementary rather than mutually exclusive.
 
-### Mandatory invalidation
+#### Mandatory invalidation
 
 Every workspace mutation immediately invalidates affected derived evidence, including:
 
@@ -681,7 +681,7 @@ Affected evidence becomes stale
 Mutation completes
 ```
 
-### Incremental refresh
+#### Incremental refresh
 
 Incremental refresh is the normal path when:
 
@@ -690,7 +690,7 @@ Incremental refresh is the normal path when:
 - the repository identity remains stable;
 - graph effects can be recomputed safely.
 
-### Full rebuild
+#### Full rebuild
 
 A full rebuild is required or preferred when:
 
@@ -701,7 +701,7 @@ A full rebuild is required or preferred when:
 - too many files changed;
 - corruption is detected.
 
-### Refresh timing modes
+#### Refresh timing modes
 
 The runtime may support configurable timing preferences:
 
@@ -731,11 +731,11 @@ On schema, configuration, or revision discontinuity:
 
 ---
 
-## 3.14 Repository engine
+### 3.14 Repository engine
 
 The repository engine converts source code into structured, queryable repository evidence.
 
-### Ingestion subsystem
+#### Ingestion subsystem
 
 Consumes:
 
@@ -752,7 +752,7 @@ Produces:
 - parse jobs;
 - indexing diagnostics.
 
-### Language-analysis subsystem
+#### Language-analysis subsystem
 
 Consumes:
 
@@ -768,7 +768,7 @@ Produces:
 - relationships;
 - parse diagnostics.
 
-### Graph subsystem
+#### Graph subsystem
 
 Consumes:
 
@@ -785,7 +785,7 @@ Produces:
 - relation confidence;
 - unresolved relation records.
 
-### Index subsystem
+#### Index subsystem
 
 Consumes:
 
@@ -803,7 +803,7 @@ Produces:
 - workspace-version metadata;
 - stale/current status.
 
-### Retrieval subsystem
+#### Retrieval subsystem
 
 Consumes requests such as:
 
@@ -824,7 +824,7 @@ The repository engine does not decide what enters model context.
 
 ---
 
-## 3.15 Shared persistence layer
+### 3.15 Shared persistence layer
 
 Kiln uses one embedded Turso-compatible database per user installation. That database can hold multiple workspaces, repositories, repository versions, runs, and agents while preserving logical scope.
 
@@ -838,7 +838,7 @@ The default local topology is:
 
 A workspace may contain lightweight local configuration, but the installation database is the canonical persistence layer. CI, container, and hosted deployments may override the database location while preserving the same logical schema.
 
-### Persistence hierarchy
+#### Persistence hierarchy
 
 ```text
 Shared Kiln database
@@ -879,7 +879,7 @@ Shared Kiln database
     └── validation reports
 ```
 
-### Scope model
+#### Scope model
 
 ```text
 workspace_id
@@ -899,7 +899,7 @@ Every run pins:
 - a repository session;
 - an allowed scope.
 
-### Isolation model
+#### Isolation model
 
 The shared database provides logical isolation through runtime-controlled scoped sessions.
 
@@ -915,7 +915,7 @@ For hosted multi-tenant use, the same logical schema may be deployed as:
 
 A single shared file is not considered sufficient adversarial tenant isolation by itself.
 
-### State materialization
+#### State materialization
 
 Repository intelligence uses a mutable current index plus a version journal.
 
@@ -940,7 +940,7 @@ invalidation records
 
 This avoids copying the full repository index for each workspace version while preserving provenance, invalidation history, and comparison against the base revision. Historical versions are not required to remain fully queryable in the initial architecture.
 
-### Persistence categories
+#### Persistence categories
 
 The database holds four logical categories:
 
@@ -953,7 +953,7 @@ Artifacts remain referenced by identity from events and domain records even thou
 
 ---
 
-## 3.16 Repository candidate model
+### 3.16 Repository candidate model
 
 The repository candidate is the primary exchange unit between the repository engine and runtime.
 
@@ -992,11 +992,11 @@ The repository engine estimates token cost for each candidate representation.
 
 ---
 
-## 3.17 Capability broker
+### 3.17 Capability broker
 
 The capability broker is the runtime's authorization authority.
 
-### Capability categories
+#### Capability categories
 
 - repository read;
 - repository write;
@@ -1007,7 +1007,7 @@ The capability broker is the runtime's authorization authority.
 - artifact publication;
 - credential use.
 
-### Consumes
+#### Consumes
 
 - requested operation;
 - run identity;
@@ -1016,7 +1016,7 @@ The capability broker is the runtime's authorization authority.
 - target resource;
 - optional approval.
 
-### Produces
+#### Produces
 
 - authorized operation;
 - narrowed authority;
@@ -1034,18 +1034,18 @@ model.invoke ≠ arbitrary network access
 
 ---
 
-## 3.18 Tool registry
+### 3.18 Tool registry
 
 The tool registry defines the operations the model may request.
 
-### Consumes
+#### Consumes
 
 - built-in tool definitions;
 - approved extensions;
 - security profile;
 - model tool-call format.
 
-### Produces
+#### Produces
 
 - model-visible tool descriptions;
 - validated invocation requests;
@@ -1059,11 +1059,11 @@ A registered tool may still be unavailable in a particular run.
 
 ---
 
-## 3.19 Workspace manager
+### 3.19 Workspace manager
 
 The workspace manager owns the mutable working tree.
 
-### Conceptual model
+#### Conceptual model
 
 ```text
 Immutable base snapshot
@@ -1073,14 +1073,14 @@ Writable task overlay
 Current workspace
 ```
 
-### Consumes
+#### Consumes
 
 - repository snapshot;
 - approved reads;
 - approved writes;
 - patch operations.
 
-### Produces
+#### Produces
 
 - current workspace state;
 - new workspace version;
@@ -1093,11 +1093,11 @@ The workspace manager does not expose Git credentials or repository remotes to t
 
 ---
 
-## 3.20 Command sandbox
+### 3.20 Command sandbox
 
 The command sandbox runs approved development commands.
 
-### Consumes
+#### Consumes
 
 - executable;
 - arguments;
@@ -1110,7 +1110,7 @@ The command sandbox runs approved development commands.
 - output limit;
 - network policy.
 
-### Produces
+#### Produces
 
 - exit status;
 - bounded stdout;
@@ -1125,11 +1125,11 @@ Arbitrary shell expressions are not supported by default.
 
 ---
 
-## 3.21 Tool result processor
+### 3.21 Tool result processor
 
 The result processor converts raw results into structured candidates suitable for context planning.
 
-### Consumes
+#### Consumes
 
 - raw command output;
 - repository results;
@@ -1137,7 +1137,7 @@ The result processor converts raw results into structured candidates suitable fo
 - changed-file state;
 - output-size limits.
 
-### Produces
+#### Produces
 
 Possible representations:
 
@@ -1153,11 +1153,11 @@ Tool output never enters model context directly.
 
 ---
 
-## 3.22 Event store
+### 3.22 Event store
 
 The event store records the authoritative execution history.
 
-### Event categories
+#### Event categories
 
 - run lifecycle;
 - repository lifecycle;
@@ -1170,7 +1170,7 @@ The event store records the authoritative execution history.
 - validation;
 - retry and failure.
 
-### Event payload policy
+#### Event payload policy
 
 Events store first-class facts describing what occurred.
 
@@ -1199,11 +1199,11 @@ Store by reference:
 - test logs;
 - validation bundles.
 
-### Consumes
+#### Consumes
 
 - structured events from all components.
 
-### Produces
+#### Produces
 
 - durable ordered event stream;
 - replay source;
@@ -1222,21 +1222,21 @@ The event stream should be sufficient to determine:
 
 ---
 
-## 3.23 State store
+### 3.23 State store
 
 The state store holds the current derived state of a run.
 
-### Consumes
+#### Consumes
 
 - validated state transitions.
 
-### Produces
+#### Produces
 
 - current run snapshot;
 - restart data;
 - status queries.
 
-### State examples
+#### State examples
 
 - current lifecycle state;
 - current turn;
@@ -1258,11 +1258,11 @@ These may share one embedded database initially while remaining logically distin
 
 ---
 
-## 3.24 Artifact store
+### 3.24 Artifact store
 
 The artifact store holds large or binary outputs as database blobs in the installation database.
 
-### Possible artifacts
+#### Possible artifacts
 
 - repository snapshot;
 - index;
@@ -1274,7 +1274,7 @@ The artifact store holds large or binary outputs as database blobs in the instal
 - provenance bundle;
 - final answer.
 
-### Produces
+#### Produces
 
 - immutable artifact reference;
 - content hash;
@@ -1287,11 +1287,11 @@ Artifacts should be content-addressed where practical so identical payloads can 
 
 ---
 
-## 3.25 Stop controller
+### 3.25 Stop controller
 
 The stop controller determines whether the run should continue.
 
-### Consumes
+#### Consumes
 
 - task state;
 - model completion proposal;
@@ -1301,7 +1301,7 @@ The stop controller determines whether the run should continue.
 - cancellation signal;
 - policy constraints.
 
-### Produces
+#### Produces
 
 - continue;
 - retry;
@@ -1309,7 +1309,7 @@ The stop controller determines whether the run should continue.
 - validate;
 - stop with reason.
 
-### Stop classes
+#### Stop classes
 
 - successful;
 - budget exhausted;
@@ -1327,11 +1327,11 @@ The runtime determines whether completion is accepted.
 
 ---
 
-## 3.26 Validation package
+### 3.26 Validation package
 
 Validation is a separate package sharing Kiln's core contracts. It executes out of process and does not depend on the internal agent loop.
 
-### Integration contract
+#### Integration contract
 
 The run coordinator creates an immutable `ValidationRequest` after output production and receives a structured `ValidationReport`.
 
@@ -1357,7 +1357,7 @@ The validation request references persisted immutable inputs:
 
 The validator never receives the live agent workspace, model credentials, or publication credentials.
 
-### Validation execution
+#### Validation execution
 
 The validation package:
 
@@ -1371,7 +1371,7 @@ The validation package:
 8. returns a structured validation report;
 9. destroys the temporary workspace.
 
-### Consumes
+#### Consumes
 
 - immutable base repository version;
 - proposed patch artifact;
@@ -1380,7 +1380,7 @@ The validation package:
 - security policy;
 - artifact references.
 
-### Produces
+#### Produces
 
 - patch applicability result;
 - clean test result;
@@ -1391,23 +1391,23 @@ The validation package:
 - approval requirement;
 - validation report artifact.
 
-### Local and hosted execution
+#### Local and hosted execution
 
 Locally, the Go runtime privately supervises a validation child process using the same private transport style as other workers. The worker receives only narrowly scoped access to the referenced request and artifacts.
 
 Hosted deployments may execute the same contract through a remote build service such as an isolated task or build job. Transport changes, but `ValidationRequest` and `ValidationReport` semantics remain the same.
 
-### Recovery
+#### Recovery
 
 Validation is recoverable after runtime interruption because its inputs are immutable and persisted before the run enters `validating`. Recovery restarts validation from the existing request.
 
 ---
 
-## 3.27 Publisher
+### 3.27 Publisher
 
 The publisher is optional and remains outside the agent runtime.
 
-### Consumes
+#### Consumes
 
 - validated patch;
 - publication approval;
@@ -1416,7 +1416,7 @@ The publisher is optional and remains outside the agent runtime.
 - pull-request metadata;
 - short-lived publishing credential.
 
-### Produces
+#### Produces
 
 - branch reference;
 - commit identity;
@@ -1427,11 +1427,11 @@ The publisher accepts validated publication requests, not free-form model instru
 
 ---
 
-# 4. Core domain objects
+## 4. Core domain objects
 
 The first architecture contracts should define the semantics of the following objects.
 
-## Run specification
+### Run specification
 
 Declares the requested execution.
 
@@ -1446,7 +1446,7 @@ Contains:
 - validation requirements;
 - metadata.
 
-## Run state
+### Run state
 
 Represents the current execution state.
 
@@ -1464,7 +1464,7 @@ Contains:
 - pending operation;
 - terminal result.
 
-## Workspace
+### Workspace
 
 Represents one registered local or hosted working environment.
 
@@ -1476,7 +1476,7 @@ Contains:
 - registered repositories;
 - persistence scope.
 
-## Repository
+### Repository
 
 Represents a logical repository across revisions and workspace states.
 
@@ -1488,7 +1488,7 @@ Contains:
 - name;
 - metadata.
 
-## Repository version
+### Repository version
 
 Represents one immutable indexed repository revision or derived repository state.
 
@@ -1502,7 +1502,7 @@ Contains:
 - index status;
 - creation reason.
 
-## Workspace version
+### Workspace version
 
 Represents one ordered mutable state of a workspace.
 
@@ -1515,7 +1515,7 @@ Contains:
 - stale evidence set;
 - synchronization status.
 
-## Repository session
+### Repository session
 
 Represents one scoped, revision-bound, workspace-version-bound repository view.
 
@@ -1528,7 +1528,7 @@ Contains:
 - workspace version;
 - allowed operations.
 
-## Repository candidate
+### Repository candidate
 
 Represents evidence returned by the repository engine.
 
@@ -1549,7 +1549,7 @@ Contains:
 - provenance;
 - stale/current status.
 
-## Context item
+### Context item
 
 Represents evidence tracked by the runtime.
 
@@ -1565,7 +1565,7 @@ Contains:
 - estimated cost;
 - repository and workspace versions.
 
-## Context plan
+### Context plan
 
 Declares proposed context transitions.
 
@@ -1580,7 +1580,7 @@ Contains actions such as:
 - preserve;
 - pin.
 
-## Model request
+### Model request
 
 Contains:
 
@@ -1591,7 +1591,7 @@ Contains:
 - provenance references;
 - budget reservation.
 
-## Model response
+### Model response
 
 Contains:
 
@@ -1601,7 +1601,7 @@ Contains:
 - finish reason;
 - provider metadata.
 
-## Tool call
+### Tool call
 
 Contains:
 
@@ -1610,7 +1610,7 @@ Contains:
 - requesting turn;
 - required capabilities.
 
-## Tool result
+### Tool result
 
 Contains:
 
@@ -1621,7 +1621,7 @@ Contains:
 - usage;
 - candidate representations.
 
-## Capability grant
+### Capability grant
 
 Contains:
 
@@ -1632,7 +1632,7 @@ Contains:
 - source of authority;
 - approval metadata.
 
-## Budget state
+### Budget state
 
 Contains:
 
@@ -1643,7 +1643,7 @@ Contains:
 - exhaustion state;
 - estimate-versus-actual metrics.
 
-## Event
+### Event
 
 Contains:
 
@@ -1657,7 +1657,7 @@ Contains:
 - causation identity;
 - correlation identity.
 
-## Artifact reference
+### Artifact reference
 
 Contains:
 
@@ -1669,7 +1669,7 @@ Contains:
 - retention metadata;
 - access scope.
 
-## Validation report
+### Validation report
 
 Contains:
 
@@ -1680,7 +1680,7 @@ Contains:
 - approval requirement;
 - publication eligibility.
 
-## Run result
+### Run result
 
 Contains:
 
@@ -1695,9 +1695,9 @@ Contains:
 
 ---
 
-# 5. Canonical run lifecycle
+## 5. Canonical run lifecycle
 
-## 5.1 Lifecycle states
+### 5.1 Lifecycle states
 
 ```text
 created
@@ -1721,9 +1721,9 @@ A run may transition from any non-terminal state to:
 - cancelled;
 - exhausted.
 
-## 5.2 State definitions
+### 5.2 State definitions
 
-### Created
+#### Created
 
 The run specification has been accepted and assigned an identity.
 
@@ -1733,7 +1733,7 @@ Required state:
 - run ID;
 - creation event.
 
-### Initializing
+#### Initializing
 
 The runtime is establishing:
 
@@ -1744,7 +1744,7 @@ The runtime is establishing:
 - adapters;
 - deadlines.
 
-### Preparing repository
+#### Preparing repository
 
 The runtime is:
 
@@ -1758,7 +1758,7 @@ The runtime is:
 
 This state is recoverable. The coordinator resumes from the first incomplete idempotent preparation step. Partial index updates must commit atomically or be rolled back and repeated.
 
-### Running
+#### Running
 
 The agent loop is active.
 
@@ -1771,7 +1771,7 @@ Permitted operations include:
 - approved workspace mutation;
 - repository invalidation and refresh.
 
-### Producing output
+#### Producing output
 
 The agent loop has proposed completion.
 
@@ -1783,33 +1783,33 @@ The runtime assembles:
 - provenance;
 - execution summary.
 
-### Validating
+#### Validating
 
 The output is evaluated by the separate validation package.
 
 This state is recoverable. The runtime reconstructs the persisted `ValidationRequest` and restarts validation against the same immutable inputs.
 
-### Completed
+#### Completed
 
 The run finished successfully.
 
-### Failed
+#### Failed
 
 The run ended because of an unrecoverable component or internal error. An unexpected runtime interruption during `initializing`, `running`, or `producing_output` is recorded as `runtime_interrupted` and is not resumed in the initial architecture.
 
-### Cancelled
+#### Cancelled
 
 The run ended because of an authorized cancellation request.
 
-### Exhausted
+#### Exhausted
 
 The run ended because a hard resource limit was reached.
 
 ---
 
-# 6. Canonical interaction sequences
+## 6. Canonical interaction sequences
 
-## 6.1 Repository retrieval
+### 6.1 Repository retrieval
 
 ```text
 Agent loop or policy proposes repository retrieval
@@ -1831,7 +1831,7 @@ Context manager applies approved plan
 Renderer includes admitted items in a later model request
 ```
 
-## 6.2 Model invocation
+### 6.2 Model invocation
 
 ```text
 Context policy proposes plan
@@ -1855,7 +1855,7 @@ Budget manager commits and reconciles actual usage
 Normalized response returns to agent loop
 ```
 
-## 6.3 Tool execution
+### 6.3 Tool execution
 
 ```text
 Model proposes tool call
@@ -1874,7 +1874,7 @@ Context policy decides what reaches the model
 Events and artifacts are persisted
 ```
 
-## 6.4 Workspace mutation and refresh
+### 6.4 Workspace mutation and refresh
 
 ```text
 Model proposes file change
@@ -1896,7 +1896,7 @@ Repository engine refreshes before stale evidence is reused as current
 Patch and changed-file state are updated
 ```
 
-## 6.5 Completion and validation
+### 6.5 Completion and validation
 
 ```text
 Model proposes completion
@@ -1918,9 +1918,9 @@ Optional publisher receives validated publication request
 
 ---
 
-# 7. Communication boundaries
+## 7. Communication boundaries
 
-## 7.1 Python SDK to Go runtime
+### 7.1 Python SDK to Go runtime
 
 The Python SDK communicates with a privately supervised Go child process.
 
@@ -1942,7 +1942,7 @@ Requirements:
 - health detection;
 - clean shutdown.
 
-## 7.2 Trusted runtime components
+### 7.2 Trusted runtime components
 
 These may communicate through direct in-process interfaces inside the Go runtime:
 
@@ -1956,7 +1956,7 @@ These may communicate through direct in-process interfaces inside the Go runtime
 - stop controller;
 - event construction.
 
-## 7.3 Isolated local workers
+### 7.3 Isolated local workers
 
 These should communicate through private typed protocols:
 
@@ -1968,7 +1968,7 @@ These should communicate through private typed protocols:
 
 Workers should not listen on public interfaces.
 
-## 7.4 External services
+### 7.4 External services
 
 External boundaries include:
 
@@ -1982,11 +1982,11 @@ These require explicit authentication, authorization, rate limiting, and tenant 
 
 ---
 
-# 8. Protocol families
+## 8. Protocol families
 
 Kiln should use separate protocols for separate trust boundaries.
 
-## Runtime protocol
+### Runtime protocol
 
 Used by the Python SDK or hosted interface.
 
@@ -2000,7 +2000,7 @@ Operations:
 - runtime.health;
 - runtime.close.
 
-## Repository protocol
+### Repository protocol
 
 Used between the runtime and repository engine.
 
@@ -2016,7 +2016,7 @@ Operations:
 - repository.refresh;
 - repository.close.
 
-## Policy callback protocol
+### Policy callback protocol
 
 Used only for isolated non-native policies.
 
@@ -2028,7 +2028,7 @@ Operations:
 
 Policies may return retrieval proposals but cannot perform repository operations directly.
 
-## Tool worker protocol
+### Tool worker protocol
 
 Used for approved external tools.
 
@@ -2039,7 +2039,7 @@ Operations:
 - tool.cancel;
 - tool.close.
 
-## Model callback protocol
+### Model callback protocol
 
 Used for Python-hosted or custom models.
 
@@ -2062,9 +2062,9 @@ All protocols must be:
 
 ---
 
-# 9. Trust model
+## 9. Trust model
 
-## Trusted
+### Trusted
 
 - Go runtime kernel;
 - built-in policies;
@@ -2073,14 +2073,14 @@ All protocols must be:
 - state transition logic;
 - event store.
 
-## Semi-trusted
+### Semi-trusted
 
 - first-party repository engine;
 - built-in model adapters;
 - built-in tools;
 - validation adapters.
 
-## Untrusted
+### Untrusted
 
 - repository contents;
 - model output;
@@ -2095,7 +2095,7 @@ Untrusted data may influence reasoning but may not grant authority.
 
 ---
 
-# 10. Required invariants
+## 10. Required invariants
 
 The following rules are architectural invariants.
 
@@ -2138,11 +2138,11 @@ The following rules are architectural invariants.
 
 ---
 
-# 11. Initial vertical slice
+## 11. Initial vertical slice
 
 The first implementation should prove the control flow without implementing the complete product.
 
-## Inputs
+### Inputs
 
 - one local repository;
 - one natural-language read-only task;
@@ -2151,7 +2151,7 @@ The first implementation should prove the control flow without implementing the 
 - token, turn, model-call, and tool-call budgets;
 - read-only repository capabilities.
 
-## Supported repository operations
+### Supported repository operations
 
 - prepare repository;
 - search;
@@ -2159,7 +2159,7 @@ The first implementation should prove the control flow without implementing the 
 - expand one graph relation;
 - retrieve alternate representation.
 
-## Supported runtime behavior
+### Supported runtime behavior
 
 - Python SDK starts a private Go runtime child process;
 - create one run;
@@ -2174,7 +2174,7 @@ The first implementation should prove the control flow without implementing the 
 - reconcile token estimates with actual usage;
 - stop with final answer or explicit failure.
 
-## Outputs
+### Outputs
 
 - final answer;
 - usage summary;
@@ -2182,7 +2182,7 @@ The first implementation should prove the control flow without implementing the 
 - event stream;
 - terminal stop reason.
 
-## Explicitly excluded
+### Explicitly excluded
 
 - file writes;
 - command execution;
@@ -2197,59 +2197,59 @@ The first implementation should prove the control flow without implementing the 
 
 ---
 
-# 12. Resolved architecture decisions
+## 12. Resolved architecture decisions
 
-## Runtime embedding
+### Runtime embedding
 
 The Go runtime is a privately supervised child process owned by the Python SDK.
 
-## State persistence and topology
+### State persistence and topology
 
 Kiln uses one embedded Turso-compatible database per user installation. The database contains multiple workspaces, repositories, runs, repository indexes, event history, and artifact blobs. Access is logically isolated by scoped runtime sessions. Hosted deployments may place the same logical schema in separate databases by tenant or execution domain.
 
-## State materialization
+### State materialization
 
 Repository intelligence uses a mutable current index plus a version journal. The current index serves active retrieval; the journal records repository versions, workspace versions, mutations, invalidations, and refreshes.
 
-## Context policy boundary
+### Context policy boundary
 
 Policies may propose retrieval. The runtime validates and performs repository operations. Policies receive structured candidates and propose context transitions.
 
-## Repository refresh
+### Repository refresh
 
 Kiln combines mandatory synchronous invalidation, incremental refresh, versioned repository and workspace state, and full rebuild fallback. Users may configure refresh timing, but may not treat stale evidence as current.
 
-## Token estimation
+### Token estimation
 
 - repository engine estimates candidate cost;
 - model gateway performs provider-specific final counting;
 - budget manager reconciles estimates with actual usage.
 
-## Event payload policy
+### Event payload policy
 
 The event store keeps first-class facts describing what happened. Large inputs, outputs, products, and payloads are stored as artifact blobs and referenced from events.
 
-## Artifact storage
+### Artifact storage
 
 Artifacts are stored in the installation database as blobs. They remain immutable, content-hashed, and referenced by artifact identity. The subsystem supports compression, retention, garbage collection, export, and deletion.
 
-## Runtime restart and recovery
+### Runtime restart and recovery
 
 Only `preparing_repository` and `validating` are recoverable after an unexpected runtime exit. Interruptions in other active states become terminal `runtime_interrupted` failures in the initial architecture.
 
-## Validation ownership and integration
+### Validation ownership and integration
 
 Validation is a separate package sharing Kiln's core contracts. The run coordinator invokes it out of process using an immutable `ValidationRequest` and receives a `ValidationReport`. Local deployments use a privately supervised validation worker; hosted deployments may use a remote isolated build service implementing the same contracts.
 
 ---
 
-# 13. Remaining architecture questions
+## 13. Remaining architecture questions
 
 The previously identified architecture questions are resolved. Further open questions should be captured in the focused design documents where they arise rather than kept as product-level ambiguities here.
 
 ---
 
-# 14. Near-term design deliverables
+## 14. Near-term design deliverables
 
 The next documents should be produced in this order:
 
@@ -2312,7 +2312,7 @@ The next documents should be produced in this order:
 
 ---
 
-# 15. First milestone
+## 15. First milestone
 
 The first milestone is complete when Kiln can perform this workflow:
 

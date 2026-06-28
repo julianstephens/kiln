@@ -3,12 +3,14 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository source",
+    "description": "Source-location metadata for repository content, including repository path and source or byte ranges.",
     "type": "object",
     "additionalProperties": false,
     "required": [
         "repository_path",
         "source_digest",
-        "line_range"
+        "byte_ranges",
+        "line_ranges"
     ],
     "properties": {
         "repository_path": {
@@ -19,16 +21,14 @@
             "type": "string",
             "minLength": 1
         },
-        "line_range": {
+        "line_ranges": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/source-range.schema.json"
             }
         },
-        "byte_range": {
+        "byte_ranges": {
             "type": "array",
-            "minItems": 1,
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/common/v1/byte-range.schema.json"
             }

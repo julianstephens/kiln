@@ -1,0 +1,9 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_03",
+    "operation": "test.operation",
+    "status": "ok",
+    "error": {
+        "code": "ERR_001"
+    }
+}

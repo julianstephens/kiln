@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-version-pinned.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository version pinned",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_version_id",
+        "source_revision",
+        "content_digest"
+    ],
+    "properties": {
+        "repository_version_id": {
+            "description": "The repository version that was pinned.",
+            "type": "string",
+            "minLength": 1
+        },
+        "source_revision": {
+            "description": "The source revision that was pinned.",
+            "type": "string",
+            "minLength": 1
+        },
+        "content_digest": {
+            "description": "The content digest of the repository version that was pinned.",
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

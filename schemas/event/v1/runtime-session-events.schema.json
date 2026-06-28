@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/runtime-session-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event runtime session events",
+    "type": "string",
+    "enum": [
+        "runtime.session_started",
+        "runtime.session_ready"
+    ]
+}

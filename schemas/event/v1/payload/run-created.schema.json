@@ -1,0 +1,79 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-created.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run created",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "run_specification_id",
+        "repository",
+        "requested_model",
+        "requested_budgets",
+        "requested_security_profile"
+    ],
+    "anyOf": [
+        {
+            "required": [
+                "task_id"
+            ]
+        },
+        {
+            "required": [
+                "task_hash"
+            ]
+        }
+    ],
+    "properties": {
+        "run_specification_id": {
+            "type": "string",
+            "description": "The run specification that was used to create this run",
+            "minLength": 1
+        },
+        "task_id": {
+            "type": "string",
+            "description": "The task that this run is associated with",
+            "minLength": 1
+        },
+        "task_hash": {
+            "type": "string",
+            "description": "The hash of the task that this run is associated with",
+            "minLength": 1
+        },
+        "task_artifact_references": {
+            "description": "The artifact references that were used to create this run",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "repository": {
+            "description": "The repository that this run is associated with",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
+        },
+        "requested_model": {
+            "description": "The model that was requested for this run",
+            "type": "string",
+            "minLength": 1
+        },
+        "requested_budgets": {
+            "description": "The budgets that were requested for this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "requested_security_profile": {
+            "description": "The security profile that was requested for this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/security-profile.schema.json"
+        },
+        "validation_requirements": {
+            "description": "The validation requirements that were requested for this run",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/requirement.schema.json"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    }
+}

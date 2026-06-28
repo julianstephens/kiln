@@ -31,7 +31,7 @@ It does not attempt to prove code mutation, command execution, validation, publi
 
 ---
 
-# 1. Milestone statement
+## 1. Milestone statement
 
 The milestone is complete when a Python developer can submit a natural-language question about a local repository and receive a grounded answer while Kiln:
 
@@ -51,7 +51,7 @@ Example task:
 
 ---
 
-# 2. Product boundary exercised
+## 2. Product boundary exercised
 
 The vertical slice proves this boundary:
 
@@ -81,7 +81,7 @@ The developer does not need to write or call Go directly.
 
 ---
 
-# 3. User experience
+## 3. User experience
 
 The target developer experience is conceptually:
 
@@ -113,7 +113,7 @@ print(result.stop_reason)
 
 The exact API is deferred to implementation design. The required semantics are not.
 
-## 3.1 Required inputs
+### 3.1 Required inputs
 
 - local repository path;
 - natural-language task;
@@ -122,7 +122,7 @@ The exact API is deferred to implementation design. The required semantics are n
 - explicit budgets;
 - read-only security profile.
 
-## 3.2 Required outputs
+### 3.2 Required outputs
 
 - final answer;
 - terminal status;
@@ -135,9 +135,9 @@ The exact API is deferred to implementation design. The required semantics are n
 
 ---
 
-# 4. Scope
+## 4. Scope
 
-## 4.1 Included
+### 4.1 Included
 
 The first milestone includes:
 
@@ -166,7 +166,7 @@ The first milestone includes:
 - recovery during repository preparation;
 - replay-oriented provenance.
 
-## 4.2 Explicitly excluded
+### 4.2 Explicitly excluded
 
 The first milestone excludes:
 
@@ -194,7 +194,7 @@ The first milestone excludes:
 
 ---
 
-# 5. Assumptions
+## 5. Assumptions
 
 The first milestone assumes:
 
@@ -210,9 +210,9 @@ External repository mutation during the run may cause the run to fail with a ver
 
 ---
 
-# 6. Components required
+## 6. Components required
 
-## 6.1 Python SDK
+### 6.1 Python SDK
 
 Responsibilities:
 
@@ -233,7 +233,7 @@ It does not:
 - select context;
 - authorize repository operations.
 
-## 6.2 Runtime process supervisor
+### 6.2 Runtime process supervisor
 
 Responsibilities:
 
@@ -244,7 +244,7 @@ Responsibilities:
 - prevent public access;
 - tie the runtime to the SDK session.
 
-## 6.3 Run coordinator
+### 6.3 Run coordinator
 
 Responsibilities:
 
@@ -256,7 +256,7 @@ Responsibilities:
 - finalize the result;
 - assign one terminal stop reason.
 
-## 6.4 Agent loop
+### 6.4 Agent loop
 
 Responsibilities:
 
@@ -267,7 +267,7 @@ Responsibilities:
 - update task state;
 - evaluate continuation.
 
-## 6.5 Fixed context policy
+### 6.5 Fixed context policy
 
 Responsibilities:
 
@@ -282,7 +282,7 @@ The policy is deterministic and built into the Go runtime.
 
 It may propose retrieval, but the runtime performs it.
 
-## 6.6 Context manager
+### 6.6 Context manager
 
 Responsibilities:
 
@@ -292,7 +292,7 @@ Responsibilities:
 - ensure stale evidence is not active;
 - produce a context ledger.
 
-## 6.7 Context renderer
+### 6.7 Context renderer
 
 Responsibilities:
 
@@ -302,7 +302,7 @@ Responsibilities:
 - produce an estimated token count;
 - store the rendered request as an artifact.
 
-## 6.8 Budget manager
+### 6.8 Budget manager
 
 Responsibilities:
 
@@ -313,7 +313,7 @@ Responsibilities:
 - deny unaffordable operations;
 - emit exhaustion.
 
-## 6.9 Capability broker
+### 6.9 Capability broker
 
 Responsibilities:
 
@@ -322,7 +322,7 @@ Responsibilities:
 - deny writes, commands, publication, integrations, and general network access;
 - record checks and denials.
 
-## 6.10 Model gateway
+### 6.10 Model gateway
 
 Responsibilities:
 
@@ -333,7 +333,7 @@ Responsibilities:
 - report actual usage;
 - store request and response artifacts.
 
-## 6.11 Model egress controller
+### 6.11 Model egress controller
 
 Responsibilities:
 
@@ -344,7 +344,7 @@ Responsibilities:
 - allow or deny the call;
 - record the decision.
 
-## 6.12 Repository session manager
+### 6.12 Repository session manager
 
 Responsibilities:
 
@@ -353,7 +353,7 @@ Responsibilities:
 - open, monitor, and close the repository session;
 - reject version conflicts.
 
-## 6.13 Repository worker
+### 6.13 Repository worker
 
 Responsibilities:
 
@@ -367,7 +367,7 @@ Responsibilities:
 - estimate candidate tokens;
 - persist preparation checkpoints.
 
-## 6.14 Persistence layer
+### 6.14 Persistence layer
 
 Responsibilities:
 
@@ -382,7 +382,7 @@ Responsibilities:
 
 ---
 
-# 7. Required contracts
+## 7. Required contracts
 
 The first slice requires these domain contracts:
 
@@ -409,9 +409,9 @@ Validation-specific contracts may exist in documentation but are not exercised.
 
 ---
 
-# 8. Required protocols
+## 8. Required protocols
 
-## 8.1 Runtime protocol
+### 8.1 Runtime protocol
 
 Minimum operations:
 
@@ -423,7 +423,7 @@ Minimum operations:
 - `run.result`;
 - `runtime.close`.
 
-## 8.2 Repository protocol
+### 8.2 Repository protocol
 
 Minimum operations:
 
@@ -439,7 +439,7 @@ Minimum operations:
 - worker health;
 - worker shutdown.
 
-## 8.3 Model adapter boundary
+### 8.3 Model adapter boundary
 
 Minimum operations:
 
@@ -452,9 +452,9 @@ A custom callback protocol is not required.
 
 ---
 
-# 9. Repository intelligence scope
+## 9. Repository intelligence scope
 
-## 9.1 File discovery
+### 9.1 File discovery
 
 The worker must:
 
@@ -465,7 +465,7 @@ The worker must:
 - identify supported files;
 - record file hashes.
 
-## 9.2 Symbol extraction
+### 9.2 Symbol extraction
 
 The worker must extract enough structure to support:
 
@@ -474,13 +474,13 @@ The worker must extract enough structure to support:
 - source ranges;
 - source retrieval.
 
-## 9.3 Search
+### 9.3 Search
 
 The milestone requires one deterministic lexical or full-text search implementation.
 
 Semantic embeddings are optional and not required for acceptance.
 
-## 9.4 Graph relation
+### 9.4 Graph relation
 
 The milestone requires one graph relation, preferably direct callers or calls.
 
@@ -490,7 +490,7 @@ The chosen relation must support:
 - confidence or derivation metadata;
 - exact source identities.
 
-## 9.5 Representations
+### 9.5 Representations
 
 The milestone requires:
 
@@ -506,7 +506,7 @@ Generated summaries are not required.
 
 ---
 
-# 10. Security profile
+## 10. Security profile
 
 The first milestone uses a fixed read-only profile.
 
@@ -540,7 +540,7 @@ publication:
     deny
 ```
 
-## 10.1 Security acceptance
+### 10.1 Security acceptance
 
 The runtime must demonstrate:
 
@@ -554,35 +554,35 @@ The runtime must demonstrate:
 
 ---
 
-# 11. Budgets
+## 11. Budgets
 
 The first milestone supports these limits.
 
-## 11.1 Model input tokens
+### 11.1 Model input tokens
 
 Limits total model input across the run or per call according to configuration.
 
-## 11.2 Model output tokens
+### 11.2 Model output tokens
 
 Reserves output capacity for every call.
 
-## 11.3 Model calls
+### 11.3 Model calls
 
 Limits inference attempts.
 
-## 11.4 Repository queries
+### 11.4 Repository queries
 
 Limits search, source, graph, and representation requests.
 
-## 11.5 Turns
+### 11.5 Turns
 
 Limits agent-loop turns.
 
-## 11.6 Wall time
+### 11.6 Wall time
 
 Limits total run duration.
 
-## 11.7 Budget behavior
+### 11.7 Budget behavior
 
 For every budgeted operation:
 
@@ -598,7 +598,7 @@ An unaffordable operation is denied before execution.
 
 ---
 
-# 12. Canonical success flow
+## 12. Canonical success flow
 
 ```text
 1. Developer opens Agent with local repository
@@ -650,7 +650,7 @@ An unaffordable operation is denied before execution.
 
 ---
 
-# 13. Agent interaction model
+## 13. Agent interaction model
 
 The model may propose only:
 
@@ -671,7 +671,7 @@ The model cannot propose:
 - capability changes;
 - security-profile changes.
 
-## 13.1 Retrieval tool definitions
+### 13.1 Retrieval tool definitions
 
 The model-visible repository tools should be narrow.
 
@@ -688,11 +688,11 @@ The exact schema is deferred, but arbitrary database queries are prohibited.
 
 ---
 
-# 14. Context-policy behavior
+## 14. Context-policy behavior
 
 The fixed-cap policy should support:
 
-## 14.1 Pinned content
+### 14.1 Pinned content
 
 Always preserve:
 
@@ -701,7 +701,7 @@ Always preserve:
 - security constraints;
 - essential task-state summary.
 
-## 14.2 Candidate admission
+### 14.2 Candidate admission
 
 Candidates are considered using:
 
@@ -712,11 +712,11 @@ Candidates are considered using:
 - duplicate status;
 - prior observation.
 
-## 14.3 Duplicate handling
+### 14.3 Duplicate handling
 
 The policy should avoid admitting duplicate identical content.
 
-## 14.4 Capacity
+### 14.4 Capacity
 
 The policy must preserve room for:
 
@@ -725,11 +725,11 @@ The policy must preserve room for:
 - model output reservation;
 - tool definitions.
 
-## 14.5 Eviction
+### 14.5 Eviction
 
 When active context exceeds its cap, the policy may evict non-pinned low-priority items.
 
-## 14.6 No compression requirement
+### 14.6 No compression requirement
 
 Learned or generated compression is deferred.
 
@@ -737,9 +737,9 @@ Representation replacement may use repository-provided lower-cost representation
 
 ---
 
-# 15. Persistence scope
+## 15. Persistence scope
 
-## 15.1 Installation state
+### 15.1 Installation state
 
 Persist:
 
@@ -747,7 +747,7 @@ Persist:
 - schema version;
 - runtime sessions.
 
-## 15.2 Repository state
+### 15.2 Repository state
 
 Persist:
 
@@ -763,7 +763,7 @@ Persist:
 - preparation checkpoints;
 - version journal.
 
-## 15.3 Run state
+### 15.3 Run state
 
 Persist:
 
@@ -776,11 +776,11 @@ Persist:
 - operations;
 - final result.
 
-## 15.4 Events
+### 15.4 Events
 
 Persist all required milestone events.
 
-## 15.5 Artifacts
+### 15.5 Artifacts
 
 Store as database blobs:
 
@@ -794,11 +794,11 @@ Store as database blobs:
 
 ---
 
-# 16. Required events
+## 16. Required events
 
 At minimum, the milestone emits:
 
-## Runtime and lifecycle
+### Runtime and lifecycle
 
 - `runtime.session_started`;
 - `runtime.session_ready`;
@@ -810,7 +810,7 @@ At minimum, the milestone emits:
 - `run.output_production_completed`;
 - exactly one terminal run event.
 
-## Repository
+### Repository
 
 - `repository.preparation_started`;
 - `repository.version_pinned`;
@@ -820,7 +820,7 @@ At minimum, the milestone emits:
 - query started and completed/failed;
 - `repository.session_closed`.
 
-## Context and policy
+### Context and policy
 
 - `context.plan_requested`;
 - `context.plan_produced`;
@@ -830,7 +830,7 @@ At minimum, the milestone emits:
 - context eviction where applicable;
 - `context.rendered`.
 
-## Model
+### Model
 
 - `model.request_rendered`;
 - `model.egress_evaluated`;
@@ -838,7 +838,7 @@ At minimum, the milestone emits:
 - model completed/failed;
 - `model.response_interpreted`.
 
-## Budget
+### Budget
 
 - `budget.initialized`;
 - reservation;
@@ -846,19 +846,19 @@ At minimum, the milestone emits:
 - reconciliation;
 - denial or exhaustion when applicable.
 
-## Turn
+### Turn
 
 - `turn.started`;
 - turn completed/failed.
 
-## Artifacts
+### Artifacts
 
 - artifact creation for model payloads;
 - artifact creation for final result.
 
 ---
 
-# 17. Run-result contract
+## 17. Run-result contract
 
 A successful result includes:
 
@@ -886,11 +886,11 @@ An unsuccessful result includes:
 
 ---
 
-# 18. Failure scenarios
+## 18. Failure scenarios
 
 The milestone must handle these failure classes.
 
-## 18.1 Invalid run configuration
+### 18.1 Invalid run configuration
 
 Examples:
 
@@ -903,7 +903,7 @@ Expected result:
 - `failed`;
 - structured initialization reason.
 
-## 18.2 Repository preparation failure
+### 18.2 Repository preparation failure
 
 Examples:
 
@@ -917,7 +917,7 @@ Expected result:
 - repository preparation reason;
 - preserved checkpoints where safe.
 
-## 18.3 Model failure
+### 18.3 Model failure
 
 Examples:
 
@@ -930,7 +930,7 @@ Expected result:
 - retry according to policy;
 - then `failed`.
 
-## 18.4 Budget exhaustion
+### 18.4 Budget exhaustion
 
 Expected result:
 
@@ -938,7 +938,7 @@ Expected result:
 - exact budget domain;
 - partial output where available.
 
-## 18.5 Cancellation
+### 18.5 Cancellation
 
 Expected result:
 
@@ -946,7 +946,7 @@ Expected result:
 - in-flight operation cancellation;
 - persisted partial history.
 
-## 18.6 Runtime interruption
+### 18.6 Runtime interruption
 
 During `preparing_repository`:
 
@@ -957,7 +957,7 @@ During `running` or `producing_output`:
 - run becomes `failed`;
 - reason `runtime_interrupted`.
 
-## 18.7 Repository version conflict
+### 18.7 Repository version conflict
 
 If the repository changes during execution:
 
@@ -967,9 +967,9 @@ If the repository changes during execution:
 
 ---
 
-# 19. Recovery scope
+## 19. Recovery scope
 
-## 19.1 Supported
+### 19.1 Supported
 
 The milestone supports recovery from interrupted `preparing_repository`.
 
@@ -980,7 +980,7 @@ Recovery uses:
 - version journal;
 - worker restart.
 
-## 19.2 Unsupported
+### 19.2 Unsupported
 
 The milestone does not resume:
 
@@ -992,25 +992,25 @@ These runs fail explicitly.
 
 ---
 
-# 20. Acceptance criteria
+## 20. Acceptance criteria
 
 The milestone is accepted when all mandatory criteria pass.
 
-## 20.1 Developer interface
+### 20.1 Developer interface
 
 - A Python caller can create and execute one run.
 - No Go API knowledge is required.
 - Cancellation can be requested.
 - Final result and streamed events are accessible.
 
-## 20.2 Runtime process
+### 20.2 Runtime process
 
 - The Go runtime is privately supervised.
 - No public TCP listener is created.
 - Unexpected runtime exit is detected.
 - Runtime close terminates child resources.
 
-## 20.3 Repository preparation
+### 20.3 Repository preparation
 
 - A local repository can be registered.
 - A repository version and workspace version are pinned.
@@ -1018,14 +1018,14 @@ The milestone is accepted when all mandatory criteria pass.
 - Preparation checkpoints are persisted.
 - Interrupted preparation can resume.
 
-## 20.4 Repository protocol
+### 20.4 Repository protocol
 
 - All retrieval uses a scoped session.
 - Cross-session or wrong-version requests are rejected.
 - Search, source, one graph relation, and one alternate representation work.
 - Candidates carry version, provenance, cost, and completeness metadata.
 
-## 20.5 Context
+### 20.5 Context
 
 - Retrieved candidates do not enter context directly.
 - The policy produces a plan.
@@ -1033,7 +1033,7 @@ The milestone is accepted when all mandatory criteria pass.
 - Active context remains within the configured cap.
 - The final context ledger is available.
 
-## 20.6 Model
+### 20.6 Model
 
 - One approved adapter works.
 - Provider-specific preflight token counting occurs.
@@ -1041,13 +1041,13 @@ The milestone is accepted when all mandatory criteria pass.
 - Model request and response artifacts are stored.
 - Actual usage is reconciled.
 
-## 20.7 Budgets
+### 20.7 Budgets
 
 - Model-call, query, turn, input, output, and wall-time limits are enforced.
 - Operations are denied before exceeding hard limits.
 - Exhaustion produces an explicit terminal result.
 
-## 20.8 Security
+### 20.8 Security
 
 - Repository access is read-only.
 - No command execution is available.
@@ -1056,14 +1056,14 @@ The milestone is accepted when all mandatory criteria pass.
 - Excluded-path content is not sent to the remote model.
 - Capability decisions are recorded.
 
-## 20.9 Events and artifacts
+### 20.9 Events and artifacts
 
 - Required events are ordered and immutable.
 - Large payloads are artifact-backed.
 - The event stream identifies what the model saw.
 - Terminal status has exactly one stop reason.
 
-## 20.10 Persistence
+### 20.10 Persistence
 
 - Runs survive process inspection after completion.
 - Multiple repositories can share the installation database without query leakage.
@@ -1072,9 +1072,9 @@ The milestone is accepted when all mandatory criteria pass.
 
 ---
 
-# 21. Required test scenarios
+## 21. Required test scenarios
 
-## 21.1 Happy path
+### 21.1 Happy path
 
 Repository contains an identifiable indexing entry point and callers.
 
@@ -1085,7 +1085,7 @@ Expected:
 - graph relation used;
 - completed state.
 
-## 21.2 Index reuse
+### 21.2 Index reuse
 
 Run the same repository twice without changes.
 
@@ -1095,7 +1095,7 @@ Expected:
 - distinct runs and event streams;
 - same repository version.
 
-## 21.3 Repository isolation
+### 21.3 Repository isolation
 
 Register two repositories with similar symbol names.
 
@@ -1103,7 +1103,7 @@ Expected:
 
 - each scoped session returns only its repository's candidates.
 
-## 21.4 Token-cap pressure
+### 21.4 Token-cap pressure
 
 Use a small context cap with oversized candidates.
 
@@ -1113,7 +1113,7 @@ Expected:
 - cap is not exceeded;
 - decisions recorded.
 
-## 21.5 Query-budget exhaustion
+### 21.5 Query-budget exhaustion
 
 Set repository-query limit below task needs.
 
@@ -1123,7 +1123,7 @@ Expected:
 - terminal state `exhausted`;
 - budget domain recorded.
 
-## 21.6 Model-call exhaustion
+### 21.6 Model-call exhaustion
 
 Set model-call limit to one when more work is requested.
 
@@ -1132,7 +1132,7 @@ Expected:
 - second call denied;
 - explicit exhaustion.
 
-## 21.7 Egress exclusion
+### 21.7 Egress exclusion
 
 Place matching content in an excluded path.
 
@@ -1141,7 +1141,7 @@ Expected:
 - content is not included in remote request;
 - egress event records exclusion.
 
-## 21.8 Cancellation
+### 21.8 Cancellation
 
 Cancel during repository query or model call.
 
@@ -1151,7 +1151,7 @@ Expected:
 - run terminal state `cancelled`;
 - partial history preserved.
 
-## 21.9 Worker crash during preparation
+### 21.9 Worker crash during preparation
 
 Terminate repository worker after a checkpoint.
 
@@ -1161,7 +1161,7 @@ Expected:
 - preparation resumes from valid checkpoint;
 - no partial index exposed.
 
-## 21.10 Runtime crash during running
+### 21.10 Runtime crash during running
 
 Terminate Go runtime during an active turn.
 
@@ -1171,7 +1171,7 @@ Expected:
 - run becomes `failed`;
 - stop reason `runtime_interrupted`.
 
-## 21.11 Repository changes during run
+### 21.11 Repository changes during run
 
 Modify a source file externally after session open.
 
@@ -1180,7 +1180,7 @@ Expected:
 - conflict detected before mismatched evidence is treated as current;
 - run fails explicitly.
 
-## 21.12 Artifact integrity
+### 21.12 Artifact integrity
 
 Corrupt a stored artifact in a test fixture.
 
@@ -1192,7 +1192,7 @@ Expected:
 
 ---
 
-# 22. Demonstration scenario
+## 22. Demonstration scenario
 
 A milestone demonstration should use a repository with:
 
@@ -1227,9 +1227,9 @@ Expected trace qualities:
 
 ---
 
-# 23. Milestone deliverables
+## 23. Milestone deliverables
 
-## 23.1 Runtime
+### 23.1 Runtime
 
 - private child-process executable;
 - run coordinator;
@@ -1242,7 +1242,7 @@ Expected trace qualities:
 - model gateway;
 - event/state/artifact persistence.
 
-## 23.2 Python SDK
+### 23.2 Python SDK
 
 - runtime supervision;
 - run submission;
@@ -1250,7 +1250,7 @@ Expected trace qualities:
 - cancellation;
 - result retrieval.
 
-## 23.3 Repository engine
+### 23.3 Repository engine
 
 - registration;
 - preparation;
@@ -1262,7 +1262,7 @@ Expected trace qualities:
 - one graph relation;
 - one alternate representation.
 
-## 23.4 Documentation
+### 23.4 Documentation
 
 - architecture;
 - contracts;
@@ -1274,7 +1274,7 @@ Expected trace qualities:
 - validation;
 - this vertical-slice specification.
 
-## 23.5 Tests
+### 23.5 Tests
 
 - contract tests;
 - protocol tests;
@@ -1286,11 +1286,11 @@ Expected trace qualities:
 
 ---
 
-# 24. Suggested implementation sequence
+## 24. Suggested implementation sequence
 
 The vertical slice should be built in this order.
 
-## Phase 1: Persistence foundation
+### Phase 1: Persistence foundation
 
 - installation database;
 - schema versioning;
@@ -1299,7 +1299,7 @@ The vertical slice should be built in this order.
 - event append;
 - artifact blobs.
 
-## Phase 2: Runtime protocol and supervision
+### Phase 2: Runtime protocol and supervision
 
 - private process startup;
 - health handshake;
@@ -1307,7 +1307,7 @@ The vertical slice should be built in this order.
 - event streaming;
 - close and cancellation.
 
-## Phase 3: Repository preparation
+### Phase 3: Repository preparation
 
 - repository worker process;
 - register;
@@ -1316,7 +1316,7 @@ The vertical slice should be built in this order.
 - checkpoints;
 - session open.
 
-## Phase 4: Retrieval
+### Phase 4: Retrieval
 
 - search;
 - source retrieval;
@@ -1324,7 +1324,7 @@ The vertical slice should be built in this order.
 - candidate contract;
 - alternate representation.
 
-## Phase 5: Runtime control plane
+### Phase 5: Runtime control plane
 
 - lifecycle transitions;
 - operations;
@@ -1332,7 +1332,7 @@ The vertical slice should be built in this order.
 - read-only capabilities;
 - task and context state.
 
-## Phase 6: Model loop
+### Phase 6: Model loop
 
 - context policy;
 - renderer;
@@ -1341,7 +1341,7 @@ The vertical slice should be built in this order.
 - model adapter;
 - response interpretation.
 
-## Phase 7: Finalization
+### Phase 7: Finalization
 
 - stop controller;
 - output production;
@@ -1349,7 +1349,7 @@ The vertical slice should be built in this order.
 - context ledger;
 - session shutdown.
 
-## Phase 8: Hardening
+### Phase 8: Hardening
 
 - cancellation;
 - recovery;
@@ -1360,7 +1360,7 @@ The vertical slice should be built in this order.
 
 ---
 
-# 25. Definition of done
+## 25. Definition of done
 
 The first vertical slice is done when:
 
@@ -1377,11 +1377,11 @@ The first vertical slice is done when:
 
 ---
 
-# 26. Deferred next slices
+## 26. Deferred next slices
 
 After the first milestone, recommended slices are:
 
-## Slice 2: Workspace mutation
+### Slice 2: Workspace mutation
 
 Adds:
 
@@ -1391,7 +1391,7 @@ Adds:
 - incremental refresh;
 - patch generation.
 
-## Slice 3: Command sandbox
+### Slice 3: Command sandbox
 
 Adds:
 
@@ -1400,7 +1400,7 @@ Adds:
 - output processing;
 - command budgets.
 
-## Slice 4: Validation
+### Slice 4: Validation
 
 Adds:
 
@@ -1410,7 +1410,7 @@ Adds:
 - validation report;
 - recovery.
 
-## Slice 5: Hosted task-to-PR workflow
+### Slice 5: Hosted task-to-PR workflow
 
 Adds:
 
@@ -1421,7 +1421,7 @@ Adds:
 - publisher;
 - PR result.
 
-## Slice 6: Policy experimentation
+### Slice 6: Policy experimentation
 
 Adds:
 
@@ -1432,7 +1432,7 @@ Adds:
 
 ---
 
-# 27. Vertical-slice invariants
+## 27. Vertical-slice invariants
 
 1. The public interface is Python-native.
 2. The Go runtime runs as a private child process.

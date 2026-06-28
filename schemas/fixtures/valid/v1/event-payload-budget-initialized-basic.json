@@ -1,0 +1,16 @@
+{
+    "budget_scope": "run",
+    "budget_id": "budget_001",
+    "run_id": "run_001",
+    "limits": {
+        "mode": "custom",
+        "model_input_tokens": 5000
+    },
+    "initial_state": {
+        "state_revision": 0,
+        "latest_transaction_sequence": 0,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "initialized_at": "2026-06-28T00:00:00Z"
+}

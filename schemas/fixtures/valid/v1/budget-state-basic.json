@@ -1,0 +1,13 @@
+{
+    "state_revision": 1,
+    "latest_transaction_sequence": 7,
+    "estimate_vs_actuals": {},
+    "mode": "custom",
+    "model_input_tokens": {
+        "configured_limit": 10000,
+        "reserved_amount": 250,
+        "committed_amount": 1500,
+        "remaining_amount": 8250,
+        "exhausted": false
+    }
+}

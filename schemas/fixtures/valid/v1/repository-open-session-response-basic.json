@@ -1,0 +1,14 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_05",
+    "operation": "repository.open_session",
+    "status": "ok",
+    "result": {
+        "session_id": "sess_02",
+        "capabilities": [
+            "search"
+        ],
+        "index_status": "ready"
+    },
+    "artifact_references": []
+}

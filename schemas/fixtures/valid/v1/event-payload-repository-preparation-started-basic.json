@@ -1,0 +1,14 @@
+{
+    "repository": {
+        "id": "repo_001",
+        "version_id": "rev_001",
+        "workspace_version_id": "wsv_001"
+    },
+    "requested_revision": "main@abc123",
+    "expected_digest": "sha256:repo001",
+    "indexing_configuration_id": "index_cfg_001",
+    "requested_refresh_policy": {
+        "mode": "time_based",
+        "ttl_seconds": 300
+    }
+}

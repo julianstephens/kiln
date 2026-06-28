@@ -1,0 +1,26 @@
+{
+    "event_id": "evt_001",
+    "event_schema_version": "1.0.0",
+    "run_id": "run_001",
+    "sequence": 1,
+    "event_type": "run.created",
+    "occurred_at": "2026-06-28T00:00:00Z",
+    "producer": "kiln-runtime",
+    "payload": {
+        "run_specification_id": "spec_001",
+        "task_id": "task_001",
+        "repository": {
+            "id": "repo_001",
+            "version_id": "rev_001",
+            "workspace_version_id": "wsv_001"
+        },
+        "requested_model": "gpt-4",
+        "requested_budgets": {
+            "mode": "custom",
+            "model_input_tokens": 1000
+        },
+        "requested_security_profile": {
+            "default_deny_settings": {}
+        }
+    }
+}

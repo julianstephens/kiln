@@ -1,0 +1,13 @@
+{
+    "model_invocation_id": "model_invocation_002",
+    "failure_category": "provider_error",
+    "error": {
+        "error_id": "run_error_001",
+        "run_id": "run_001",
+        "category": "tool",
+        "code": "tool_failed",
+        "message": "Model provider returned an error",
+        "occurred_at": "2026-06-28T00:00:00Z"
+    },
+    "failed_at": "2026-06-28T00:00:00Z"
+}

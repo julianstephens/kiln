@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/common/v1/byte-range.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln common byte range",
+    "description": "Inclusive byte offset range within a source or artifact payload.",
     "type": "object",
     "additionalProperties": false,
     "required": [

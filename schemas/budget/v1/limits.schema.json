@@ -1,0 +1,65 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln budget limits",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "mode"
+    ],
+    "properties": {
+        "mode": {
+            "type": "string",
+            "enum": [
+                "installation_default",
+                "unlimited",
+                "custom"
+            ]
+        },
+        "model_input_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_output_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_calls": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "tool_calls": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "repository_requests": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "elapsed_wall_time_seconds": {
+            "type": "number",
+            "minimum": 0
+        },
+        "monetary_cost_usd": {
+            "type": "number",
+            "minimum": 0
+        },
+        "command_time_seconds": {
+            "type": "number",
+            "minimum": 0
+        },
+        "command_output_size_bytes": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "artifact_size_bytes": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "repeated_token_cost_usd": {
+            "type": "number",
+            "minimum": 0
+        }
+    }
+}

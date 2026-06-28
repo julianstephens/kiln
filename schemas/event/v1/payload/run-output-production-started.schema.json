@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-output-production-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload run output production started",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "completion_proposal_id",
+        "output_mode",
+        "expected_artifact_kinds"
+    ],
+    "properties": {
+        "completion_proposal_id": {
+            "type": "string",
+            "description": "The proposal that is being used to produce the output for this run",
+            "minLength": 1
+        },
+        "output_mode": {
+            "description": "The output mode that is being used to produce the output for this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/output-mode.schema.json"
+        },
+        "expected_artifact_kinds": {
+            "description": "The artifact kinds that are expected to be produced by this run",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "answer",
+                    "patch",
+                    "report",
+                    "changed_file_manifest",
+                    "validation_report"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    }
+}

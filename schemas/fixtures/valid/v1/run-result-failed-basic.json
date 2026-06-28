@@ -1,0 +1,31 @@
+{
+    "run_id": "run_456",
+    "terminal_status": "failed",
+    "output_mode": "report",
+    "stop_reason": {
+        "category": "failed",
+        "code": "tool_failed",
+        "message": "A required tool invocation failed"
+    },
+    "error": {
+        "error_id": "err_001",
+        "run_id": "run_456",
+        "category": "tool",
+        "code": "tool_failed",
+        "message": "Tool execution returned non-zero exit code",
+        "occurred_at": "2026-06-28T00:00:00Z"
+    },
+    "budget": {
+        "usage": {
+            "usage_scope": "run",
+            "run_id": "run_456",
+            "model_input_tokens": 128,
+            "recorded_at": "2026-06-28T00:00:00Z"
+        }
+    },
+    "event_stream_range": {
+        "first_sequence": 1,
+        "last_sequence": 19
+    },
+    "context_ledger_reference": "context_ledger_456"
+}

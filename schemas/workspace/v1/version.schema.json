@@ -1,0 +1,71 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/workspace/v1/version.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln workspace version",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [],
+    "properties": {
+        "version_id": {
+            "type": "string",
+            "description": "The unique identifier for this version of the workspace",
+            "minLength": 1
+        },
+        "repository_id": {
+            "type": "string",
+            "description": "The unique identifier for the repository that this version of the workspace is associated with",
+            "minLength": 1
+        },
+        "base_repository_version_id": {
+            "type": "string",
+            "description": "The unique identifier for the base version of the repository that this version of the workspace is associated with",
+            "minLength": 1
+        },
+        "parent_workspace_version_id": {
+            "type": "string",
+            "description": "The unique identifier for the parent version of the workspace that this version was created from",
+            "minLength": 1
+        },
+        "mutation_set": {
+            "type": "array",
+            "description": "The set of mutations that were applied to create this version of the workspace",
+            "items": {
+                "type": "object"
+            },
+            "uniqueItems": true
+        },
+        "affected_paths": {
+            "type": "array",
+            "description": "The set of paths that were affected by the mutations that were applied to create this version of the workspace",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "invalidated_evidence_set": {
+            "type": "array",
+            "description": "The set of evidence that was invalidated by the mutations that were applied to create this version of the workspace",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "invalidation_reference": {
+            "description": "The reference to the evidence that invalidated this version of the workspace",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "synchronized": {
+            "type": "boolean",
+            "description": "Whether this version of the workspace has been synchronized with the base repository version"
+        },
+        "created_at": {
+            "type": "string",
+            "description": "The timestamp when this version of the workspace was created",
+            "format": "date-time"
+        }
+    }
+}

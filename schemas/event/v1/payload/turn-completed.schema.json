@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/turn-completed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload turn completed",
+    "description": "Payload for turn.completed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "turn_id",
+        "turn_index",
+        "turn_outcome",
+        "completed_at"
+    ],
+    "properties": {
+        "turn_id": {
+            "description": "Identity for the turn that completed.",
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_index": {
+            "description": "Zero-based index of this turn within the run.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "turn_outcome": {
+            "description": "Normalized outcome of the completed turn.",
+            "type": "string",
+            "enum": [
+                "assistant_message_produced",
+                "tool_calls_requested",
+                "tool_results_processed",
+                "output_candidate_produced",
+                "validation_judgment_produced",
+                "no_op"
+            ]
+        },
+        "model_invocation_ids": {
+            "description": "Model invocations performed during this turn.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "tool_call_ids": {
+            "description": "Tool calls requested or processed during this turn.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "output_reference": {
+            "description": "Optional artifact reference for the normalized turn output.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "context_state_revision": {
+            "description": "Context state revision after the turn completed.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "budget_usage": {
+            "description": "Budget usage committed for this turn.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "completed_at": {
+            "description": "When the turn completed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

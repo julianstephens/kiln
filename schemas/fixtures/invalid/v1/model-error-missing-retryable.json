@@ -1,0 +1,6 @@
+{
+    "error_id": "model_error_01",
+    "category": "timeout",
+    "code": "MODEL_TIMEOUT",
+    "message": "Model provider timed out."
+}

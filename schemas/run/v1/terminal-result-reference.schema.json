@@ -1,0 +1,35 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/terminal-result-reference.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run terminal result reference",
+    "description": "Reference to the persisted terminal result associated with a run that has reached a terminal lifecycle state.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "kind",
+        "id"
+    ],
+    "properties": {
+        "kind": {
+            "description": "The kind of terminal result being referenced.",
+            "type": "string",
+            "enum": [
+                "output",
+                "error",
+                "cancellation",
+                "exhaustion"
+            ]
+        },
+        "id": {
+            "description": "Stable identifier for the persisted terminal result.",
+            "type": "string",
+            "minLength": 1
+        },
+        "created_at": {
+            "description": "When the terminal result was recorded.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

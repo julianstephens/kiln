@@ -48,7 +48,7 @@ It does not define:
 
 ---
 
-# 1. Protocol goals
+## 1. Protocol goals
 
 The repository protocol must:
 
@@ -65,9 +65,9 @@ The repository protocol must:
 
 ---
 
-# 2. Protocol roles
+## 2. Protocol roles
 
-## 2.1 Runtime
+### 2.1 Runtime
 
 The runtime is the protocol client.
 
@@ -86,7 +86,7 @@ It owns:
 
 The runtime may request retrieval, but it does not directly inspect the repository engine's database.
 
-## 2.2 Repository engine
+### 2.2 Repository engine
 
 The repository engine is the protocol server.
 
@@ -118,7 +118,7 @@ The repository engine does not:
 - publish changes;
 - expose unrestricted database queries.
 
-## 2.3 Repository worker
+### 2.3 Repository worker
 
 The repository worker is the isolated process hosting the repository engine.
 
@@ -128,7 +128,7 @@ The worker must not listen on a public interface.
 
 ---
 
-# 3. Trust model
+## 3. Trust model
 
 The repository engine is first-party but semi-trusted.
 
@@ -152,7 +152,7 @@ Repository output is evidence, not instruction.
 
 ---
 
-# 4. Transport requirements
+## 4. Transport requirements
 
 The initial local transport should be one of:
 
@@ -178,11 +178,11 @@ The semantic protocol should remain transport-independent.
 
 ---
 
-# 5. Protocol envelope
+## 5. Protocol envelope
 
 Every request and response uses a common envelope.
 
-## 5.1 Request envelope
+### 5.1 Request envelope
 
 A request contains:
 
@@ -213,7 +213,7 @@ RepositoryRequest
 └── budget_reservation_id?
 ```
 
-## 5.2 Response envelope
+### 5.2 Response envelope
 
 A response contains:
 
@@ -247,7 +247,7 @@ RepositoryResponse
 └── artifact_references?
 ```
 
-## 5.3 Status values
+### 5.3 Status values
 
 Protocol-level response statuses are:
 
@@ -266,7 +266,7 @@ Domain-specific outcome fields may provide additional detail.
 
 ---
 
-# 6. Protocol versioning
+## 6. Protocol versioning
 
 The protocol version must be explicit in every request and response.
 
@@ -285,17 +285,17 @@ The initial protocol should prefer a closed operation set.
 
 ---
 
-# 7. Repository identity model
+## 7. Repository identity model
 
 The protocol distinguishes several related identities.
 
-## 7.1 Workspace identity
+### 7.1 Workspace identity
 
 Represents a registered local or hosted working environment.
 
 A workspace may contain one or more logical repositories.
 
-## 7.2 Repository identity
+### 7.2 Repository identity
 
 Represents one logical repository across revisions and workspace states.
 
@@ -305,7 +305,7 @@ Examples:
 - a hosted repository snapshot;
 - an extracted source bundle.
 
-## 7.3 Repository version identity
+### 7.3 Repository version identity
 
 Represents one immutable base repository state.
 
@@ -316,13 +316,13 @@ It is typically bound to:
 - a snapshot identity;
 - an import timestamp.
 
-## 7.4 Workspace version identity
+### 7.4 Workspace version identity
 
 Represents one ordered mutable state derived from a repository version.
 
 Every approved workspace mutation advances the workspace version.
 
-## 7.5 Repository session identity
+### 7.5 Repository session identity
 
 Represents one scoped protocol session bound to:
 
@@ -336,11 +336,11 @@ A session prevents callers from issuing arbitrary cross-repository queries.
 
 ---
 
-# 8. Session model
+## 8. Session model
 
 Repository operations occur through scoped sessions.
 
-## 8.1 Session creation
+### 8.1 Session creation
 
 The runtime opens a session after repository preparation.
 
@@ -360,7 +360,7 @@ repository.open
         current index status
 ```
 
-## 8.2 Session scope
+### 8.2 Session scope
 
 A repository session binds all later requests to:
 
@@ -373,7 +373,7 @@ A repository session binds all later requests to:
 
 The caller does not repeat arbitrary repository identifiers on each operation.
 
-## 8.3 Session advancement
+### 8.3 Session advancement
 
 When the workspace version advances, the existing session becomes stale until refreshed or advanced.
 
@@ -385,7 +385,7 @@ The runtime may request:
 
 The protocol must never silently change a session's version binding.
 
-## 8.4 Session closure
+### 8.4 Session closure
 
 Closing a session:
 
@@ -394,7 +394,7 @@ Closing a session:
 - does not delete run events;
 - does not remove persisted repository versions.
 
-## 8.5 Session expiration
+### 8.5 Session expiration
 
 Sessions may expire when:
 
@@ -407,13 +407,13 @@ A restarted worker may require the runtime to reopen a logically equivalent sess
 
 ---
 
-# 9. Repository preparation operations
+## 9. Repository preparation operations
 
-## 9.1 `repository.register`
+### 9.1 `repository.register`
 
 Registers or resolves a logical repository.
 
-### Consumes
+#### Consumes
 
 - workspace identity;
 - repository root or snapshot reference;
@@ -422,14 +422,14 @@ Registers or resolves a logical repository.
 - source kind;
 - configuration identity.
 
-### Produces
+#### Produces
 
 - repository identity;
 - resolved metadata;
 - whether the repository already existed;
 - current known repository versions.
 
-### Rules
+#### Rules
 
 - registration does not imply indexing;
 - root paths must be normalized and scoped;
@@ -438,11 +438,11 @@ Registers or resolves a logical repository.
 
 ---
 
-## 9.2 `repository.prepare`
+### 9.2 `repository.prepare`
 
 Prepares one repository version and current workspace version for retrieval.
 
-### Consumes
+#### Consumes
 
 - repository identity;
 - requested revision or snapshot;
@@ -453,7 +453,7 @@ Prepares one repository version and current workspace version for retrieval.
 - refresh policy;
 - operation budget.
 
-### Produces
+#### Produces
 
 - repository version identity;
 - workspace version identity;
@@ -464,7 +464,7 @@ Prepares one repository version and current workspace version for retrieval.
 - diagnostics;
 - readiness status.
 
-### Preparation modes
+#### Preparation modes
 
 The result identifies one of:
 
@@ -474,7 +474,7 @@ The result identifies one of:
 - `new_index`;
 - `failed`.
 
-### Rules
+#### Rules
 
 - preparation must be idempotent for the same immutable inputs;
 - partial index updates must commit atomically;
@@ -484,15 +484,15 @@ The result identifies one of:
 
 ---
 
-## 9.3 `repository.status`
+### 9.3 `repository.status`
 
 Returns preparation and index status.
 
-### Consumes
+#### Consumes
 
 - repository identity or preparation operation identity.
 
-### Produces
+#### Produces
 
 - repository version;
 - workspace version;
@@ -504,7 +504,7 @@ Returns preparation and index status.
 
 ---
 
-# 10. Retrieval operations
+## 10. Retrieval operations
 
 The initial protocol supports these retrieval families:
 
@@ -517,11 +517,11 @@ The initial protocol supports these retrieval families:
 
 Every retrieval response returns structured candidates.
 
-## 10.1 `repository.search`
+### 10.1 `repository.search`
 
 Performs repository search.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - search query;
@@ -533,7 +533,7 @@ Performs repository search.
 - optional minimum score;
 - result-size limit.
 
-### Search modes
+#### Search modes
 
 Possible modes include:
 
@@ -546,7 +546,7 @@ Possible modes include:
 
 The initial vertical slice may support only lexical or full-text search.
 
-### Produces
+#### Produces
 
 - ordered repository candidates;
 - search diagnostics;
@@ -554,7 +554,7 @@ The initial vertical slice may support only lexical or full-text search.
 - truncation status;
 - usage metadata.
 
-### Rules
+#### Rules
 
 - results are scoped to the session;
 - results must include repository and workspace versions;
@@ -564,11 +564,11 @@ The initial vertical slice may support only lexical or full-text search.
 
 ---
 
-## 10.2 `repository.get_source`
+### 10.2 `repository.get_source`
 
 Retrieves source for a file, symbol, or source range.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - target content identity or path;
@@ -577,7 +577,7 @@ Retrieves source for a file, symbol, or source range.
 - representation preference;
 - maximum result size.
 
-### Produces
+#### Produces
 
 - one or more repository candidates;
 - exact source location;
@@ -586,7 +586,7 @@ Retrieves source for a file, symbol, or source range.
 - token estimate;
 - truncation status.
 
-### Rules
+#### Rules
 
 - paths must remain within the scoped repository;
 - symlink or junction escape is rejected;
@@ -596,18 +596,18 @@ Retrieves source for a file, symbol, or source range.
 
 ---
 
-## 10.3 `repository.get_file`
+### 10.3 `repository.get_file`
 
 Retrieves file-level metadata and representations.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - file identity or path;
 - representation preference;
 - include metadata flags.
 
-### Produces
+#### Produces
 
 Possible candidate representations:
 
@@ -619,11 +619,11 @@ Possible candidate representations:
 
 ---
 
-## 10.4 `repository.expand_graph`
+### 10.4 `repository.expand_graph`
 
 Traverses repository relationships.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - starting content identities;
@@ -635,7 +635,7 @@ Traverses repository relationships.
 - confidence threshold;
 - representation preference.
 
-### Relation types
+#### Relation types
 
 Possible relation types include:
 
@@ -654,7 +654,7 @@ Possible relation types include:
 
 The initial vertical slice may support one relation family.
 
-### Produces
+#### Produces
 
 - graph-path candidates;
 - node candidates;
@@ -663,7 +663,7 @@ The initial vertical slice may support one relation family.
 - truncation status;
 - traversal usage.
 
-### Rules
+#### Rules
 
 - graph traversal must be bounded;
 - cycles must be detected;
@@ -673,11 +673,11 @@ The initial vertical slice may support one relation family.
 
 ---
 
-## 10.5 `repository.get_representation`
+### 10.5 `repository.get_representation`
 
 Requests a specific representation for known content.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - content identity;
@@ -685,14 +685,14 @@ Requests a specific representation for known content.
 - maximum token estimate;
 - optional compression profile.
 
-### Produces
+#### Produces
 
 - repository candidate in requested or fallback representation;
 - available alternatives;
 - representation provenance;
 - estimate metadata.
 
-### Representation kinds
+#### Representation kinds
 
 Possible kinds include:
 
@@ -707,7 +707,7 @@ Possible kinds include:
 - graph path;
 - search snippet.
 
-### Fallback behavior
+#### Fallback behavior
 
 When the requested representation is unavailable, the engine may:
 
@@ -719,16 +719,16 @@ Fallback must never be silent.
 
 ---
 
-## 10.6 `repository.list_representations`
+### 10.6 `repository.list_representations`
 
 Lists available representations for content.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - content identity.
 
-### Produces
+#### Produces
 
 - available representation kinds;
 - token estimates;
@@ -737,11 +737,11 @@ Lists available representations for content.
 
 ---
 
-# 11. Repository candidate contract
+## 11. Repository candidate contract
 
 A repository candidate is the primary evidence unit returned by the repository engine.
 
-## 11.1 Required identity fields
+### 11.1 Required identity fields
 
 A candidate includes:
 
@@ -752,7 +752,7 @@ A candidate includes:
 - semantic kind;
 - representation kind.
 
-## 11.2 Source fields
+### 11.2 Source fields
 
 When source-backed, a candidate includes:
 
@@ -763,7 +763,7 @@ When source-backed, a candidate includes:
 - qualified name, where available;
 - language, where known.
 
-## 11.3 Content fields
+### 11.3 Content fields
 
 A candidate provides one of:
 
@@ -773,7 +773,7 @@ A candidate provides one of:
 
 The response must declare which form is used.
 
-## 11.4 Cost fields
+### 11.4 Cost fields
 
 A candidate includes advisory estimates:
 
@@ -787,7 +787,7 @@ Repository estimates are advisory.
 
 The model gateway performs final provider-specific counting.
 
-## 11.5 Relevance fields
+### 11.5 Relevance fields
 
 A candidate may include:
 
@@ -801,7 +801,7 @@ A candidate may include:
 
 Scores must be labeled and must not be treated as universally comparable across methods.
 
-## 11.6 Provenance fields
+### 11.6 Provenance fields
 
 A candidate includes:
 
@@ -813,7 +813,7 @@ A candidate includes:
 - creation timestamp;
 - whether generated or directly extracted.
 
-## 11.7 Validity fields
+### 11.7 Validity fields
 
 A candidate includes:
 
@@ -823,7 +823,7 @@ A candidate includes:
 - synchronization status;
 - completeness or truncation status.
 
-## 11.8 Alternative representations
+### 11.8 Alternative representations
 
 A candidate may advertise alternatives:
 
@@ -836,7 +836,7 @@ AlternativeRepresentation
 └── quality metadata
 ```
 
-## 11.9 Candidate invariants
+### 11.9 Candidate invariants
 
 1. A candidate is bound to one repository version and workspace version.
 2. A candidate cannot claim current status if invalidated.
@@ -851,14 +851,14 @@ AlternativeRepresentation
 
 ---
 
-# 12. Current index and version journal
+## 12. Current index and version journal
 
 Kiln uses:
 
 - one mutable current index;
 - a version journal describing repository and workspace changes.
 
-## 12.1 Mutable current index
+### 12.1 Mutable current index
 
 The current index contains the active materialized state for:
 
@@ -869,7 +869,7 @@ The current index contains the active materialized state for:
 - search structures;
 - embeddings, when enabled.
 
-## 12.2 Version journal
+### 12.2 Version journal
 
 The journal records:
 
@@ -883,7 +883,7 @@ The journal records:
 - index schema changes;
 - content digests.
 
-## 12.3 Historical queryability
+### 12.3 Historical queryability
 
 The initial protocol does not require arbitrary queries against all historical versions.
 
@@ -896,7 +896,7 @@ Historical versions may be:
 
 The current index is optimized for the active version.
 
-## 12.4 Version transition rule
+### 12.4 Version transition rule
 
 The engine must not expose a partially updated current index as a new workspace version.
 
@@ -909,13 +909,13 @@ A version transition becomes current only after:
 
 ---
 
-# 13. Invalidation operations
+## 13. Invalidation operations
 
-## 13.1 `repository.invalidate`
+### 13.1 `repository.invalidate`
 
 Marks evidence affected by workspace mutations as stale.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - prior workspace version;
@@ -925,7 +925,7 @@ Marks evidence affected by workspace mutations as stale.
 - optional content digests;
 - mutation operation identity.
 
-### Produces
+#### Produces
 
 - invalidation summary;
 - stale file identities;
@@ -935,7 +935,7 @@ Marks evidence affected by workspace mutations as stale.
 - refresh recommendation;
 - new session status.
 
-### Rules
+#### Rules
 
 - invalidation is synchronous with workspace-version advancement;
 - affected evidence becomes stale before the mutation is considered complete;
@@ -945,7 +945,7 @@ Marks evidence affected by workspace mutations as stale.
 
 ---
 
-## 13.2 Mutation set
+### 13.2 Mutation set
 
 A mutation set may contain:
 
@@ -968,13 +968,13 @@ Each mutation includes:
 
 ---
 
-# 14. Refresh operations
+## 14. Refresh operations
 
-## 14.1 `repository.refresh`
+### 14.1 `repository.refresh`
 
 Synchronizes stale repository intelligence.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - target workspace version;
@@ -983,7 +983,7 @@ Synchronizes stale repository intelligence.
 - operation budget;
 - deadline.
 
-### Refresh modes
+#### Refresh modes
 
 - `eager_incremental`;
 - `lazy_incremental`;
@@ -991,7 +991,7 @@ Synchronizes stale repository intelligence.
 - `full_rebuild`;
 - `auto`.
 
-### Produces
+#### Produces
 
 - refreshed workspace version;
 - refresh mode actually used;
@@ -1003,7 +1003,7 @@ Synchronizes stale repository intelligence.
 - diagnostics;
 - usage metadata.
 
-### Rules
+#### Rules
 
 - `auto` may select incremental refresh or full rebuild;
 - correctness overrides caller preference;
@@ -1014,11 +1014,11 @@ Synchronizes stale repository intelligence.
 
 ---
 
-## 14.2 `repository.refresh_status`
+### 14.2 `repository.refresh_status`
 
 Returns refresh progress and stale-state information.
 
-### Produces
+#### Produces
 
 - active refresh operation;
 - completed stages;
@@ -1030,23 +1030,23 @@ Returns refresh progress and stale-state information.
 
 ---
 
-## 14.3 `repository.advance_session`
+### 14.3 `repository.advance_session`
 
 Advances a session after successful invalidation and refresh.
 
-### Consumes
+#### Consumes
 
 - repository session identity;
 - expected prior workspace version;
 - target workspace version.
 
-### Produces
+#### Produces
 
 - updated session binding;
 - current index status;
 - available operations.
 
-### Rules
+#### Rules
 
 - advancement is explicit;
 - stale prior sessions remain invalid;
@@ -1054,7 +1054,7 @@ Advances a session after successful invalidation and refresh.
 
 ---
 
-# 15. Preparation and refresh checkpoints
+## 15. Preparation and refresh checkpoints
 
 Repository preparation and refresh are recoverable operations.
 
@@ -1078,7 +1078,7 @@ Incomplete transactions must be rolled back or repeated.
 
 ---
 
-# 16. Request limits
+## 16. Request limits
 
 Every request must be bounded.
 
@@ -1101,7 +1101,7 @@ The engine must return explicit truncation or exhaustion metadata rather than si
 
 ---
 
-# 17. Budget semantics
+## 17. Budget semantics
 
 Repository operations may consume:
 
@@ -1112,13 +1112,13 @@ Repository operations may consume:
 - embedding budget;
 - result-byte budget.
 
-## 17.1 Reservation
+### 17.1 Reservation
 
 The runtime reserves the applicable budget before starting a repository operation.
 
 The request may carry the reservation identity.
 
-## 17.2 Usage response
+### 17.2 Usage response
 
 The engine reports operation usage such as:
 
@@ -1130,7 +1130,7 @@ The engine reports operation usage such as:
 - representations generated;
 - estimated tokens returned.
 
-## 17.3 Reconciliation
+### 17.3 Reconciliation
 
 The runtime commits actual usage and releases unused reservation.
 
@@ -1138,7 +1138,7 @@ The repository engine does not mutate the runtime budget ledger directly.
 
 ---
 
-# 18. Cancellation
+## 18. Cancellation
 
 The runtime may cancel:
 
@@ -1149,19 +1149,19 @@ The runtime may cancel:
 - refresh;
 - full rebuild.
 
-## 18.1 `repository.cancel`
+### 18.1 `repository.cancel`
 
-### Consumes
+#### Consumes
 
 - request or operation identity;
 - cancellation reason.
 
-### Produces
+#### Produces
 
 - cancellation accepted or too-late status;
 - final operation disposition.
 
-## 18.2 Cancellation rules
+### 18.2 Cancellation rules
 
 - cancellation is best effort until acknowledged;
 - completed atomic index commits remain valid;
@@ -1172,7 +1172,7 @@ The runtime may cancel:
 
 ---
 
-# 19. Retry semantics
+## 19. Retry semantics
 
 The runtime may retry idempotent repository operations.
 
@@ -1200,11 +1200,11 @@ The engine should provide idempotency keys for preparation and refresh operation
 
 ---
 
-# 20. Error contract
+## 20. Error contract
 
 Errors are structured.
 
-## 20.1 Error fields
+### 20.1 Error fields
 
 A repository error includes:
 
@@ -1219,7 +1219,7 @@ A repository error includes:
 - artifact references;
 - causal error identity, where applicable.
 
-## 20.2 Error categories
+### 20.2 Error categories
 
 Suggested categories:
 
@@ -1238,7 +1238,7 @@ Suggested categories:
 - cancellation;
 - internal.
 
-## 20.3 Important error codes
+### 20.3 Important error codes
 
 Examples:
 
@@ -1270,7 +1270,7 @@ The repository engine does not choose the run terminal state.
 
 ---
 
-# 21. Diagnostics
+## 21. Diagnostics
 
 Diagnostics are structured and distinct from errors.
 
@@ -1300,7 +1300,7 @@ Diagnostics include:
 
 ---
 
-# 22. Event expectations
+## 22. Event expectations
 
 The repository engine does not own the authoritative event store, but it returns enough metadata for the runtime to emit events.
 
@@ -1331,9 +1331,9 @@ Large result payloads are stored as artifact blobs and referenced by events.
 
 ---
 
-# 23. Worker lifecycle
+## 23. Worker lifecycle
 
-## 23.1 Startup
+### 23.1 Startup
 
 On startup, the worker:
 
@@ -1344,7 +1344,7 @@ On startup, the worker:
 5. reports parser and index versions;
 6. becomes ready.
 
-## 23.2 Health
+### 23.2 Health
 
 The runtime may request worker health.
 
@@ -1357,7 +1357,7 @@ Health includes:
 - index migration status;
 - degraded capability list.
 
-## 23.3 Shutdown
+### 23.3 Shutdown
 
 Graceful shutdown:
 
@@ -1367,7 +1367,7 @@ Graceful shutdown:
 - closes database resources;
 - acknowledges shutdown.
 
-## 23.4 Unexpected exit
+### 23.4 Unexpected exit
 
 On worker exit:
 
@@ -1379,7 +1379,7 @@ On worker exit:
 
 ---
 
-# 24. Security requirements
+## 24. Security requirements
 
 The repository worker must:
 
@@ -1408,7 +1408,7 @@ The runtime must:
 
 ---
 
-# 25. Initial vertical-slice protocol
+## 25. Initial vertical-slice protocol
 
 The first vertical slice requires only:
 
@@ -1423,7 +1423,7 @@ The first vertical slice requires only:
 - `repository.close`;
 - worker health and shutdown.
 
-## 25.1 Initial constraints
+### 25.1 Initial constraints
 
 - one local repository per run;
 - read-only workspace;
@@ -1436,7 +1436,7 @@ The first vertical slice requires only:
 - no remote embeddings requirement;
 - no arbitrary historical-version queries.
 
-## 25.2 Initial success criteria
+### 25.2 Initial success criteria
 
 The protocol is sufficient when the runtime can:
 
@@ -1453,7 +1453,7 @@ The protocol is sufficient when the runtime can:
 
 ---
 
-# 26. Repository protocol invariants
+## 26. Repository protocol invariants
 
 1. Every repository operation is associated with one run.
 2. Every retrieval operation occurs through a scoped repository session.
@@ -1488,7 +1488,7 @@ The protocol is sufficient when the runtime can:
 
 ---
 
-# 27. Open protocol questions
+## 27. Open protocol questions
 
 The protocol boundary is defined well enough for implementation planning. The following details remain for later design:
 

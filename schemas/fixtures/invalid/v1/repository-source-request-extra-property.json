@@ -1,0 +1,14 @@
+{
+    "protocol_version": "1",
+    "request_id": "req_37",
+    "run_id": "run_37",
+    "session_id": "session_src8",
+    "operation": "repository.get_source",
+    "payload": {
+        "target_source": "src/main.ts",
+        "representation_preference": "source",
+        "max_result_size": 1000,
+        "extra_field": "not_allowed"
+    },
+    "deadline": "2026-06-26T01:00:00Z"
+}

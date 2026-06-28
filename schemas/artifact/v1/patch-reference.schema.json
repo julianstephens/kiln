@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/patch-reference.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln artifact patch reference",
+    "type": "object",
+    "allOf": [
+        {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        }
+    ],
+    "properties": {
+        "artifact_kind": {
+            "const": "patch"
+        }
+    }
+}

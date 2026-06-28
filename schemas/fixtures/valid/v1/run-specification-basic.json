@@ -1,0 +1,47 @@
+{
+    "repository": {
+        "id": "repo_abc123",
+        "version_id": "rev_111",
+        "workspace_id": "ws_def456",
+        "workspace_version_id": "wsv_222"
+    },
+    "task_specification": {
+        "description": "Implement feature X",
+        "success_criteria": [
+            "All tests pass"
+        ],
+        "constraints": [
+            "Must not break existing functionality"
+        ],
+        "deliverables": [
+            "feature-implementation",
+            "test-coverage"
+        ],
+        "provenance": {
+            "source_kind": "issue",
+            "source_id": "issue_123",
+            "trusted": true,
+            "created_at": "2026-06-26T00:00:00Z"
+        }
+    },
+    "model_configuration": {
+        "model_id": "gpt-4",
+        "context_limit": 8000,
+        "tool_call_mode": "unrestricted",
+        "tokenizer_strategy": "default",
+        "generation_parameters": {},
+        "streaming_preference": "enabled",
+        "provider_id": "openai"
+    },
+    "budget_limits": {
+        "mode": "custom",
+        "model_input_tokens": 1000,
+        "model_output_tokens": 500
+    },
+    "security_profile": {
+        "default_deny_settings": {}
+    },
+    "validation": {},
+    "output_mode": "answer",
+    "caller_metadata": {}
+}
