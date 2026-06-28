@@ -1,6 +1,7 @@
 {
     "run_id": "run_456",
     "terminal_status": "failed",
+    "output_mode": "report",
     "stop_reason": {
         "category": "failed",
         "code": "tool_failed",

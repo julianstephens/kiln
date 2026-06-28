@@ -9,6 +9,7 @@
         "run_id",
         "terminal_status",
         "stop_reason",
+        "output_mode",
         "usage",
         "context_ledger_reference"
     ],
@@ -28,6 +29,15 @@
         },
         "stop_reason": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
+        },
+        "output_mode": {
+            "type": "string",
+            "enum": [
+                "answer",
+                "patch",
+                "answer_with_patch",
+                "report"
+            ]
         },
         "error": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error.schema.json"
@@ -57,13 +67,16 @@
         "answer_artifact": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/answer-reference.schema.json"
         },
+        "report_artifact": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/report-reference.schema.json"
+        },
         "patch_artifact": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/patch-reference.schema.json"
         },
-        "changed_file_manifest_reference": {
+        "changed_file_manifest_artifact": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/changed-file-manifest-reference.schema.json"
         },
-        "validation_report_reference": {
+        "validation_report_artifact": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/validation-report-reference.schema.json"
         },
         "usage": {
@@ -109,10 +122,14 @@
                 "properties": {
                     "terminal_status": {
                         "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "answer"
                     }
                 },
                 "required": [
-                    "terminal_status"
+                    "terminal_status",
+                    "output_mode"
                 ]
             },
             "then": {
@@ -141,7 +158,132 @@
                                 ]
                             }
                         ]
+                    },
+                    {
+                        "not": {
+                            "anyOf": [
+                                {
+                                    "required": [
+                                        "patch_artifact"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "changed_file_manifest_artifact"
+                                    ]
+                                }
+                            ]
+                        }
                     }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "patch"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "completed"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "required": [
+                            "patch_artifact",
+                            "changed_file_manifest_artifact"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "answer_with_patch"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "completed"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "answer"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "answer_artifact"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "required": [
+                            "patch_artifact",
+                            "changed_file_manifest_artifact"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "terminal_status": {
+                        "const": "completed"
+                    },
+                    "output_mode": {
+                        "const": "report"
+                    }
+                },
+                "required": [
+                    "terminal_status",
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "required": [
+                    "report_artifact"
                 ]
             }
         },

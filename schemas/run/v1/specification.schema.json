@@ -58,6 +58,7 @@
             ]
         },
         "caller_metadata": {
+            "description": "Caller-supplied opaque metadata. Kiln does not interpret this object.",
             "type": "object"
         },
         "idempotency_key": {
