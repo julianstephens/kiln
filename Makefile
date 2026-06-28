@@ -73,7 +73,7 @@ lint-go:
 test: test-python test-go
 
 test-python:
-	cd $(PYTHON_DIR) && uv run pytest -c kiln/pyproject.toml 
+	cd $(PYTHON_DIR) && uv sync --package kiln-sdk && uv run pytest -c kiln/pyproject.toml 
 
 test-go:
 	cd $(GO_DIR) && $(GO) test -v ./...
