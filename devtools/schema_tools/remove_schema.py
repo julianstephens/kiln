@@ -128,10 +128,15 @@ def remove_fixtures(
     return removed
 
 
-def remove_empty_schema_dirs(schema_path_to_remove: Path, *, schema_root: Path) -> list[Path]:
+def remove_empty_schema_dirs(
+    schema_path_to_remove: Path,
+    *,
+    schema_root: Path,
+) -> list[Path]:
     removed: list[Path] = []
+    candidate_dirs = (schema_path_to_remove.parent, schema_path_to_remove.parent.parent)
 
-    for directory in (schema_path_to_remove.parent, schema_path_to_remove.parent.parent):
+    for directory in candidate_dirs:
         if directory == schema_root or schema_root not in directory.parents:
             continue
 
