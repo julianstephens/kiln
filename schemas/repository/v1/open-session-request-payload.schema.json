@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/open-session-request-payload.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln repository open session request payload",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "run_id",
+        "repository",
+        "allowed_operations"
+    ],
+    "properties": {
+        "run_id": {
+            "description": "The run identifier for the run that is requesting to open a session",
+            "type": "string",
+            "minLength": 1
+        },
+        "repository": {
+            "description": "The repository identifier for the repository to open a session for",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
+        },
+        "allowed_operations": {
+            "description": "Concrete repository operations allowed for the opened session.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "repository.search",
+                    "repository.get_source",
+                    "repository.get_content",
+                    "repository.get_version",
+                    "repository.get_diagnostics"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    }
+}
