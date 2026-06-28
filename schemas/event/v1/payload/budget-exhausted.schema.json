@@ -1,0 +1,90 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-exhausted.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload budget exhausted",
+    "description": "Payload for budget.exhausted events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "budget_id",
+        "exhausted_dimensions",
+        "state_at_exhaustion",
+        "exhausted_at"
+    ],
+    "properties": {
+        "budget_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "triggering_commitment_id": {
+            "description": "Commitment that caused exhaustion, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "triggering_reservation_id": {
+            "description": "Reservation that caused exhaustion, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "exhausted_dimensions": {
+            "description": "Budget dimensions that are exhausted.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "model_input_tokens",
+                    "model_output_tokens",
+                    "model_calls",
+                    "tool_calls",
+                    "repository_requests",
+                    "elapsed_wall_time_seconds",
+                    "monetary_cost_usd",
+                    "command_time_seconds",
+                    "command_output_size_bytes",
+                    "artifact_size_bytes",
+                    "repeated_token_cost_usd"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "exhaustion_reason": {
+            "description": "Reason exhaustion was detected.",
+            "type": "string",
+            "enum": [
+                "committed_usage_reached_limit",
+                "reservation_reached_limit",
+                "reconciliation_reached_limit",
+                "external_limit_reached",
+                "unknown"
+            ]
+        },
+        "state_at_exhaustion": {
+            "description": "Budget state when exhaustion was detected.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "exhausted_at": {
+            "description": "When budget exhaustion was detected.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "oneOf": [
+        {
+            "required": [
+                "triggering_commitment_id"
+            ]
+        },
+        {
+            "required": [
+                "triggering_reservation_id"
+            ]
+        },
+        {
+            "required": [
+                "exhaustion_reason"
+            ]
+        }
+    ]
+}

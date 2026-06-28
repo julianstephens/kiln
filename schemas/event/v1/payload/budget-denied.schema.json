@@ -1,0 +1,81 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-denied.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload budget denied",
+    "description": "Payload for budget.denied events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "budget_id",
+        "denial_id",
+        "requested_amounts",
+        "denial_reason",
+        "state_at_denial",
+        "denied_at"
+    ],
+    "properties": {
+        "budget_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "denial_id": {
+            "description": "Identity for this budget denial decision.",
+            "type": "string",
+            "minLength": 1
+        },
+        "reservation_id": {
+            "description": "Reservation identity that was denied, when the denial occurred during reservation.",
+            "type": "string",
+            "minLength": 1
+        },
+        "requested_amounts": {
+            "description": "Budget amounts requested but denied.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "denied_dimensions": {
+            "description": "Budget dimensions that caused or contributed to denial.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "model_input_tokens",
+                    "model_output_tokens",
+                    "model_calls",
+                    "tool_calls",
+                    "repository_requests",
+                    "elapsed_wall_time_seconds",
+                    "monetary_cost_usd",
+                    "command_time_seconds",
+                    "command_output_size_bytes",
+                    "artifact_size_bytes",
+                    "repeated_token_cost_usd"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "denial_reason": {
+            "description": "Reason the budget request was denied.",
+            "type": "string",
+            "enum": [
+                "limit_exceeded",
+                "reservation_exceeds_remaining",
+                "budget_exhausted",
+                "budget_not_initialized",
+                "invalid_request",
+                "policy_denied",
+                "unknown"
+            ]
+        },
+        "state_at_denial": {
+            "description": "Budget state when the request was denied.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "denied_at": {
+            "description": "When budget was denied.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

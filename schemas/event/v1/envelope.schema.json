@@ -69,7 +69,13 @@
                 "model.invocation_started",
                 "model.invocation_completed",
                 "model.invocation_failed",
-                "model.response_interpreted"
+                "model.response_interpreted",
+                "budget.initialized",
+                "budget.reserved",
+                "budget.committed",
+                "budget.denied",
+                "budget.exhausted",
+                "budget.reconciled"
             ]
         },
         "occurred_at": {
@@ -723,6 +729,120 @@
                 "properties": {
                     "payload": {
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/model-response-interpreted.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "budget.initialized"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-initialized.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "budget.reserved"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-reserved.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "budget.committed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-committed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "budget.denied"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-denied.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "budget.exhausted"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-exhausted.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "budget.reconciled"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-reconciled.schema.json"
                     }
                 }
             }

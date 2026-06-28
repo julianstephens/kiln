@@ -1,0 +1,98 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-reconciled.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload budget reconciled",
+    "description": "Payload for budget.reconciled events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "budget_id",
+        "reconciliation_id",
+        "reconciliation_reason",
+        "state_before",
+        "state_after",
+        "reconciled_at"
+    ],
+    "properties": {
+        "budget_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "reconciliation_id": {
+            "description": "Identity for this reconciliation operation.",
+            "type": "string",
+            "minLength": 1
+        },
+        "reconciliation_reason": {
+            "description": "Reason the budget ledger was reconciled.",
+            "type": "string",
+            "enum": [
+                "estimated_to_actual",
+                "provider_usage_reported",
+                "reservation_expired",
+                "reservation_released",
+                "manual_adjustment",
+                "ledger_repair",
+                "run_finalization",
+                "unknown"
+            ]
+        },
+        "adjustments": {
+            "description": "Usage adjustments applied during reconciliation.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "dimension",
+                    "adjustment_amount"
+                ],
+                "properties": {
+                    "dimension": {
+                        "type": "string",
+                        "enum": [
+                            "model_input_tokens",
+                            "model_output_tokens",
+                            "model_calls",
+                            "tool_calls",
+                            "repository_requests",
+                            "elapsed_wall_time_seconds",
+                            "monetary_cost_usd",
+                            "command_time_seconds",
+                            "command_output_size_bytes",
+                            "artifact_size_bytes",
+                            "repeated_token_cost_usd"
+                        ]
+                    },
+                    "adjustment_amount": {
+                        "description": "Signed adjustment amount. Positive increases committed usage; negative decreases it.",
+                        "type": "number"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            },
+            "minItems": 1
+        },
+        "reconciled_usage": {
+            "description": "Usage record produced by reconciliation, when applicable.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "state_before": {
+            "description": "Budget state before reconciliation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "state_after": {
+            "description": "Budget state after reconciliation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "reconciled_at": {
+            "description": "When budget reconciliation completed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

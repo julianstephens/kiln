@@ -1,0 +1,11 @@
+{
+    "budget_id": "budget_001",
+    "usage": {},
+    "state_after": {
+        "state_revision": 2,
+        "latest_transaction_sequence": 10,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "committed_at": "2026-06-28T00:00:00Z"
+}

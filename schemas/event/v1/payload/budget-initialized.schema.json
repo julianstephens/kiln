@@ -1,0 +1,133 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-initialized.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload budget initialized",
+    "description": "Payload for budget.initialized events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "budget_scope",
+        "budget_id",
+        "limits",
+        "initial_state",
+        "initialized_at"
+    ],
+    "properties": {
+        "budget_scope": {
+            "description": "Scope controlled by this budget.",
+            "type": "string",
+            "enum": [
+                "run",
+                "turn",
+                "operation",
+                "component"
+            ]
+        },
+        "budget_id": {
+            "description": "Stable identity for this budget ledger or accounting scope.",
+            "type": "string",
+            "minLength": 1
+        },
+        "run_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "turn_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "operation_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "component": {
+            "type": "string",
+            "minLength": 1
+        },
+        "limits": {
+            "description": "Budget limits configured for this scope.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/limits.schema.json"
+        },
+        "initial_state": {
+            "description": "Initial budget accounting state.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/state.schema.json"
+        },
+        "initialized_at": {
+            "description": "When this budget scope was initialized.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "budget_scope": {
+                        "const": "run"
+                    }
+                },
+                "required": [
+                    "budget_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "budget_scope": {
+                        "const": "turn"
+                    }
+                },
+                "required": [
+                    "budget_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "turn_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "budget_scope": {
+                        "const": "operation"
+                    }
+                },
+                "required": [
+                    "budget_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "operation_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "budget_scope": {
+                        "const": "component"
+                    }
+                },
+                "required": [
+                    "budget_scope"
+                ]
+            },
+            "then": {
+                "required": [
+                    "component"
+                ]
+            }
+        }
+    ]
+}

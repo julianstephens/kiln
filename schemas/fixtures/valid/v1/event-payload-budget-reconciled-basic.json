@@ -1,0 +1,18 @@
+{
+    "budget_id": "budget_001",
+    "reconciliation_id": "reconcile_001",
+    "reconciliation_reason": "run_finalization",
+    "state_before": {
+        "state_revision": 4,
+        "latest_transaction_sequence": 12,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "state_after": {
+        "state_revision": 5,
+        "latest_transaction_sequence": 13,
+        "estimate_vs_actuals": {},
+        "mode": "custom"
+    },
+    "reconciled_at": "2026-06-28T00:00:00Z"
+}
