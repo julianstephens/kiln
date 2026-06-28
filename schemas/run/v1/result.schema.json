@@ -29,6 +29,9 @@
         "stop_reason": {
             "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
         },
+        "error": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error.schema.json"
+        },
         "answer": {
             "type": "object",
             "additionalProperties": false,
@@ -154,15 +157,24 @@
                 ]
             },
             "then": {
-                "properties": {
-                    "stop_reason": {
+                "allOf": [
+                    {
                         "properties": {
-                            "category": {
-                                "const": "failed"
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "failed"
+                                    }
+                                }
                             }
                         }
+                    },
+                    {
+                        "required": [
+                            "error"
+                        ]
                     }
-                }
+                ]
             }
         },
         {

@@ -45,6 +45,7 @@
         "repository/source-result",
         "repository/usage",
         "repository/validity",
+        "run/error",
         "run/result",
         "run/specification",
         "run/state",

@@ -1,0 +1,370 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/error.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run error",
+    "description": "Structured error record associated with a failed run or failed run operation.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "error_id",
+        "run_id",
+        "category",
+        "code",
+        "message",
+        "occurred_at"
+    ],
+    "properties": {
+        "error_id": {
+            "description": "Stable identifier for this error record.",
+            "type": "string",
+            "minLength": 1
+        },
+        "run_id": {
+            "description": "Identifier of the run associated with this error.",
+            "type": "string",
+            "minLength": 1
+        },
+        "category": {
+            "description": "Broad class of run error.",
+            "type": "string",
+            "enum": [
+                "validation",
+                "capability",
+                "repository",
+                "tool",
+                "external_operation",
+                "output_production",
+                "runtime",
+                "internal"
+            ]
+        },
+        "code": {
+            "description": "Specific machine-readable run error code.",
+            "type": "string",
+            "enum": [
+                "validation_failed",
+                "validation_error",
+                "capability_denied",
+                "capability_unavailable",
+                "repository_unavailable",
+                "repository_dirty",
+                "repository_preparation_failed",
+                "repository_session_invalid",
+                "tool_failed",
+                "tool_timed_out",
+                "tool_result_invalid",
+                "external_operation_failed",
+                "external_operation_timed_out",
+                "external_operation_result_invalid",
+                "output_production_failed",
+                "artifact_write_failed",
+                "answer_assembly_failed",
+                "patch_generation_failed",
+                "runtime_interrupted",
+                "worker_interrupted",
+                "shutdown_interrupted",
+                "lease_lost",
+                "internal_error",
+                "invariant_violation",
+                "persistence_failed"
+            ]
+        },
+        "message": {
+            "description": "Human-readable explanation of the error.",
+            "type": "string",
+            "minLength": 1
+        },
+        "severity": {
+            "description": "Severity of the error.",
+            "type": "string",
+            "enum": [
+                "warning",
+                "error",
+                "fatal"
+            ],
+            "default": "error"
+        },
+        "lifecycle_state": {
+            "description": "Run lifecycle state in which the error occurred.",
+            "type": "string",
+            "enum": [
+                "created",
+                "initializing",
+                "preparing_repository",
+                "running",
+                "producing_output",
+                "validating",
+                "completed",
+                "failed",
+                "canceled",
+                "exhausted"
+            ]
+        },
+        "operation_reference": {
+            "description": "Optional reference to the operation that produced the error.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "kind",
+                "id"
+            ],
+            "properties": {
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "repository_preparation",
+                        "repository_query",
+                        "context_plan",
+                        "model_invocation",
+                        "tool_call",
+                        "external_job",
+                        "output_production",
+                        "validation",
+                        "recovery"
+                    ]
+                },
+                "id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "correlation_id": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "source": {
+            "description": "Component or subsystem that reported the error.",
+            "type": "string",
+            "minLength": 1
+        },
+        "cause": {
+            "description": "Optional nested causal error reference or summary.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "error_id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "code": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "message": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "details": {
+            "description": "Optional structured diagnostic details. Intended for machine-readable context, not arbitrary logs.",
+            "type": "object"
+        },
+        "artifact_references": {
+            "description": "Artifacts containing supporting diagnostics, logs, reports, or partial outputs.",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            },
+            "uniqueItems": true
+        },
+        "retryable": {
+            "description": "Whether retry may be attempted by policy.",
+            "type": "boolean"
+        },
+        "occurred_at": {
+            "description": "When the error occurred.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "validation"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "validation_failed",
+                            "validation_error"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "capability"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "capability_denied",
+                            "capability_unavailable"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "repository"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "repository_unavailable",
+                            "repository_dirty",
+                            "repository_preparation_failed",
+                            "repository_session_invalid"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "tool"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "tool_failed",
+                            "tool_timed_out",
+                            "tool_result_invalid"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "external_operation"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "external_operation_failed",
+                            "external_operation_timed_out",
+                            "external_operation_result_invalid"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "output_production"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "output_production_failed",
+                            "artifact_write_failed",
+                            "answer_assembly_failed",
+                            "patch_generation_failed"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "runtime"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "runtime_interrupted",
+                            "worker_interrupted",
+                            "shutdown_interrupted",
+                            "lease_lost"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "internal"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "internal_error",
+                            "invariant_violation",
+                            "persistence_failed"
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}
