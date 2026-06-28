@@ -1,0 +1,90 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/model/v1/error.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln model error",
+    "description": "Provider-neutral model failure body for model protocol responses and model invocation events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "error_id",
+        "category",
+        "code",
+        "message",
+        "retryable"
+    ],
+    "properties": {
+        "error_id": {
+            "description": "Stable identity for this model error.",
+            "type": "string",
+            "minLength": 1
+        },
+        "category": {
+            "description": "Provider-neutral model error category.",
+            "type": "string",
+            "enum": [
+                "invalid_request",
+                "authentication",
+                "authorization",
+                "rate_limited",
+                "quota_exceeded",
+                "timeout",
+                "provider_unavailable",
+                "model_unavailable",
+                "content_filter",
+                "egress_denied",
+                "context_length_exceeded",
+                "adapter_error",
+                "canceled",
+                "unknown"
+            ]
+        },
+        "code": {
+            "description": "Provider-neutral or adapter-normalized error code.",
+            "type": "string",
+            "minLength": 1
+        },
+        "provider_code": {
+            "description": "Provider-specific error code, when safe to expose.",
+            "type": "string",
+            "minLength": 1
+        },
+        "message": {
+            "description": "Human-readable provider-neutral error message.",
+            "type": "string",
+            "minLength": 1
+        },
+        "retryable": {
+            "description": "Whether the model invocation may be retried.",
+            "type": "boolean"
+        },
+        "retry_after_seconds": {
+            "description": "Suggested retry delay in seconds, when available.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_id": {
+            "description": "Model identifier associated with the failure, when known.",
+            "type": "string",
+            "minLength": 1
+        },
+        "provider_id": {
+            "description": "Provider associated with the failure, when known.",
+            "type": "string",
+            "minLength": 1
+        },
+        "model_invocation_id": {
+            "description": "Model invocation associated with the failure, when known.",
+            "type": "string",
+            "minLength": 1
+        },
+        "partial_response_artifact_reference": {
+            "description": "Artifact reference for partial model response content, when available.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "diagnostic_artifact_reference": {
+            "description": "Artifact reference for model diagnostic details, when available.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/diagnostic-log-reference.schema.json"
+        }
+    }
+}
