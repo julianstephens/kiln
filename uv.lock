@@ -399,9 +399,6 @@ source = { editable = "." }
 dev = [
     { name = "build" },
     { name = "kiln-devtools" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-xdist" },
 ]
 
 [package.metadata]
@@ -410,9 +407,6 @@ dev = [
 dev = [
     { name = "build", specifier = ">=1.5.0" },
     { name = "kiln-devtools", editable = "devtools" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "pytest-xdist", specifier = ">=3.8.0" },
 ]
 
 [[package]]

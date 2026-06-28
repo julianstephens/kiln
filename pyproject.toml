@@ -9,25 +9,9 @@ dependencies = []
 Homepage = "https://github.com/julianstephens/kiln"
 Issues = "https://github.com/julianstephens/kiln/issues"
 
-[tool.ruff]
-line-length = 88
-
-[tool.ruff.lint]
-extend-select = ["B", "LOG", "Q", "RET", "SIM", "ARG", "I", "N", "E", "W", "F", "RUF", "TRY"]
-
-[tool.ruff.lint.per-file-ignores]
-"python/kiln/schemas/**/*.py" = ["ALL"]
-
-[tool.pytest.ini_options]
-addopts = "-n auto"
-pythonpath = ["python"]
-
 [dependency-groups]
 dev = [
     "build>=1.5.0",
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
-    "pytest-xdist>=3.8.0",
     "kiln-devtools",
 ]
 

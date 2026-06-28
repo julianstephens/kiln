@@ -1,13 +1,13 @@
 SHELL := /usr/bin/env bash
 
-RUFF ?= uvx ruff
-GO ?= go
-GOLANGCI_LINT ?= golangci-lint
-
 PYTHON_DIR := python
 TOOLS_DIR := devtools
 GO_DIR := go
 DIST_DIR := dist
+
+RUFF ?= uvx ruff --config kiln/pyproject.toml
+GO ?= go
+GOLANGCI_LINT ?= golangci-lint
 
 default: check
 
@@ -73,7 +73,7 @@ lint-go:
 test: test-python test-go
 
 test-python:
-	cd $(PYTHON_DIR) && uv run pytest --cov=kiln --cov-report=term-missing
+	cd $(PYTHON_DIR) && uv run pytest -c kiln/pyproject.toml 
 
 test-go:
 	cd $(GO_DIR) && $(GO) test -v ./...
