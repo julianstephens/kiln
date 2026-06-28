@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, ConfigDict
+from pydantic import ConfigDict
 
 from . import source_request_payload
 from .protocol_request import SchemaModel1
@@ -24,4 +24,4 @@ class Schema(SchemaModel1):
     payload: source_request_payload.Schema | None = None
     run_id: Any
     session_id: Any
-    deadline: AwareDatetime
+    deadline: Any

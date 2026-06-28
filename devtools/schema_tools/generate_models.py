@@ -4,10 +4,8 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any
-
 
 DEFAULT_SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas"
 DEFAULT_OUTPUT_ROOT = (
@@ -138,11 +136,9 @@ def selected_schema_keys(
     return list(values)
 
 
-def schema_id_for_key(schema_key: str, *, major: int) -> str:
+def schema_ref_for_key(schema_key: str, *, major: int) -> str:
     domain, contract = parse_schema_key(schema_key)
-    return (
-        f"https://kiln.cyborgdev.cloud/schemas/{domain}/v{major}/{contract}.schema.json"
-    )
+    return f"{domain}/v{major}/{contract}.schema.json"
 
 
 def schema_path_for_key(schema_root: Path, schema_key: str, *, major: int) -> Path:
@@ -178,20 +174,11 @@ def write_bundle_schema(
     *,
     major: int,
 ) -> None:
-    """
-    Create one artificial schema that references every selected Kiln schema.
-
-    This avoids per-schema output ambiguity in datamodel-code-generator:
-    - some schemas want file output
-    - some schemas with external refs want directory output
-
-    Generating once into one package directory is more stable.
-    """
     defs: dict[str, Any] = {}
 
     for schema_key in schema_keys:
         defs[def_name_for_key(schema_key)] = {
-            "$ref": schema_id_for_key(schema_key, major=major)
+            "$ref": schema_ref_for_key(schema_key, major=major)
         }
 
     bundle = {
@@ -260,7 +247,6 @@ def run_datamodel_codegen(
         "--formatters",
         "ruff-check",
         "ruff-format",
-        "--allow-remote-refs",
         "--custom-file-header",
         HEADER,
         *extra_args,
@@ -347,29 +333,28 @@ def main() -> int:
         if not args.no_clean:
             clean_output_root(output_root, dry_run=args.dry_run)
 
-        if args.dry_run:
-            bundle_path = output_root / "_kiln_models_bundle.schema.json"
-            print(f"would write temporary bundle schema: {bundle_path}")
-            run_datamodel_codegen(
-                bundle_path=bundle_path,
-                schema_root=schema_root,
-                output_root=output_root,
-                extra_args=args.extra_arg,
-                dry_run=True,
-            )
-            return 0
+        bundle_path = schema_root / ".python-models-bundle.schema.json"
 
-        with tempfile.TemporaryDirectory(prefix="kiln-schema-models-") as temp_dir:
-            bundle_path = Path(temp_dir) / "kiln-models-bundle.schema.json"
-            write_bundle_schema(bundle_path, schema_keys, major=major)
+        try:
+            if args.dry_run:
+                print(f"would write temporary bundle schema: {bundle_path}")
+            else:
+                write_bundle_schema(
+                    bundle_path,
+                    schema_keys,
+                    major=major,
+                )
 
             run_datamodel_codegen(
                 bundle_path=bundle_path,
                 schema_root=schema_root,
                 output_root=output_root,
                 extra_args=args.extra_arg,
-                dry_run=False,
+                dry_run=args.dry_run,
             )
+        finally:
+            if not args.dry_run:
+                bundle_path.unlink(missing_ok=True)
 
         write_init(output_root)
 
