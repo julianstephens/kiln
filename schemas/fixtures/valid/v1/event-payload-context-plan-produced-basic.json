@@ -1,0 +1,14 @@
+{
+    "context_id": "ctx_001",
+    "context_plan_request_id": "plan_req_001",
+    "context_plan_id": "plan_001",
+    "planned_active_items": [
+        {
+            "item_id": "item_001",
+            "order": 0,
+            "admission_reason": "relevant",
+            "estimated_tokens": 90
+        }
+    ],
+    "estimated_token_count": 90
+}

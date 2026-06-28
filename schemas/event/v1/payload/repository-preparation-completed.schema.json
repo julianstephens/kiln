@@ -1,0 +1,74 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-preparation-completed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository preparation completed",
+    "description": "Payload for repository.preparation_completed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "repository",
+        "repository_version",
+        "preparation_status",
+        "prepared_capabilities",
+        "preparation_duration_seconds"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "description": "The repository session that was prepared.",
+            "type": "string",
+            "minLength": 1
+        },
+        "repository": {
+            "description": "The repository that was prepared.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
+        },
+        "repository_version": {
+            "description": "The repository version available after preparation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/version.schema.json"
+        },
+        "preparation_status": {
+            "description": "Final preparation status for the repository session.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/preparation-status.schema.json"
+        },
+        "prepared_capabilities": {
+            "description": "Repository protocol capabilities available after preparation.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "search",
+                    "source",
+                    "open_session",
+                    "close_session",
+                    "version",
+                    "diagnostics"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "preparation_duration_seconds": {
+            "description": "Elapsed wall-clock duration of repository preparation.",
+            "type": "number",
+            "minimum": 0
+        },
+        "source_snapshot_reference": {
+            "description": "Optional artifact reference for a repository snapshot produced during preparation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/repository-snapshot-reference.schema.json"
+        },
+        "diagnostic_log_reference": {
+            "description": "Optional diagnostic log artifact produced during preparation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/diagnostic-log-reference.schema.json"
+        },
+        "usage": {
+            "description": "Repository-operation usage recorded during preparation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/usage.schema.json"
+        },
+        "budget_usage": {
+            "description": "Budget usage committed for repository preparation.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        }
+    }
+}

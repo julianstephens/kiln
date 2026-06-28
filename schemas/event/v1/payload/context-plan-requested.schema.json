@@ -1,0 +1,96 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/context-plan-requested.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload context plan requested",
+    "description": "Payload for context.plan_requested events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "context_id",
+        "context_plan_request_id",
+        "planning_goal",
+        "model_context_limit",
+        "current_token_estimate"
+    ],
+    "properties": {
+        "context_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "context_plan_request_id": {
+            "description": "Operation-local identity for this context planning request.",
+            "type": "string",
+            "minLength": 1
+        },
+        "planning_goal": {
+            "description": "Reason a context plan was requested.",
+            "type": "string",
+            "enum": [
+                "initial_context",
+                "turn_context",
+                "tool_context",
+                "output_production",
+                "validation",
+                "recovery"
+            ]
+        },
+        "model_context_limit": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "current_token_estimate": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "available_item_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "active_item_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "pinned_item_ids": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "constraints": {
+            "description": "Planning constraints supplied to the context planner.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "target_token_budget": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "must_include_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "uniqueItems": true
+                },
+                "must_exclude_item_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "uniqueItems": true
+                },
+                "allow_compression": {
+                    "type": "boolean"
+                },
+                "allow_eviction": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

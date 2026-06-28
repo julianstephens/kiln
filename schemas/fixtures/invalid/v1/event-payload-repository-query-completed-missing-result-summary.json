@@ -1,0 +1,14 @@
+{
+    "repository_session_id": "repo_session_001",
+    "query_operation_id": "op_query_001",
+    "query_kind": "search",
+    "usage": {
+        "elapsed_time": 0.21,
+        "files_scanned": 12,
+        "bytes_returned": 1024,
+        "candidates_returned": 2,
+        "graph_nodes_visited": 8,
+        "estimated_tokens_returned": 256
+    },
+    "completed_at": "2026-06-28T00:00:00Z"
+}

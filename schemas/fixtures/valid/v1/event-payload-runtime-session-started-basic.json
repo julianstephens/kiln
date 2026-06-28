@@ -1,0 +1,13 @@
+{
+    "runtime_session_id": "runtime_session_001",
+    "runtime_version": "1.0.0",
+    "protocol_version": "v1",
+    "parent_process": {
+        "process_kind": "python_sdk",
+        "process_id": 12345,
+        "executable_name": "python",
+        "sdk_version": "0.1.0"
+    },
+    "database_id": "db_main",
+    "startup_timestamp": "2026-06-28T00:00:00Z"
+}

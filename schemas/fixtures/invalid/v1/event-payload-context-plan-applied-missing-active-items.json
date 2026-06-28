@@ -1,0 +1,7 @@
+{
+    "context_id": "ctx_001",
+    "context_plan_id": "plan_001",
+    "context_state_revision": 3,
+    "current_token_estimate": 90,
+    "model_context_limit": 8192
+}

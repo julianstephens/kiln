@@ -1,0 +1,70 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/context-rendered.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload context rendered",
+    "description": "Payload for context.rendered events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "context_id",
+        "render_id",
+        "render_target",
+        "rendered_item_count",
+        "rendered_token_estimate",
+        "context_state_revision"
+    ],
+    "properties": {
+        "context_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "render_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "render_target": {
+            "description": "Consumer or phase for which context was rendered.",
+            "type": "string",
+            "enum": [
+                "model_invocation",
+                "tool_invocation",
+                "output_production",
+                "validation",
+                "diagnostic",
+                "preview"
+            ]
+        },
+        "rendered_item_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "rendered_item_ids": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "uniqueItems": true
+        },
+        "rendered_token_estimate": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_context_limit": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "truncated": {
+            "type": "boolean"
+        },
+        "render_artifact_reference": {
+            "description": "Optional artifact reference for the rendered context.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "context_state_revision": {
+            "type": "integer",
+            "minimum": 0
+        }
+    }
+}

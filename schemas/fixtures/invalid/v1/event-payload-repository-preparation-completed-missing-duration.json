@@ -1,0 +1,30 @@
+{
+    "repository_session_id": "repo_session_001",
+    "repository": {
+        "id": "repo_001",
+        "version_id": "rev_001",
+        "workspace_version_id": "wsv_001"
+    },
+    "repository_version": {
+        "version_id": "rv_001",
+        "repository_id": "repo_001",
+        "source_revision": "main@abc123",
+        "content_digest": "sha256:repo001",
+        "index_compatibility_metadata": {},
+        "creation_reason": "prepare",
+        "preparation_status": "prepared",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "preparation_status": {
+        "state": "ready",
+        "prepared_for_refresh_state": "prepared",
+        "adapter_capabilities": [
+            "search"
+        ],
+        "ready_at": "2026-06-28T00:00:00Z"
+    },
+    "prepared_capabilities": [
+        "search",
+        "source"
+    ]
+}

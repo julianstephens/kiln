@@ -1,0 +1,113 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/runtime-session-ready.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload runtime session ready",
+    "description": "Payload for runtime.session_ready events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "runtime_session_id",
+        "supported_protocol_capabilities",
+        "database_schema_version",
+        "available_adapters"
+    ],
+    "properties": {
+        "runtime_session_id": {
+            "description": "The runtime session that is now ready.",
+            "type": "string",
+            "minLength": 1
+        },
+        "supported_protocol_capabilities": {
+            "description": "Protocol capabilities supported by this runtime session.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "repository.open_session",
+                    "repository.search",
+                    "repository.get_source",
+                    "model.generate",
+                    "capability.check",
+                    "budget.reserve",
+                    "budget.commit",
+                    "artifact.create",
+                    "artifact.read",
+                    "validation.request",
+                    "workspace.read",
+                    "workspace.patch"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "database_schema_version": {
+            "description": "The loaded database schema version.",
+            "type": "string",
+            "minLength": 1
+        },
+        "available_adapters": {
+            "description": "Adapters available to the runtime session.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "adapter_id",
+                    "adapter_kind",
+                    "adapter_version"
+                ],
+                "properties": {
+                    "adapter_id": {
+                        "description": "Stable runtime-local adapter identity.",
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "adapter_kind": {
+                        "description": "Logical adapter kind.",
+                        "type": "string",
+                        "enum": [
+                            "repository",
+                            "model",
+                            "artifact",
+                            "budget",
+                            "capability",
+                            "workspace",
+                            "validation",
+                            "telemetry"
+                        ]
+                    },
+                    "adapter_version": {
+                        "description": "Adapter implementation version.",
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "supported_operations": {
+                        "description": "Operations supported by this adapter.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "capability_profile": {
+                        "description": "Optional coarse capability profile exposed by the adapter.",
+                        "type": "string",
+                        "enum": [
+                            "read_only",
+                            "read_write",
+                            "networked",
+                            "sandboxed",
+                            "external",
+                            "unknown"
+                        ]
+                    }
+                }
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    }
+}

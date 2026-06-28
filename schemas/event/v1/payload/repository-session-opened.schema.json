@@ -1,0 +1,55 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-session-opened.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository session opened",
+    "description": "Payload for repository.session_opened events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "repository",
+        "repository_version",
+        "preparation_status",
+        "opened_at"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "description": "Repository session that was opened.",
+            "type": "string",
+            "minLength": 1
+        },
+        "repository": {
+            "description": "Repository associated with the opened session.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
+        },
+        "repository_version": {
+            "description": "Repository version observed when the session was opened.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/version.schema.json"
+        },
+        "preparation_status": {
+            "description": "Preparation status available for the opened session.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/preparation-status.schema.json"
+        },
+        "supported_operations": {
+            "description": "Repository operations available for this session.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "repository.search",
+                    "repository.source",
+                    "repository.version",
+                    "repository.diagnostics"
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "opened_at": {
+            "description": "When the repository session was opened.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

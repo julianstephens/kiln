@@ -1,0 +1,86 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-query-completed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository query completed",
+    "description": "Payload for repository.query_completed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "query_operation_id",
+        "query_kind",
+        "result_summary",
+        "usage",
+        "completed_at"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "description": "Repository session used for the query.",
+            "type": "string",
+            "minLength": 1
+        },
+        "query_operation_id": {
+            "description": "Operation identity for this repository query.",
+            "type": "string",
+            "minLength": 1
+        },
+        "query_kind": {
+            "description": "Kind of repository query that completed.",
+            "type": "string",
+            "enum": [
+                "search",
+                "source",
+                "content",
+                "version",
+                "diagnostics"
+            ]
+        },
+        "result_summary": {
+            "description": "Summary of repository query results.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "result_count"
+            ],
+            "properties": {
+                "result_count": {
+                    "description": "Number of results returned by the query.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "bytes_returned": {
+                    "description": "Approximate number of bytes returned by the query.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "estimated_tokens_returned": {
+                    "description": "Estimated number of tokens represented by returned content.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "truncated": {
+                    "description": "Whether the result was truncated.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "result_reference": {
+            "description": "Optional artifact reference for the durable query result.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "usage": {
+            "description": "Repository-specific telemetry for the completed query.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/usage.schema.json"
+        },
+        "budget_usage": {
+            "description": "Budget usage committed for this repository query.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "completed_at": {
+            "description": "When the repository query completed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

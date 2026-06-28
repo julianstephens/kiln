@@ -1,0 +1,85 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/context-item-available.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload context item available",
+    "description": "Payload for context.item_available events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "context_id",
+        "item_id",
+        "item_kind",
+        "availability_reason",
+        "estimated_tokens"
+    ],
+    "properties": {
+        "context_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "item_id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "item_kind": {
+            "type": "string",
+            "enum": [
+                "system_instruction",
+                "user_message",
+                "assistant_message",
+                "tool_result",
+                "repository_source",
+                "repository_search_result",
+                "artifact",
+                "summary",
+                "memory",
+                "validation_result",
+                "diagnostic"
+            ]
+        },
+        "availability_reason": {
+            "type": "string",
+            "enum": [
+                "observed",
+                "retrieved",
+                "generated",
+                "pinned",
+                "restored",
+                "manual"
+            ]
+        },
+        "source_reference": {
+            "description": "Artifact, repository, or external reference for the item source.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "priority": {
+            "type": "string",
+            "enum": [
+                "low",
+                "normal",
+                "high",
+                "required"
+            ]
+        },
+        "pinned": {
+            "type": "boolean"
+        },
+        "metadata": {
+            "description": "Small non-sensitive item metadata.",
+            "type": "object",
+            "additionalProperties": {
+                "type": [
+                    "string",
+                    "number",
+                    "integer",
+                    "boolean"
+                ]
+            }
+        }
+    }
+}

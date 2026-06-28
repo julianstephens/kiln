@@ -1,0 +1,121 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/runtime-session-started.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload runtime session started",
+    "description": "Payload for runtime.session_started events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "runtime_session_id",
+        "runtime_version",
+        "protocol_version",
+        "parent_process",
+        "database_id",
+        "startup_timestamp"
+    ],
+    "properties": {
+        "runtime_session_id": {
+            "description": "The runtime session that was started.",
+            "type": "string",
+            "minLength": 1
+        },
+        "runtime_version": {
+            "description": "Runtime implementation version.",
+            "type": "string",
+            "minLength": 1
+        },
+        "protocol_version": {
+            "description": "Protocol version spoken by this runtime session.",
+            "type": "string",
+            "minLength": 1
+        },
+        "parent_process": {
+            "description": "Identity metadata for the parent process that launched or supervised this runtime session.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "process_kind"
+            ],
+            "properties": {
+                "process_kind": {
+                    "description": "The kind of parent process that launched the runtime session.",
+                    "type": "string",
+                    "enum": [
+                        "python_sdk",
+                        "cli",
+                        "hosted_worker",
+                        "test_harness",
+                        "unknown"
+                    ]
+                },
+                "process_id": {
+                    "description": "The operating-system process ID of the parent process, when safe and available.",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "process_start_time": {
+                    "description": "When the parent process started, when safe and available.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "executable_name": {
+                    "description": "The executable or logical entrypoint name of the parent process.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "supervisor_id": {
+                    "description": "Stable identity for the supervising component, worker, or SDK instance, when available.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "host_id": {
+                    "description": "Opaque host or container identity, when safe to record.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sdk_version": {
+                    "description": "Version of the SDK or client package that launched the runtime session, when applicable.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "command_invocation_id": {
+                    "description": "Opaque identity for the CLI or command invocation that launched the runtime session, when applicable.",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "database_id": {
+            "description": "Opaque identity for the database or persistence store used by the runtime session.",
+            "type": "string",
+            "minLength": 1
+        },
+        "database_schema_version": {
+            "description": "Database schema version observed at session startup, when available.",
+            "type": "string",
+            "minLength": 1
+        },
+        "startup_timestamp": {
+            "description": "When runtime session startup began or was recorded.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "startup_mode": {
+            "description": "How the runtime session was started.",
+            "type": "string",
+            "enum": [
+                "fresh",
+                "resume",
+                "restart",
+                "recovery",
+                "test"
+            ]
+        },
+        "startup_reason": {
+            "description": "Human-readable or system-provided reason for starting the runtime session.",
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}

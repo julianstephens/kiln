@@ -1,0 +1,7 @@
+{
+    "context_id": "ctx_001",
+    "context_plan_request_id": "plan_req_001",
+    "planning_goal": "turn_context",
+    "model_context_limit": 8192,
+    "current_token_estimate": 1200
+}

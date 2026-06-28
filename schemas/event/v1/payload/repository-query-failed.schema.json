@@ -1,0 +1,60 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/repository-query-failed.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event payload repository query failed",
+    "description": "Payload for repository.query_failed events.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "repository_session_id",
+        "query_operation_id",
+        "query_kind",
+        "error",
+        "failed_at"
+    ],
+    "properties": {
+        "repository_session_id": {
+            "description": "Repository session used for the failed query.",
+            "type": "string",
+            "minLength": 1
+        },
+        "query_operation_id": {
+            "description": "Operation identity for this repository query.",
+            "type": "string",
+            "minLength": 1
+        },
+        "query_kind": {
+            "description": "Kind of repository query that failed.",
+            "type": "string",
+            "enum": [
+                "search",
+                "source",
+                "content",
+                "version",
+                "diagnostics"
+            ]
+        },
+        "error": {
+            "description": "Repository error produced by the failed query.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/error.schema.json"
+        },
+        "partial_result_reference": {
+            "description": "Optional artifact reference for partial query results, if any were produced before failure.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "usage": {
+            "description": "Repository-specific telemetry recorded before the query failed.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/usage.schema.json"
+        },
+        "budget_usage": {
+            "description": "Budget usage committed before the query failed.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/budget/v1/usage.schema.json"
+        },
+        "failed_at": {
+            "description": "When the repository query failed.",
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}
