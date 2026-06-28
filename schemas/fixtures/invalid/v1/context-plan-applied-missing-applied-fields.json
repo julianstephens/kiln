@@ -1,0 +1,32 @@
+{
+    "context_plan_id": "context_plan_01J2X9",
+    "context_plan_request_id": "context_plan_request_01J2X8",
+    "context_id": "context_01J2X7",
+    "planning_goal": "model_invocation",
+    "planning_status": "applied",
+    "planning_strategy": "hybrid",
+    "planned_actions": [
+        {
+            "action_id": "context_action_01J2XA",
+            "context_id": "context_01J2X7",
+            "context_plan_id": "context_plan_01J2X9",
+            "item_id": "context_item_01J2XB",
+            "action_kind": "admit",
+            "reason": "relevant",
+            "order": 0,
+            "estimated_tokens_after": 900
+        }
+    ],
+    "planned_active_items": [
+        {
+            "item_id": "context_item_01J2XB",
+            "order": 0,
+            "estimated_tokens": 900
+        }
+    ],
+    "estimated_token_count": 900,
+    "model_context_limit": 128000,
+    "target_token_budget": 24000,
+    "source_context_state_revision": 4,
+    "created_at": "2026-06-28T22:20:00Z"
+}

@@ -1,0 +1,408 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/context/v1/item.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln context item",
+    "description": "A durable item of context that may be made available, admitted into active context, rendered, evicted, or marked stale.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "item_id",
+        "context_id",
+        "item_kind",
+        "item_status",
+        "content_reference",
+        "estimated_tokens",
+        "created_at"
+    ],
+    "properties": {
+        "item_id": {
+            "description": "Stable identity for this context item.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_id": {
+            "description": "Context ledger this item belongs to.",
+            "type": "string",
+            "minLength": 1
+        },
+        "item_kind": {
+            "description": "Kind of content represented by this context item.",
+            "type": "string",
+            "enum": [
+                "system_instruction",
+                "developer_instruction",
+                "user_message",
+                "assistant_message",
+                "tool_request",
+                "tool_result",
+                "repository_source",
+                "repository_search_result",
+                "artifact",
+                "summary",
+                "memory",
+                "validation_result",
+                "diagnostic",
+                "run_state",
+                "other"
+            ]
+        },
+        "item_status": {
+            "description": "Current lifecycle status of the context item.",
+            "type": "string",
+            "enum": [
+                "available",
+                "active",
+                "evicted",
+                "stale",
+                "invalidated"
+            ]
+        },
+        "content_reference": {
+            "description": "Reference to the item's underlying content.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "reference_kind"
+            ],
+            "properties": {
+                "reference_kind": {
+                    "description": "Kind of content reference used by the item.",
+                    "type": "string",
+                    "enum": [
+                        "inline",
+                        "artifact",
+                        "repository_source",
+                        "repository_candidate",
+                        "message",
+                        "state",
+                        "external"
+                    ]
+                },
+                "inline_content": {
+                    "description": "Inline context content for small items.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "artifact_reference": {
+                    "description": "Artifact containing the item content.",
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+                },
+                "repository_source": {
+                    "description": "Repository source location represented by this item.",
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source.schema.json"
+                },
+                "repository_candidate": {
+                    "description": "Repository candidate represented by this item.",
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json"
+                },
+                "message_id": {
+                    "description": "Message identity represented by this item.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "state_reference": {
+                    "description": "Opaque state reference represented by this item.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "external_reference": {
+                    "description": "External reference represented by this item.",
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "inline"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "inline_content"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "artifact"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "artifact_reference"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "repository_source"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "repository_source"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "repository_candidate"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "repository_candidate"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "message"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "message_id"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "state"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "state_reference"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "reference_kind": {
+                                "const": "external"
+                            }
+                        },
+                        "required": [
+                            "reference_kind"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "external_reference"
+                        ]
+                    }
+                }
+            ]
+        },
+        "estimated_tokens": {
+            "description": "Estimated token cost of admitting this item into context.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "priority": {
+            "description": "Planner-visible priority for this context item.",
+            "type": "string",
+            "enum": [
+                "low",
+                "normal",
+                "high",
+                "required"
+            ]
+        },
+        "pinned": {
+            "description": "Whether this item should be treated as pinned by context planning.",
+            "type": "boolean"
+        },
+        "source_event_id": {
+            "description": "Event that made this item available, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "source_operation_id": {
+            "description": "Operation that produced or retrieved this item, when applicable.",
+            "type": "string",
+            "minLength": 1
+        },
+        "active_order": {
+            "description": "Order of this item when admitted into active context.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "admission_reason": {
+            "description": "Reason this item was admitted into active context.",
+            "type": "string",
+            "enum": [
+                "pinned",
+                "recent",
+                "relevant",
+                "required",
+                "dependency",
+                "manual",
+                "plan_applied"
+            ]
+        },
+        "eviction_reason": {
+            "description": "Reason this item was evicted from active context.",
+            "type": "string",
+            "enum": [
+                "token_budget",
+                "stale",
+                "superseded",
+                "low_relevance",
+                "manual",
+                "plan_applied",
+                "context_reset"
+            ]
+        },
+        "created_at": {
+            "description": "When this context item was created.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "admitted_at": {
+            "description": "When this item was admitted into active context.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "evicted_at": {
+            "description": "When this item was evicted from active context.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "stale_at": {
+            "description": "When this item became stale.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "invalidated_at": {
+            "description": "When this item was invalidated.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "metadata": {
+            "description": "Small non-sensitive item metadata.",
+            "type": "object",
+            "additionalProperties": {
+                "type": [
+                    "string",
+                    "number",
+                    "integer",
+                    "boolean"
+                ]
+            }
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "item_status": {
+                        "const": "active"
+                    }
+                },
+                "required": [
+                    "item_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "active_order",
+                    "admission_reason",
+                    "admitted_at"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "item_status": {
+                        "const": "evicted"
+                    }
+                },
+                "required": [
+                    "item_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "eviction_reason",
+                    "evicted_at"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "item_status": {
+                        "const": "stale"
+                    }
+                },
+                "required": [
+                    "item_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "stale_at"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "item_status": {
+                        "const": "invalidated"
+                    }
+                },
+                "required": [
+                    "item_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "invalidated_at"
+                ]
+            }
+        }
+    ]
+}

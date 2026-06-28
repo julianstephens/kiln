@@ -1,0 +1,193 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/context/v1/plan.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln context plan",
+    "description": "A planned set of context actions that selects, orders, evicts, compresses, or otherwise prepares context items for rendering.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "context_plan_id",
+        "context_id",
+        "planning_goal",
+        "planning_status",
+        "planned_actions",
+        "estimated_token_count",
+        "model_context_limit",
+        "created_at"
+    ],
+    "properties": {
+        "context_plan_id": {
+            "description": "Stable identity for this context plan.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_plan_request_id": {
+            "description": "Request identity that caused this plan to be produced.",
+            "type": "string",
+            "minLength": 1
+        },
+        "context_id": {
+            "description": "Context ledger this plan applies to.",
+            "type": "string",
+            "minLength": 1
+        },
+        "planning_goal": {
+            "description": "Reason this context plan was produced.",
+            "type": "string",
+            "enum": [
+                "initial_context",
+                "turn_context",
+                "tool_context",
+                "model_invocation",
+                "output_production",
+                "validation",
+                "recovery"
+            ]
+        },
+        "planning_status": {
+            "description": "Current status of the context plan.",
+            "type": "string",
+            "enum": [
+                "produced",
+                "applied",
+                "rejected",
+                "superseded",
+                "failed"
+            ]
+        },
+        "planning_strategy": {
+            "description": "Strategy used to produce this context plan.",
+            "type": "string",
+            "enum": [
+                "recency",
+                "relevance",
+                "pinned_first",
+                "budget_fit",
+                "hybrid",
+                "manual"
+            ]
+        },
+        "planned_actions": {
+            "description": "Context mutations proposed by this plan.",
+            "type": "array",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/context/v1/action.schema.json"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "planned_active_items": {
+            "description": "Planned active context items in render order after applying the plan.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "item_id",
+                    "order"
+                ],
+                "properties": {
+                    "item_id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "estimated_tokens": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                }
+            },
+            "uniqueItems": true
+        },
+        "estimated_token_count": {
+            "description": "Estimated active-context token count after applying the plan.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "model_context_limit": {
+            "description": "Model context limit used during planning.",
+            "type": "integer",
+            "minimum": 1
+        },
+        "target_token_budget": {
+            "description": "Planner target budget, when lower than the full model context limit.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "source_context_state_revision": {
+            "description": "Context state revision used as input to this plan.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "result_context_state_revision": {
+            "description": "Context state revision after the plan was applied, when applicable.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "plan_artifact_reference": {
+            "description": "Artifact reference for this context plan, when stored durably outside the event stream.",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+        },
+        "created_at": {
+            "description": "When the context plan was created.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "applied_at": {
+            "description": "When the context plan was applied.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "closed_at": {
+            "description": "When the context plan reached a terminal non-applied status.",
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "planning_status": {
+                        "const": "applied"
+                    }
+                },
+                "required": [
+                    "planning_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "applied_at",
+                    "result_context_state_revision"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "planning_status": {
+                        "enum": [
+                            "rejected",
+                            "superseded",
+                            "failed"
+                        ]
+                    }
+                },
+                "required": [
+                    "planning_status"
+                ]
+            },
+            "then": {
+                "required": [
+                    "closed_at"
+                ]
+            }
+        }
+    ]
+}
