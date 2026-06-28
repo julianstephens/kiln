@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/relevance.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository relevance",
+    "description": "Search and ranking metadata describing why a repository candidate is relevant to a query.",
     "type": "object",
     "additionalProperties": false,
     "required": [
