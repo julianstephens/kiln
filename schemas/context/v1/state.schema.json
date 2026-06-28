@@ -6,11 +6,16 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "context_id",
         "current_token_estimate",
         "model_context_limit",
         "context_state_revision"
     ],
     "properties": {
+        "context_id": {
+            "type": "string",
+            "minLength": 1
+        },
         "pinned_item_ids": {
             "type": "array",
             "items": {

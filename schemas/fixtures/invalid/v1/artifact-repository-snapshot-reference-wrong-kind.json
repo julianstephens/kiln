@@ -1,0 +1,12 @@
+{
+    "artifact_id": "art_snapshot_001",
+    "scope": "installation",
+    "artifact_kind": "answer",
+    "content_type": "application/gzip",
+    "content_hash": "sha256:778899",
+    "uncompressed_size": 65536,
+    "stored_size": 16384,
+    "compression_method": "gzip",
+    "retention_class": "standard",
+    "created_at": "2026-06-28T00:00:00Z"
+}

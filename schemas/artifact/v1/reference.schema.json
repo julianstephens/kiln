@@ -35,7 +35,14 @@
         },
         "artifact_kind": {
             "type": "string",
-            "minLength": 1
+            "enum": [
+                "answer",
+                "changed_file_manifest",
+                "diagnostic_log",
+                "patch",
+                "repository_snapshot",
+                "validation_report"
+            ]
         },
         "content_type": {
             "type": "string",

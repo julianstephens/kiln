@@ -1,0 +1,64 @@
+{
+    "run_id": "run_123",
+    "terminal_status": "completed",
+    "stop_reason": {
+        "category": "completed",
+        "code": "user_canceled"
+    },
+    "answer": {
+        "content_type": "text/markdown",
+        "content": "# Done"
+    },
+    "answer_artifact": {
+        "artifact_id": "art_answer_001",
+        "scope": "installation",
+        "artifact_kind": "answer",
+        "content_type": "text/markdown",
+        "content_hash": "sha256:abc123",
+        "uncompressed_size": 512,
+        "stored_size": 256,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "patch_artifact": {
+        "artifact_id": "art_patch_001",
+        "scope": "tenant",
+        "artifact_kind": "patch",
+        "content_type": "text/x-diff",
+        "content_hash": "sha256:445566",
+        "uncompressed_size": 2048,
+        "stored_size": 700,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "changed_file_manifest_reference": {
+        "artifact_id": "art_manifest_001",
+        "scope": "tenant",
+        "artifact_kind": "changed_file_manifest",
+        "content_type": "application/json",
+        "content_hash": "sha256:def456",
+        "uncompressed_size": 1024,
+        "stored_size": 320,
+        "compression_method": "gzip",
+        "retention_class": "audit",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "validation_report_reference": {
+        "artifact_id": "art_validation_001",
+        "scope": "tenant",
+        "artifact_kind": "validation_report",
+        "content_type": "application/json",
+        "content_hash": "sha256:a1b2c3",
+        "uncompressed_size": 5000,
+        "stored_size": 1400,
+        "compression_method": "gzip",
+        "retention_class": "audit",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "usage": {},
+    "event_stream_range": {},
+    "event_stream_reference": "events_123",
+    "context_ledger_reference": "context_ledger_123"
+}

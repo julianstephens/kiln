@@ -32,7 +32,7 @@
                 "denied",
                 "stale_session",
                 "conflict",
-                "cancelled",
+                "canceled",
                 "exhausted",
                 "retryable_error",
                 "fatal_error"
@@ -78,7 +78,7 @@
                             "denied",
                             "stale_session",
                             "conflict",
-                            "cancelled",
+                            "canceled",
                             "exhausted",
                             "retryable_error",
                             "fatal_error"

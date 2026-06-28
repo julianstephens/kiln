@@ -1,0 +1,11 @@
+{
+    "scope": "tenant",
+    "artifact_kind": "changed_file_manifest",
+    "content_type": "application/json",
+    "content_hash": "sha256:def456",
+    "uncompressed_size": 1024,
+    "stored_size": 320,
+    "compression_method": "gzip",
+    "retention_class": "audit",
+    "created_at": "2026-06-28T00:00:00Z"
+}

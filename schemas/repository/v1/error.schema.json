@@ -71,7 +71,7 @@
         "artifact_references": {
             "type": "array",
             "items": {
-                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/diagnostic-log-reference.schema.json"
             }
         },
         "cause_error_id": {

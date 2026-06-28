@@ -1,0 +1,12 @@
+{
+    "artifact_id": "art_patch_001",
+    "scope": "tenant",
+    "artifact_kind": "patch",
+    "content_type": "text/x-diff",
+    "content_hash": "sha256:445566",
+    "uncompressed_size": 2048,
+    "stored_size": 700,
+    "compression_method": "gzip",
+    "retention_class": "standard",
+    "created_at": "2026-06-28T00:00:00Z"
+}

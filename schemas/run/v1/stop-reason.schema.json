@@ -1,0 +1,183 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run stop reason",
+    "description": "Describes why a run stopped executing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "category",
+        "code"
+    ],
+    "properties": {
+        "category": {
+            "description": "Broad class of reason the run stopped.",
+            "type": "string",
+            "enum": [
+                "completed",
+                "failed",
+                "canceled",
+                "exhausted",
+                "interrupted"
+            ]
+        },
+        "code": {
+            "description": "Specific machine-readable stop reason.",
+            "type": "string",
+            "enum": [
+                "completed_successfully",
+                "user_canceled",
+                "system_canceled",
+                "policy_canceled",
+                "budget_exhausted",
+                "turn_limit_exhausted",
+                "time_limit_exhausted",
+                "context_limit_exhausted",
+                "retry_limit_exhausted",
+                "validation_failed",
+                "capability_denied",
+                "capability_unavailable",
+                "repository_unavailable",
+                "repository_dirty",
+                "tool_failed",
+                "external_operation_failed",
+                "output_production_failed",
+                "internal_error",
+                "worker_interrupted",
+                "shutdown_interrupted",
+                "lease_lost"
+            ]
+        },
+        "message": {
+            "description": "Optional human-readable explanation of the stop reason.",
+            "type": "string",
+            "minLength": 1
+        },
+        "details": {
+            "description": "Optional structured diagnostic details for the stop reason.",
+            "type": "object"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "completed"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "const": "completed_successfully"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "canceled"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "user_canceled",
+                            "system_canceled",
+                            "policy_canceled"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "exhausted"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "budget_exhausted",
+                            "turn_limit_exhausted",
+                            "time_limit_exhausted",
+                            "context_limit_exhausted",
+                            "retry_limit_exhausted"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "failed"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "validation_failed",
+                            "capability_denied",
+                            "capability_unavailable",
+                            "repository_unavailable",
+                            "repository_dirty",
+                            "tool_failed",
+                            "external_operation_failed",
+                            "output_production_failed",
+                            "internal_error"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "category": {
+                        "const": "interrupted"
+                    }
+                },
+                "required": [
+                    "category"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "worker_interrupted",
+                            "shutdown_interrupted",
+                            "lease_lost"
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}

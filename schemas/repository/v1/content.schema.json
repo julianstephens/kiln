@@ -22,7 +22,7 @@
             "minLength": 1
         },
         "artifact_reference": {
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/repository-snapshot-reference.schema.json"
         },
         "structured_representation": {
             "type": "object"
