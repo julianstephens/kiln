@@ -27,7 +27,7 @@ class SchemaDefinition:
 
     @property
     def fixture_prefix(self) -> str:
-        return f"{self.domain}-{self.contract}-"
+        return f"{self.domain}-{self.contract.replace('/', '-')}-"
 
 
 class ValidationFailureError(Exception):
@@ -59,6 +59,31 @@ def require_object(value: Any, *, path: Path) -> dict[str, Any]:
         raise ValidationFailureError(message=f"{path}: expected a JSON object")
 
     return value
+
+
+def schema_local_path(
+    schema_root: Path,
+    *,
+    domain: str,
+    contract: str,
+    major: int,
+) -> Path:
+    parts = contract.split("/")
+    return schema_root / domain / f"v{major}" / Path(*parts[:-1]) / f"{parts[-1]}.schema.json"
+
+
+def schema_local_suffix(*, domain: str, contract: str, major: int) -> Path:
+    parts = contract.split("/")
+    return Path(domain) / f"v{major}" / Path(*parts[:-1]) / f"{parts[-1]}.schema.json"
+
+
+def validate_schema_key(schema_key: str, *, manifest_path: Path, field: str) -> None:
+    parts = schema_key.split("/")
+    if len(parts) < 2 or not all(parts):
+        raise ValidationFailureError(
+            message=f"{manifest_path}: invalid {field} entry {schema_key!r}; "
+            "expected '<domain>/<contract>' or '<domain>/<nested>/<contract>'"
+        )
 
 
 def load_manifest(schema_root: Path) -> dict[str, Any]:
@@ -122,12 +147,7 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
                 message=f"{manifest_path}: schemas[{index}] must be a non-empty string"
             )
 
-        parts = schema_key.split("/")
-        if len(parts) != 2 or not all(parts):
-            raise ValidationFailureError(
-                message=f"{manifest_path}: invalid schema entry {schema_key!r}; "
-                "expected '<domain>/<contract>'"
-            )
+        validate_schema_key(schema_key, manifest_path=manifest_path, field="schema")
 
         if schema_key in seen:
             raise ValidationFailureError(
@@ -154,12 +174,7 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
                     )
                 )
 
-            parts = ep_key.split("/")
-            if len(parts) != 2 or not all(parts):
-                raise ValidationFailureError(
-                    message=f"{manifest_path}: invalid entrypoint entry {ep_key!r}; "
-                    "expected '<domain>/<contract>'"
-                )
+            validate_schema_key(ep_key, manifest_path=manifest_path, field="entrypoint")
 
             if ep_key in seen_entrypoints:
                 raise ValidationFailureError(
@@ -191,7 +206,12 @@ def load_schemas(
 
     for schema_key in manifest["schemas"]:
         domain, contract = schema_key.split("/", maxsplit=1)
-        path = schema_root / domain / f"v{major}" / f"{contract}.schema.json"
+        path = schema_local_path(
+            schema_root,
+            domain=domain,
+            contract=contract,
+            major=major,
+        )
         contents = require_object(load_json(path), path=path)
 
         if contents.get("$schema") != EXPECTED_DIALECT:
@@ -240,7 +260,11 @@ def load_schemas(
                 f"{schema_key!r} with compatibility_major={major}"
             )
 
-        expected_local_suffix = Path(domain) / f"v{major}" / f"{contract}.schema.json"
+        expected_local_suffix = schema_local_suffix(
+            domain=domain,
+            contract=contract,
+            major=major,
+        )
         try:
             actual_local_suffix = path.relative_to(schema_root)
         except ValueError:
