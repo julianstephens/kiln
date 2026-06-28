@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/usage.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository usage",
+    "description": "Repository-engine usage telemetry recorded for repository protocol operations.",
     "type": "object",
     "additionalProperties": false,
     "required": [
