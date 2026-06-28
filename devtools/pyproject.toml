@@ -25,5 +25,10 @@ package = true
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+]
+
 [tool.setuptools]
 py-modules = ["schema_tools"]
