@@ -110,7 +110,8 @@
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
             },
-            "minItems": 1
+            "minItems": 1,
+            "uniqueItems": true
         }
     },
     "allOf": [
@@ -128,6 +129,79 @@
             "then": {
                 "required": [
                     "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "pattern": "^turn\\."
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "turn_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "pattern": "^model\\."
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "operation_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "pattern": "^context\\."
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "context_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "pattern": "^repository\\.query_.*"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id",
+                    "operation_id",
+                    "repository_session_id"
                 ]
             }
         },
@@ -903,11 +977,29 @@
                 ]
             },
             "then": {
-                "properties": {
-                    "payload": {
-                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/artifact-created.schema.json"
+                "allOf": [
+                    {
+                        "properties": {
+                            "payload": {
+                                "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/artifact-created.schema.json"
+                            }
+                        }
+                    },
+                    {
+                        "oneOf": [
+                            {
+                                "required": [
+                                    "run_id"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "artifact.run_id"
+                                ]
+                            }
+                        ]
                     }
-                }
+                ]
             }
         }
     ]

@@ -29,7 +29,7 @@
                 "tenant"
             ]
         },
-        "run_identity": {
+        "run_id": {
             "type": "string",
             "minLength": 1
         },
