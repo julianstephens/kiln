@@ -22,6 +22,7 @@ pythonpath = ["python"]
 [dependency-groups]
 dev = [
     "build>=1.5.0",
+    "datamodel-code-generator[http]>=0.66.0",
     "jsonschema[format]>=4.26.0",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
