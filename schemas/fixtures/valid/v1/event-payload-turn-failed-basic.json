@@ -1,0 +1,14 @@
+{
+    "turn_id": "turn_002",
+    "turn_index": 1,
+    "failure_category": "tool",
+    "error": {
+        "error_id": "run_error_turn_001",
+        "run_id": "run_001",
+        "category": "tool",
+        "code": "tool_failed",
+        "message": "Tool execution failed during turn",
+        "occurred_at": "2026-06-28T00:00:00Z"
+    },
+    "failed_at": "2026-06-28T00:00:00Z"
+}

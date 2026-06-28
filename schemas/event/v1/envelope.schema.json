@@ -75,7 +75,10 @@
                 "budget.committed",
                 "budget.denied",
                 "budget.exhausted",
-                "budget.reconciled"
+                "budget.reconciled",
+                "turn.started",
+                "turn.completed",
+                "turn.failed"
             ]
         },
         "occurred_at": {
@@ -843,6 +846,63 @@
                 "properties": {
                     "payload": {
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/budget-reconciled.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "turn.started"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/turn-started.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "turn.completed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/turn-completed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "turn.failed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/turn-failed.schema.json"
                     }
                 }
             }
