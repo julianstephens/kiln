@@ -7,6 +7,9 @@ from typing import Any
 
 SCHEMA_BASE_URL = "https://kiln.cyborgdev.cloud/schemas"
 NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+CONTRACT_PATH_PATTERN = re.compile(
+    r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
+)
 
 
 class SchemaCreationError(Exception):
@@ -47,8 +50,27 @@ def validate_name(value: str, *, field: str) -> None:
         )
 
 
+def validate_contract_path(value: str) -> None:
+    if not CONTRACT_PATH_PATTERN.fullmatch(value):
+        raise SchemaCreationError(
+            message=(
+                "contract must use lowercase kebab-case path segments "
+                f"separated by '/': {value!r}"
+            )
+        )
+
+
 def schema_key(domain: str, contract: str) -> str:
     return f"{domain}/{contract}"
+
+
+def contract_path(contract: str) -> Path:
+    parts = contract.split("/")
+    return Path(*parts[:-1]) / f"{parts[-1]}.schema.json"
+
+
+def fixture_contract_name(contract: str) -> str:
+    return contract.replace("/", "-")
 
 
 def schema_path(
@@ -58,7 +80,7 @@ def schema_path(
     contract: str,
     major: int,
 ) -> Path:
-    return schema_root / domain / f"v{major}" / f"{contract}.schema.json"
+    return schema_root / domain / f"v{major}" / contract_path(contract)
 
 
 def fixture_path(
@@ -75,7 +97,7 @@ def fixture_path(
         / "fixtures"
         / fixture_kind
         / f"v{major}"
-        / f"{domain}-{contract}-{case}.json"
+        / f"{domain}-{fixture_contract_name(contract)}-{case}.json"
     )
 
 
@@ -156,7 +178,7 @@ def create_schema(args: argparse.Namespace) -> None:
         )
 
     validate_name(args.domain, field="domain")
-    validate_name(args.contract, field="contract")
+    validate_contract_path(args.contract)
 
     if args.valid_case:
         validate_name(args.valid_case, field="valid case")
@@ -175,7 +197,8 @@ def create_schema(args: argparse.Namespace) -> None:
     if destination.exists() and not args.force:
         raise SchemaCreationError(message=f"schema already exists: {destination}")
 
-    title = args.title or (f"Kiln {args.domain} " f"{args.contract.replace('-', ' ')}")
+    contract_title = args.contract.replace("/", " ").replace("-", " ")
+    title = args.title or f"Kiln {args.domain} {contract_title}"
 
     document = schema_document(
         domain=args.domain,
@@ -248,7 +271,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "contract",
-        help="Contract name in lowercase kebab-case.",
+        help=(
+            "Contract name or nested contract path using lowercase "
+            "kebab-case path segments, such as payload/run-created."
+        ),
     )
     parser.add_argument(
         "--schema-root",
@@ -269,14 +295,16 @@ def parse_args() -> argparse.Namespace:
         "--valid-case",
         metavar="CASE",
         help=(
-            "Create an empty valid fixture named " "<domain>-<contract>-<case>.json."
+            "Create an empty valid fixture named "
+            "<domain>-<flattened-contract>-<case>.json."
         ),
     )
     parser.add_argument(
         "--invalid-case",
         metavar="CASE",
         help=(
-            "Create an empty invalid fixture named " "<domain>-<contract>-<case>.json."
+            "Create an empty invalid fixture named "
+            "<domain>-<flattened-contract>-<case>.json."
         ),
     )
     parser.add_argument(
