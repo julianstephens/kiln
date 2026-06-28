@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/preparation-status.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository preparation status",
+    "description": "Repository preparation state, including version context, index or refresh state, checkpoints, and diagnostics.",
     "type": "object",
     "additionalProperties": false,
     "required": [
