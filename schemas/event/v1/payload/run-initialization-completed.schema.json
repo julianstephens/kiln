@@ -36,8 +36,8 @@
         },
         "initialization_duration": {
             "description": "The duration of the initialization phase of this run",
-            "type": "string",
-            "format": "duration"
+            "type": "integer",
+            "minimum": 0
         }
     }
 }

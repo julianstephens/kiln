@@ -7,8 +7,8 @@
     "additionalProperties": false,
     "required": [
         "completion_proposal_id",
-        "output_requirements",
-        "expected_artifact_references"
+        "output_mode",
+        "expected_artifact_kinds"
     ],
     "properties": {
         "completion_proposal_id": {
@@ -16,21 +16,25 @@
             "description": "The proposal that is being used to produce the output for this run",
             "minLength": 1
         },
-        "output_requirements": {
-            "description": "The output requirements that are being used to produce the output for this run",
+        "output_mode": {
+            "description": "The output mode that is being used to produce the output for this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/output-mode.schema.json"
+        },
+        "expected_artifact_kinds": {
+            "description": "The artifact kinds that are expected to be produced by this run",
             "type": "array",
             "items": {
                 "type": "string",
-                "minLength": 1
-            }
-        },
-        "expected_artifact_references": {
-            "description": "The artifact references that are expected to be produced by this run",
-            "type": "array",
-            "items": {
-                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+                "enum": [
+                    "answer",
+                    "patch",
+                    "report",
+                    "changed_file_manifest",
+                    "validation_report"
+                ]
             },
-            "minItems": 1
+            "minItems": 1,
+            "uniqueItems": true
         }
     }
 }

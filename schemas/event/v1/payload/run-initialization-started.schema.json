@@ -6,11 +6,11 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
-        "init_operation_id",
+        "initialized_operation_id",
         "runtime_session_id"
     ],
     "properties": {
-        "init_operation_id": {
+        "initialized_operation_id": {
             "type": "string",
             "description": "The operation that is being performed to initialize this run",
             "minLength": 1

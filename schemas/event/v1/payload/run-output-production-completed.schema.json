@@ -6,9 +6,14 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
-        "final_answer_artifact_reference"
+        "output_mode",
+        "usage"
     ],
     "properties": {
+        "report_reference": {
+            "description": "The report reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/report-reference.schema.json"
+        },
         "final_answer_artifact_reference": {
             "description": "The artifact reference that was produced by this run",
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/answer-reference.schema.json"
@@ -20,6 +25,10 @@
         "changed_file_manifest_reference": {
             "description": "The changed file manifest reference that was produced by this run",
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/changed-file-manifest-reference.schema.json"
+        },
+        "output_mode": {
+            "description": "The output mode that was used by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/output-mode.schema.json"
         },
         "usage": {
             "description": "The usage that was produced by this run",
@@ -39,5 +48,78 @@
         "patch_reference": [
             "changed_file_manifest_reference"
         ]
-    }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "output_mode": {
+                        "const": "answer"
+                    }
+                },
+                "required": [
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "required": [
+                    "final_answer_artifact_reference"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "output_mode": {
+                        "const": "patch"
+                    }
+                },
+                "required": [
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "required": [
+                    "patch_reference",
+                    "changed_file_manifest_reference"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "output_mode": {
+                        "const": "answer_with_patch"
+                    }
+                },
+                "required": [
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "required": [
+                    "final_answer_artifact_reference",
+                    "patch_reference",
+                    "changed_file_manifest_reference"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "output_mode": {
+                        "const": "report"
+                    }
+                },
+                "required": [
+                    "output_mode"
+                ]
+            },
+            "then": {
+                "required": [
+                    "report_reference"
+                ]
+            }
+        }
+    ]
 }

@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/run/v1/error-category.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln run error category",
+    "type": "string",
+    "enum": [
+        "validation",
+        "capability",
+        "repository",
+        "tool",
+        "external_operation",
+        "output_production",
+        "runtime",
+        "internal"
+    ]
+}

@@ -3,7 +3,7 @@
         "category": "completed",
         "code": "completed_successfully"
     },
-    "final_answer_artifact_reference": {
+    "final_result_reference": {
         "artifact_id": "art_answer_001",
         "scope": "installation",
         "artifact_kind": "answer",

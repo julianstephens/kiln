@@ -12,7 +12,7 @@
         "requested_budgets",
         "requested_security_profile"
     ],
-    "oneOf": [
+    "anyOf": [
         {
             "required": [
                 "task_id"
@@ -53,13 +53,17 @@
             "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
         },
         "requested_policy": {
-            "description": "The policy that was requested for this run",
+            "description": "The capability policy decisions that were requested for this run",
             "type": "array",
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/decision.schema.json"
             },
-            "minItems": 1,
-            "uniqueItems": true
+            "minItems": 1
+        },
+        "requested_model": {
+            "description": "The model that was requested for this run",
+            "type": "string",
+            "minLength": 1
         },
         "requested_budgets": {
             "description": "The budgets that were requested for this run",

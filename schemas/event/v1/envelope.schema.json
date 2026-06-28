@@ -287,6 +287,71 @@
                     }
                 }
             }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.failed"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-failed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "not": {
+                            "anyOf": [
+                                {
+                                    "const": "run.created"
+                                },
+                                {
+                                    "const": "run.initialization_started"
+                                },
+                                {
+                                    "const": "run.initialization_completed"
+                                },
+                                {
+                                    "const": "run.execution_started"
+                                },
+                                {
+                                    "const": "run.output_production_started"
+                                },
+                                {
+                                    "const": "run.output_production_completed"
+                                },
+                                {
+                                    "const": "run.completed"
+                                },
+                                {
+                                    "const": "run.failed"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/unsupported.schema.json"
+                    }
+                }
+            }
         }
     ]
 }

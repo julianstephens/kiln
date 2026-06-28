@@ -7,7 +7,7 @@
     "additionalProperties": false,
     "required": [
         "stop_reason",
-        "final_answer_artifact_reference",
+        "final_result_reference",
         "final_usage"
     ],
     "properties": {
@@ -20,9 +20,9 @@
                 }
             }
         },
-        "final_answer_artifact_reference": {
-            "description": "The artifact reference that was produced by this run",
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/answer-reference.schema.json"
+        "final_result_reference": {
+            "description": "The result reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
         },
         "final_usage": {
             "description": "The usage summary that was produced by this run",

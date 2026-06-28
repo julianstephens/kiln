@@ -5,5 +5,5 @@
     },
     "failure_category": "tool",
     "last_successful_lifecycle_state": "running",
-    "cleanup_completed": true
+    "cleanup_status": "completed"
 }

@@ -8,5 +8,5 @@
     "effective_capability_profile": {
         "default_deny_settings": {}
     },
-    "initialization_duration": "PT5S"
+    "initialization_duration": 5
 }

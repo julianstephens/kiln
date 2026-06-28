@@ -27,17 +27,7 @@
         },
         "category": {
             "description": "Broad class of run error.",
-            "type": "string",
-            "enum": [
-                "validation",
-                "capability",
-                "repository",
-                "tool",
-                "external_operation",
-                "output_production",
-                "runtime",
-                "internal"
-            ]
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/error-category.schema.json"
         },
         "code": {
             "description": "Specific machine-readable run error code.",
