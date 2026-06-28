@@ -38,55 +38,15 @@
         "event_type": {
             "type": "string",
             "description": "The type of event being reported",
-            "oneOf": [
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/run-lifecycle-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/runtime-session-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/turn-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/repository-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/context-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/policy-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/model-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/budget-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/capability-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/tool-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/workspace-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/artifact-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/validation-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/recovery-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/error-events.schema.json"
-                },
-                {
-                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/publication-events.schema.json"
-                }
+            "enum": [
+                "run.created",
+                "run.initialization_started",
+                "run.initialization_completed",
+                "run.execution_started",
+                "run.output_production_started",
+                "run.output_production_completed",
+                "run.completed",
+                "run.failed"
             ]
         },
         "occurred_at": {
@@ -303,52 +263,6 @@
                 "properties": {
                     "payload": {
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/run-failed.schema.json"
-                    }
-                }
-            }
-        },
-        {
-            "if": {
-                "properties": {
-                    "event_type": {
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "const": "run.created"
-                                },
-                                {
-                                    "const": "run.initialization_started"
-                                },
-                                {
-                                    "const": "run.initialization_completed"
-                                },
-                                {
-                                    "const": "run.execution_started"
-                                },
-                                {
-                                    "const": "run.output_production_started"
-                                },
-                                {
-                                    "const": "run.output_production_completed"
-                                },
-                                {
-                                    "const": "run.completed"
-                                },
-                                {
-                                    "const": "run.failed"
-                                }
-                            ]
-                        }
-                    }
-                },
-                "required": [
-                    "event_type"
-                ]
-            },
-            "then": {
-                "properties": {
-                    "payload": {
-                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/unsupported.schema.json"
                     }
                 }
             }

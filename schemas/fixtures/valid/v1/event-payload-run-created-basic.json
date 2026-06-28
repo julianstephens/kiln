@@ -6,30 +6,7 @@
         "version_id": "rev_001",
         "workspace_version_id": "wsv_001"
     },
-    "requested_policy": [
-        {
-            "decision": "granted",
-            "reason": "Capability is permitted for this run",
-            "grant": {
-                "grant_id": "grant_event_001",
-                "capability_type": "tool",
-                "run_id": "run_001",
-                "capability_scope": {
-                    "installation_id": "inst_001"
-                },
-                "allowed_operations": [
-                    "invoke"
-                ],
-                "creation_source": "system",
-                "approval_metadata": {
-                    "approval_required": false
-                },
-                "starts_at": "2026-06-28T00:00:00Z",
-                "expires_at": "2026-12-31T00:00:00Z",
-                "revoked": false
-            }
-        }
-    ],
+    "requested_model": "gpt-4",
     "requested_budgets": {
         "mode": "custom",
         "model_input_tokens": 1000

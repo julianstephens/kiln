@@ -14,12 +14,7 @@
     "properties": {
         "stop_reason": {
             "description": "The reason that this run was stopped",
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json",
-            "properties": {
-                "category": {
-                    "const": "failed"
-                }
-            }
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
         },
         "failure_category": {
             "description": "The category of failure that caused this run to stop",
@@ -51,5 +46,21 @@
                 "unknown"
             ]
         }
-    }
+    },
+    "allOf": [
+        {
+            "properties": {
+                "stop_reason": {
+                    "properties": {
+                        "category": {
+                            "const": "failed"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "stop_reason"
+            ]
+        }
+    ]
 }

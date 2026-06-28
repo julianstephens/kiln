@@ -8,7 +8,7 @@
     "required": [
         "run_specification_id",
         "repository",
-        "requested_policy",
+        "requested_model",
         "requested_budgets",
         "requested_security_profile"
     ],
@@ -46,19 +46,12 @@
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
             },
-            "minItems": 1
+            "minItems": 1,
+            "uniqueItems": true
         },
         "repository": {
             "description": "The repository that this run is associated with",
             "$ref": "https://kiln.cyborgdev.cloud/schemas/repository/v1/identifier.schema.json"
-        },
-        "requested_policy": {
-            "description": "The capability policy decisions that were requested for this run",
-            "type": "array",
-            "items": {
-                "$ref": "https://kiln.cyborgdev.cloud/schemas/capability/v1/decision.schema.json"
-            },
-            "minItems": 1
         },
         "requested_model": {
             "description": "The model that was requested for this run",
@@ -79,7 +72,8 @@
             "items": {
                 "$ref": "https://kiln.cyborgdev.cloud/schemas/validation/v1/requirement.schema.json"
             },
-            "minItems": 1
+            "minItems": 1,
+            "uniqueItems": true
         }
     }
 }

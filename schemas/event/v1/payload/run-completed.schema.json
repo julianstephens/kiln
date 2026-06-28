@@ -13,16 +13,11 @@
     "properties": {
         "stop_reason": {
             "description": "The reason that this run was stopped",
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json",
-            "properties": {
-                "category": {
-                    "const": "completed"
-                }
-            }
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/stop-reason.schema.json"
         },
         "final_result_reference": {
-            "description": "The result reference that was produced by this run",
-            "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            "description": "The terminal result reference that was produced by this run",
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/run/v1/terminal-result-reference.schema.json"
         },
         "final_usage": {
             "description": "The usage summary that was produced by this run",
@@ -32,5 +27,21 @@
             "description": "The validation report reference that was produced by this run",
             "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/validation-report-reference.schema.json"
         }
-    }
+    },
+    "allOf": [
+        {
+            "properties": {
+                "stop_reason": {
+                    "properties": {
+                        "category": {
+                            "const": "completed"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "stop_reason"
+            ]
+        }
+    ]
 }
