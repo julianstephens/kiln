@@ -144,6 +144,7 @@
                     "code": {
                         "enum": [
                             "validation_failed",
+                            "validation_error",
                             "capability_denied",
                             "capability_unavailable",
                             "repository_unavailable",
@@ -151,7 +152,11 @@
                             "tool_failed",
                             "external_operation_failed",
                             "output_production_failed",
-                            "internal_error"
+                            "internal_error",
+                            "runtime_interrupted",
+                            "worker_interrupted",
+                            "shutdown_interrupted",
+                            "lease_lost"
                         ]
                     }
                 }

@@ -158,26 +158,7 @@
                     "stop_reason": {
                         "properties": {
                             "category": {
-                                "anyOf": [
-                                    {
-                                        "const": "failed"
-                                    },
-                                    {
-                                        "const": "runtime_interrupted"
-                                    },
-                                    {
-                                        "const": "worker_interrupted"
-                                    },
-                                    {
-                                        "const": "shutdown_interrupted"
-                                    },
-                                    {
-                                        "const": "lease_lost"
-                                    },
-                                    {
-                                        "const": "validation_error"
-                                    }
-                                ]
+                                "const": "failed"
                             }
                         }
                     }
