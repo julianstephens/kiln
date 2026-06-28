@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/candidate.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository candidate",
+    "description": "Repository content candidate returned by search or source retrieval, with source, content, cost, relevance, provenance, and validity metadata.",
     "type": "object",
     "additionalProperties": false,
     "required": [
