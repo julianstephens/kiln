@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/alternative-representation.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository alternative representation",
+    "description": "Metadata for an alternate representation of repository content, including availability, estimated cost, and quality metadata.",
     "type": "object",
     "additionalProperties": false,
     "required": [
