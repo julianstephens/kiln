@@ -41,7 +41,11 @@
                 "diagnostic_log",
                 "patch",
                 "repository_snapshot",
-                "validation_report"
+                "validation_report",
+                "model_request",
+                "model_response",
+                "candidate_batch",
+                "final_result_bundle"
             ]
         },
         "content_type": {

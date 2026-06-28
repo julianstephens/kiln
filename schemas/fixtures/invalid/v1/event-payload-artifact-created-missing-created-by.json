@@ -1,0 +1,16 @@
+{
+    "artifact": {
+        "artifact_id": "art_created_001",
+        "scope": "tenant",
+        "artifact_kind": "answer",
+        "content_type": "text/markdown",
+        "content_hash": "sha256:artifact001",
+        "uncompressed_size": 2048,
+        "stored_size": 900,
+        "compression_method": "gzip",
+        "retention_class": "standard",
+        "created_at": "2026-06-28T00:00:00Z"
+    },
+    "creation_reason": "output_production",
+    "created_at": "2026-06-28T00:00:00Z"
+}

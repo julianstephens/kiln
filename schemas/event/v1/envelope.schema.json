@@ -78,7 +78,8 @@
                 "budget.reconciled",
                 "turn.started",
                 "turn.completed",
-                "turn.failed"
+                "turn.failed",
+                "artifact.created"
             ]
         },
         "occurred_at": {
@@ -903,6 +904,25 @@
                 "properties": {
                     "payload": {
                         "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/turn-failed.schema.json"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "artifact.created"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/payload/artifact-created.schema.json"
                     }
                 }
             }
