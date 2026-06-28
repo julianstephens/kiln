@@ -2,7 +2,11 @@
 name = "kiln-devtools"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "datamodel-code-generator[http]>=0.66.0",
+    "jsonschema[format]>=4.26.0",
+    "referencing>=0.37.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/julianstephens/kiln"
@@ -12,6 +16,7 @@ Issues = "https://github.com/julianstephens/kiln/issues"
 newschema = "schema_tools.new_schema:main"
 removeschema = "schema_tools.remove_schema:main"
 validateschemas = "schema_tools.validate:main"
+generatemodels = "schema_tools.generate_models:main"
 
 [tool.uv]
 package = true
@@ -19,6 +24,11 @@ package = true
 [build-system]
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+]
 
 [tool.setuptools]
 py-modules = ["schema_tools"]

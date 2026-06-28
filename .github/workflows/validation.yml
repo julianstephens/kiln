@@ -30,8 +30,10 @@ jobs:
         with:
           version: 0.11.17
 
-      - name: Install dependencies
-        run: uv sync --locked --all-extras --dev
-
       - name: Validate code
-        run: make check
+        run: uv sync --dev --package kiln-sdk && make check
+
+      - name: Check generated schema synchronization
+        run: |
+          uv sync --package kiln-devtools && uv run generatemodels
+          git diff --exit-code python/kiln/schemas
