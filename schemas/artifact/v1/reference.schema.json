@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln artifact reference",
+    "description": "Stable reference to a stored artifact, including kind, scope, content identity, size, retention, and creation metadata.",
     "type": "object",
     "additionalProperties": false,
     "required": [
