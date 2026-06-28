@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/budget-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event budget events",
+    "type": "string",
+    "enum": [
+        "budget.initialized",
+        "budget.reserved",
+        "budget.committed",
+        "budget.released",
+        "budget.denied",
+        "budget.exhausted",
+        "budget.reconciled"
+    ]
+}

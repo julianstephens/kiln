@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/publication-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event publication events",
+    "type": "string",
+    "enum": [
+        "publication.requested",
+        "publication.authorized",
+        "publication.branch_created",
+        "publication.commit_created",
+        "publication.pull_request_created",
+        "publication.failed"
+    ]
+}

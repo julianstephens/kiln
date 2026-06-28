@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/recovery-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event recovery events",
+    "type": "string",
+    "enum": [
+        "run.recovery_claimed",
+        "run.recovery_started",
+        "repository.preparation_resumed",
+        "validation.resumed",
+        "run.recovery_completed",
+        "run.recovery_failed"
+    ]
+}

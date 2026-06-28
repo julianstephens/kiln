@@ -1,0 +1,178 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/envelope.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event envelope",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "event_id",
+        "event_schema_version",
+        "sequence",
+        "event_type",
+        "occurred_at",
+        "producer",
+        "payload"
+    ],
+    "properties": {
+        "event_id": {
+            "type": "string",
+            "description": "A globally unique identifier with the installation or tenant scope for this event",
+            "minLength": 1
+        },
+        "event_schema_version": {
+            "type": "string",
+            "description": "The version of the event schema for this event_type.",
+            "minLength": 1
+        },
+        "run_id": {
+            "type": "string",
+            "description": "The run that this event is associated with",
+            "minLength": 1
+        },
+        "sequence": {
+            "type": "integer",
+            "description": "The monotonically increasing sequence number of this event within the run",
+            "minimum": 1
+        },
+        "event_type": {
+            "type": "string",
+            "description": "The type of event being reported",
+            "oneOf": [
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/run-lifecycle-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/runtime-session-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/turn-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/repository-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/context-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/policy-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/model-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/budget-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/capability-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/tool-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/workspace-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/artifact-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/validation-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/recovery-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/error-events.schema.json"
+                },
+                {
+                    "$ref": "https://kiln.cyborgdev.cloud/schemas/event/v1/publication-events.schema.json"
+                }
+            ]
+        },
+        "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when this event was generated"
+        },
+        "producer": {
+            "type": "string",
+            "description": "The identifier of the logical component that generated this event",
+            "minLength": 1
+        },
+        "payload": {
+            "type": "object",
+            "description": "The payload of the event, which varies based on the event type"
+        },
+        "causation_id": {
+            "type": "string",
+            "description": "The event_id of the event that caused this event to be generated, if applicable",
+            "minLength": 1
+        },
+        "correlation_id": {
+            "type": "string",
+            "description": "An identifier that can be used to correlate this event with other events, if applicable",
+            "minLength": 1
+        },
+        "operation_id": {
+            "type": "string",
+            "description": "An identifier that can be used to associate this event with a specific operation, if applicable",
+            "minLength": 1
+        },
+        "turn_id": {
+            "type": "string",
+            "description": "An identifier that can be used to associate this event with a specific turn, if applicable",
+            "minLength": 1
+        },
+        "repository_session_id": {
+            "type": "string",
+            "description": "An identifier that can be used to associate this event with a specific repository session, if applicable",
+            "minLength": 1
+        },
+        "artifact_references": {
+            "type": "array",
+            "description": "References to any artifacts that are associated with this event",
+            "items": {
+                "$ref": "https://kiln.cyborgdev.cloud/schemas/artifact/v1/reference.schema.json"
+            },
+            "minItems": 1
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "pattern": "^run\\."
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "run_id"
+                ]
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "event_type": {
+                        "const": "run.created"
+                    }
+                },
+                "required": [
+                    "event_type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "payload": {
+                        "$ref": "<TODO: Add reference to run.created payload schema>"
+                    }
+                }
+            }
+        }
+    ]
+}

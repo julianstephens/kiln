@@ -1,0 +1,14 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/workspace-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event workspace events",
+    "type": "string",
+    "enum": [
+        "workspace.mutation_proposed",
+        "workspace.mutation_authorized",
+        "workspace.mutation_applied",
+        "workspace.mutation_failed",
+        "workspace.patch_created"
+    ]
+}

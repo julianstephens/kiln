@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/policy-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event policy events",
+    "type": "string",
+    "enum": [
+        "policy.invocation_started",
+        "policy.invocation_completed",
+        "policy.invocation_failed",
+        "policy.retrieval_proposed"
+    ]
+}

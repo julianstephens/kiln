@@ -1,0 +1,22 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/event/v1/run-lifecycle-events.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln event run lifecycle events",
+    "type": "string",
+    "enum": [
+        "run.created",
+        "run.initialization_started",
+        "run.initialization_completed",
+        "run.execution_started",
+        "run.output_production_started",
+        "run.output_production_completed",
+        "run.completed",
+        "run.failed",
+        "run.cancellation_requested",
+        "run.cancellation_accepted",
+        "run.cancellation_rejected",
+        "run.canceled",
+        "run.exhausted"
+    ]
+}
