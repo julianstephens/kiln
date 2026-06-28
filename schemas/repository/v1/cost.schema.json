@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/cost.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository cost",
+    "description": "Estimated retrieval and representation cost metadata for repository content candidates.",
     "type": "object",
     "additionalProperties": false,
     "required": [
