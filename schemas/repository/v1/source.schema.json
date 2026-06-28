@@ -3,6 +3,7 @@
     "$id": "https://kiln.cyborgdev.cloud/schemas/repository/v1/source.schema.json",
     "x-kiln-schema-release": "1.0.0",
     "title": "Kiln repository source",
+    "description": "Source-location metadata for repository content, including repository path and source or byte ranges.",
     "type": "object",
     "additionalProperties": false,
     "required": [
