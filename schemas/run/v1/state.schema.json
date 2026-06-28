@@ -9,7 +9,6 @@
         "lifecycle_state",
         "current_turn",
         "current_task_state",
-        "active_repository",
         "current_context_ledger_summary",
         "budget_summary",
         "active_capability_grant_references"
@@ -163,12 +162,7 @@
             "then": {
                 "required": [
                     "terminal_result_reference"
-                ],
-                "not": {
-                    "required": [
-                        "pending_operation_reference"
-                    ]
-                }
+                ]
             },
             "else": {
                 "not": {
@@ -176,6 +170,56 @@
                         "terminal_result_reference"
                     ]
                 }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "lifecycle_state": {
+                        "enum": [
+                            "created",
+                            "completed",
+                            "failed",
+                            "canceled",
+                            "exhausted"
+                        ]
+                    }
+                },
+                "required": [
+                    "lifecycle_state"
+                ]
+            },
+            "then": {
+                "not": {
+                    "required": [
+                        "pending_operation_reference"
+                    ]
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "lifecycle_state": {
+                        "enum": [
+                            "running",
+                            "producing_output",
+                            "validating",
+                            "completed",
+                            "failed",
+                            "canceled",
+                            "exhausted"
+                        ]
+                    }
+                },
+                "required": [
+                    "lifecycle_state"
+                ]
+            },
+            "then": {
+                "required": [
+                    "active_repository"
+                ]
             }
         }
     ]

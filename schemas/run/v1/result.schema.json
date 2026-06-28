@@ -113,15 +113,33 @@
                 ]
             },
             "then": {
-                "properties": {
-                    "stop_reason": {
+                "allOf": [
+                    {
                         "properties": {
-                            "category": {
-                                "const": "completed"
+                            "stop_reason": {
+                                "properties": {
+                                    "category": {
+                                        "const": "completed"
+                                    }
+                                }
                             }
                         }
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "answer"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "answer_artifact"
+                                ]
+                            }
+                        ]
                     }
-                }
+                ]
             }
         },
         {
@@ -140,7 +158,26 @@
                     "stop_reason": {
                         "properties": {
                             "category": {
-                                "const": "failed"
+                                "anyOf": [
+                                    {
+                                        "const": "failed"
+                                    },
+                                    {
+                                        "const": "runtime_interrupted"
+                                    },
+                                    {
+                                        "const": "worker_interrupted"
+                                    },
+                                    {
+                                        "const": "shutdown_interrupted"
+                                    },
+                                    {
+                                        "const": "lease_lost"
+                                    },
+                                    {
+                                        "const": "validation_error"
+                                    }
+                                ]
                             }
                         }
                     }
@@ -203,20 +240,6 @@
                 {
                     "required": [
                         "event_stream_reference"
-                    ]
-                }
-            ]
-        },
-        {
-            "anyOf": [
-                {
-                    "required": [
-                        "answer"
-                    ]
-                },
-                {
-                    "required": [
-                        "answer_artifact"
                     ]
                 }
             ]
