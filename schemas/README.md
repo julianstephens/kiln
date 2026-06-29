@@ -1,6 +1,6 @@
 # Kiln schemas
 
-This directory contains the language-neutral contracts used across Kiln process boundaries.
+This directory contains the language-neutral contracts used across Kiln process boundaries. Transport request and response payloads are programmatically wrapped in JSON-RPC envelopes, but the payloads themselves are defined by these schemas.
 
 ## Schema versioning
 
