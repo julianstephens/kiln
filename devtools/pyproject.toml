@@ -17,6 +17,7 @@ newschema = "schema_tools.new_schema:main"
 removeschema = "schema_tools.remove_schema:main"
 validateschemas = "schema_tools.validate:main"
 generatemodels = "schema_tools.generate_models:main"
+generategomodels = "schema_tools.generate_go_models:main"
 
 [tool.uv]
 package = true

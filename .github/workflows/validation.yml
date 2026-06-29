@@ -33,7 +33,12 @@ jobs:
       - name: Validate code
         run: uv sync --dev --package kiln-sdk && make check
 
-      - name: Check generated schema synchronization
+      - name: Check generated Python schema synchronization
         run: |
           uv sync --package kiln-devtools && uv run generatemodels
           git diff --exit-code python/kiln/schemas
+
+      - name: Check generated Go schema synchronization
+        run: |
+          uv sync --package kiln-devtools && uv run generategomodels
+          git diff --exit-code go/schema
