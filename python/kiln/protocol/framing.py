@@ -25,30 +25,28 @@ from .errors import (
 DEFAULT_MAX_MESSAGE_BYTES = 1 << 20
 
 
-REQUEST_SCHEMAS_BY_METHOD: dict[str, type[BaseModel]] = {
-    "repository.open": RepositoryOpenSessionRequestPayload,
-    "repository.search": RepositorySearchRequestPayload,
-    "repository.source": RepositorySourceRequestPayload,
-    "model.generate": ModelGeneratePayload,
+SUPPORTED_SCHEMAS = {
+    "repository.open_session": {
+        "request_schema": RepositoryOpenSessionRequestPayload,
+        "result_schema": RepositorySession,
+        "error_schema": RepositoryError,
+    },
+    "repository.search": {
+        "request_schema": RepositorySearchRequestPayload,
+        "result_schema": RepositorySearchResult,
+        "error_schema": RepositoryError,
+    },
+    "repository.get_source": {
+        "request_schema": RepositorySourceRequestPayload,
+        "result_schema": RepositorySourceResult,
+        "error_schema": RepositoryError,
+    },
+    "model.generate": {
+        "request_schema": ModelGeneratePayload,
+        "result_schema": ModelGenerateResult,
+        "error_schema": ModelError,
+    },
 }
-
-RESULT_SCHEMAS_BY_METHOD: dict[str, type[BaseModel]] = {
-    "repository.open": RepositorySession,
-    "repository.search": RepositorySearchResult,
-    "repository.source": RepositorySourceResult,
-    "model.generate": ModelGenerateResult,
-}
-
-ERROR_SCHEMAS_BY_METHOD: dict[str, type[BaseModel]] = {
-    "repository.open": RepositoryError,
-    "repository.search": RepositoryError,
-    "repository.source": RepositoryError,
-    "model.generate": ModelError,
-}
-
-SUPPORTED_METHODS = set(REQUEST_SCHEMAS_BY_METHOD.keys()) | set(
-    RESULT_SCHEMAS_BY_METHOD.keys()
-)
 
 
 class JsonRpcFrame(BaseModel):
@@ -131,7 +129,7 @@ def validate_frame(
         raise FramingError(
             message="invalid JSON-RPC frame: field 'method' must be a string"
         )
-    if method not in SUPPORTED_METHODS:
+    if method not in SUPPORTED_SCHEMAS:
         raise FramingError(
             message=f"invalid JSON-RPC frame: unsupported method '{method}'"
         )
@@ -167,22 +165,22 @@ def validate_frame(
     validated_result = None
     validated_error = None
 
-    if has_params and method in REQUEST_SCHEMAS_BY_METHOD:
+    if has_params and "request_schema" in SUPPORTED_SCHEMAS[method]:
         validated_params = validate_json(
             data_type="request",
-            schema=REQUEST_SCHEMAS_BY_METHOD[method],
+            schema=SUPPORTED_SCHEMAS[method]["request_schema"],
             frame=data,
         )
-    if has_result and method in RESULT_SCHEMAS_BY_METHOD:
+    if has_result and "result_schema" in SUPPORTED_SCHEMAS[method]:
         validated_result = validate_json(
             data_type="response",
-            schema=RESULT_SCHEMAS_BY_METHOD[method],
+            schema=SUPPORTED_SCHEMAS[method]["result_schema"],
             frame=data,
         )
-    if has_error and method in ERROR_SCHEMAS_BY_METHOD:
+    if has_error and "error_schema" in SUPPORTED_SCHEMAS[method]:
         validated_error = validate_json(
             data_type="error",
-            schema=ERROR_SCHEMAS_BY_METHOD[method],
+            schema=SUPPORTED_SCHEMAS[method]["error_schema"],
             frame=data,
         )
 
