@@ -3,8 +3,8 @@
 package decision
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	capability_grant "github.com/julianstephens/kiln/go/schema/capability/grant"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type DecisionDecision string
@@ -22,7 +22,5 @@ type Decision struct {
 }
 
 func (value Decision) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,8 +3,8 @@
 package grant
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	capability_scope "github.com/julianstephens/kiln/go/schema/capability/scope"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -52,7 +52,5 @@ type Grant struct {
 }
 
 func (value Grant) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

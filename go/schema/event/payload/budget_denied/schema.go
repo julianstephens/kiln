@@ -3,9 +3,9 @@
 package budget_denied
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_limits "github.com/julianstephens/kiln/go/schema/budget/limits"
 	budget_state "github.com/julianstephens/kiln/go/schema/budget/state"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -65,7 +65,5 @@ type BudgetDenied struct {
 }
 
 func (value BudgetDenied) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,7 +3,7 @@
 package report_reference
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ReportReference struct {
@@ -11,7 +11,5 @@ type ReportReference struct {
 }
 
 func (value ReportReference) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

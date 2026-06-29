@@ -3,9 +3,9 @@
 package reservation
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_limits "github.com/julianstephens/kiln/go/schema/budget/limits"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -75,7 +75,5 @@ type Reservation struct {
 }
 
 func (value Reservation) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

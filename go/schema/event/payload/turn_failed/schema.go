@@ -3,11 +3,11 @@
 package turn_failed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	run_error "github.com/julianstephens/kiln/go/schema/run/error"
 	run_error_category "github.com/julianstephens/kiln/go/schema/run/error_category"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -17,16 +17,14 @@ type TurnFailed struct {
 	Error                  run_error.Error                  `json:"error" validate:"required"`
 	FailedAt               time.Time                        `json:"failed_at" validate:"required"`
 	FailureCategory        run_error_category.ErrorCategory `json:"failure_category" validate:"required"`
-	ModelInvocationIDs     []string                         `json:"model_invocation_ids,omitempty" validate:"omitempty"`
+	ModelInvocationIds     []string                         `json:"model_invocation_ids,omitempty" validate:"omitempty"`
 	PartialOutputReference *artifact_reference.Reference    `json:"partial_output_reference,omitempty" validate:"omitempty"`
 	Retryable              *bool                            `json:"retryable,omitempty" validate:"omitempty"`
-	ToolCallIDs            []string                         `json:"tool_call_ids,omitempty" validate:"omitempty"`
+	ToolCallIds            []string                         `json:"tool_call_ids,omitempty" validate:"omitempty"`
 	TurnID                 string                           `json:"turn_id" validate:"required,min=1"`
 	TurnIndex              int                              `json:"turn_index" validate:"required,gte=0"`
 }
 
 func (value TurnFailed) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

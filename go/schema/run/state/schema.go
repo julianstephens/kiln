@@ -3,18 +3,18 @@
 package state
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_state "github.com/julianstephens/kiln/go/schema/budget/state"
 	context_state "github.com/julianstephens/kiln/go/schema/context/state"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
 	run_lifecycle_state "github.com/julianstephens/kiln/go/schema/run/lifecycle_state"
 	run_task_state "github.com/julianstephens/kiln/go/schema/run/task_state"
 	run_terminal_result_reference "github.com/julianstephens/kiln/go/schema/run/terminal_result_reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type State struct {
 	ActiveCapabilityGrantReferences []string                                               `json:"active_capability_grant_references" validate:"required,min=1"`
-	ActiveRepository                *repository_identifier.IDentifier                      `json:"active_repository,omitempty" validate:"omitempty"`
+	ActiveRepository                *repository_identifier.Identifier                      `json:"active_repository,omitempty" validate:"omitempty"`
 	BudgetSummary                   budget_state.State                                     `json:"budget_summary" validate:"required"`
 	CurrentContextLedgerSummary     context_state.State                                    `json:"current_context_ledger_summary" validate:"required"`
 	CurrentTaskState                run_task_state.TaskState                               `json:"current_task_state" validate:"required"`
@@ -27,7 +27,5 @@ type State struct {
 }
 
 func (value State) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

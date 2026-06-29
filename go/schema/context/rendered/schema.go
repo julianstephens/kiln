@@ -3,8 +3,8 @@
 package rendered
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -49,7 +49,7 @@ type Rendered struct {
 	RenderTarget            RenderedRenderTarget          `json:"render_target" validate:"required"`
 	RenderedAt              time.Time                     `json:"rendered_at" validate:"required"`
 	RenderedItemCount       int                           `json:"rendered_item_count" validate:"required,gte=0"`
-	RenderedItemIDs         []string                      `json:"rendered_item_ids" validate:"required"`
+	RenderedItemIds         []string                      `json:"rendered_item_ids" validate:"required"`
 	RenderedItems           []map[string]any              `json:"rendered_items,omitempty" validate:"omitempty"`
 	RenderedTokenEstimate   int                           `json:"rendered_token_estimate" validate:"required,gte=0"`
 	TargetOperationID       *string                       `json:"target_operation_id,omitempty" validate:"omitempty,min=1"`
@@ -58,7 +58,5 @@ type Rendered struct {
 }
 
 func (value Rendered) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

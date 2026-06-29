@@ -3,14 +3,12 @@
 package turn_events
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type TurnEvents struct {
 }
 
 func (value TurnEvents) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

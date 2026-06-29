@@ -3,8 +3,8 @@
 package run_execution_started
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_version "github.com/julianstephens/kiln/go/schema/repository/version"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	workspace_version "github.com/julianstephens/kiln/go/schema/workspace/version"
 )
 
@@ -16,7 +16,5 @@ type RunExecutionStarted struct {
 }
 
 func (value RunExecutionStarted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

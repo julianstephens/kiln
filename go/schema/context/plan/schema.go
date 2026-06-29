@@ -3,9 +3,9 @@
 package plan
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	context_action "github.com/julianstephens/kiln/go/schema/context/action"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -78,7 +78,5 @@ type Plan struct {
 }
 
 func (value Plan) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

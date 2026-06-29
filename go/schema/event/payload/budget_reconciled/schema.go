@@ -3,9 +3,9 @@
 package budget_reconciled
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_state "github.com/julianstephens/kiln/go/schema/budget/state"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -41,7 +41,5 @@ type BudgetReconciled struct {
 }
 
 func (value BudgetReconciled) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

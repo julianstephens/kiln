@@ -3,8 +3,8 @@
 package preparation_status
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_diagnostic "github.com/julianstephens/kiln/go/schema/repository/diagnostic"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type PreparationStatusRefreshState string
@@ -30,7 +30,5 @@ type PreparationStatus struct {
 }
 
 func (value PreparationStatus) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

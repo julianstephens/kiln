@@ -3,8 +3,8 @@
 package content
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_repository_snapshot_reference "github.com/julianstephens/kiln/go/schema/artifact/repository_snapshot_reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ContentContentType string
@@ -25,7 +25,5 @@ type Content struct {
 }
 
 func (value Content) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

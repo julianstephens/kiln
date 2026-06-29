@@ -3,7 +3,7 @@
 package changed_file_manifest_reference
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ChangedFileManifestReference struct {
@@ -11,7 +11,5 @@ type ChangedFileManifestReference struct {
 }
 
 func (value ChangedFileManifestReference) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

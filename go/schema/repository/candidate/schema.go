@@ -3,7 +3,6 @@
 package candidate
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_alternative_representation "github.com/julianstephens/kiln/go/schema/repository/alternative_representation"
 	repository_content "github.com/julianstephens/kiln/go/schema/repository/content"
 	repository_cost "github.com/julianstephens/kiln/go/schema/repository/cost"
@@ -12,6 +11,7 @@ import (
 	repository_relevance "github.com/julianstephens/kiln/go/schema/repository/relevance"
 	repository_source "github.com/julianstephens/kiln/go/schema/repository/source"
 	repository_validity "github.com/julianstephens/kiln/go/schema/repository/validity"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type Candidate struct {
@@ -21,7 +21,7 @@ type Candidate struct {
 	Cost                       repository_cost.Cost                                              `json:"cost" validate:"required"`
 	Provenance                 repository_provenance.Provenance                                  `json:"provenance" validate:"required"`
 	Relevance                  repository_relevance.Relevance                                    `json:"relevance" validate:"required"`
-	Repository                 repository_identifier.IDentifier                                  `json:"repository" validate:"required"`
+	Repository                 repository_identifier.Identifier                                  `json:"repository" validate:"required"`
 	RepresentationKind         string                                                            `json:"representation_kind" validate:"required,min=1"`
 	SemanticKind               string                                                            `json:"semantic_kind" validate:"required,min=1"`
 	Source                     repository_source.Source                                          `json:"source" validate:"required"`
@@ -29,7 +29,5 @@ type Candidate struct {
 }
 
 func (value Candidate) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,20 +3,18 @@
 package repository_preparation_started
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RepositoryPreparationStarted struct {
 	ExpectedDigest          string                           `json:"expected_digest" validate:"required,min=1"`
 	IndexingConfigurationID string                           `json:"indexing_configuration_id" validate:"required,min=1"`
-	Repository              repository_identifier.IDentifier `json:"repository" validate:"required"`
+	Repository              repository_identifier.Identifier `json:"repository" validate:"required"`
 	RequestedRefreshPolicy  map[string]any                   `json:"requested_refresh_policy" validate:"required"`
 	RequestedRevision       string                           `json:"requested_revision" validate:"required,min=1"`
 }
 
 func (value RepositoryPreparationStarted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

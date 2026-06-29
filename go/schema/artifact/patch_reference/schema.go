@@ -3,7 +3,7 @@
 package patch_reference
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type PatchReference struct {
@@ -11,7 +11,5 @@ type PatchReference struct {
 }
 
 func (value PatchReference) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

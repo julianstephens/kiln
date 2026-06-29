@@ -3,8 +3,8 @@
 package task_specification
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	run_task_provenance "github.com/julianstephens/kiln/go/schema/run/task_provenance"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type TaskSpecification struct {
@@ -19,7 +19,5 @@ type TaskSpecification struct {
 }
 
 func (value TaskSpecification) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

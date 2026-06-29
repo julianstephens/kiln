@@ -3,11 +3,11 @@
 package repository_query_failed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	repository_error "github.com/julianstephens/kiln/go/schema/repository/error"
 	repository_usage "github.com/julianstephens/kiln/go/schema/repository/usage"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -37,7 +37,5 @@ type RepositoryQueryFailed struct {
 }
 
 func (value RepositoryQueryFailed) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

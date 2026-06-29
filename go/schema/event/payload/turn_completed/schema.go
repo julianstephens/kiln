@@ -3,9 +3,9 @@
 package turn_completed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -29,16 +29,14 @@ type TurnCompleted struct {
 	BudgetUsage          *budget_usage.Usage           `json:"budget_usage,omitempty" validate:"omitempty"`
 	CompletedAt          time.Time                     `json:"completed_at" validate:"required"`
 	ContextStateRevision *int                          `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
-	ModelInvocationIDs   []string                      `json:"model_invocation_ids,omitempty" validate:"omitempty"`
+	ModelInvocationIds   []string                      `json:"model_invocation_ids,omitempty" validate:"omitempty"`
 	OutputReference      *artifact_reference.Reference `json:"output_reference,omitempty" validate:"omitempty"`
-	ToolCallIDs          []string                      `json:"tool_call_ids,omitempty" validate:"omitempty"`
+	ToolCallIds          []string                      `json:"tool_call_ids,omitempty" validate:"omitempty"`
 	TurnID               string                        `json:"turn_id" validate:"required,min=1"`
 	TurnIndex            int                           `json:"turn_index" validate:"required,gte=0"`
 	TurnOutcome          TurnCompletedTurnOutcome      `json:"turn_outcome" validate:"required"`
 }
 
 func (value TurnCompleted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

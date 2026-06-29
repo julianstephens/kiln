@@ -3,7 +3,6 @@
 package repository_preparation_completed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_diagnostic_log_reference "github.com/julianstephens/kiln/go/schema/artifact/diagnostic_log_reference"
 	artifact_repository_snapshot_reference "github.com/julianstephens/kiln/go/schema/artifact/repository_snapshot_reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
@@ -11,6 +10,7 @@ import (
 	repository_preparation_status "github.com/julianstephens/kiln/go/schema/repository/preparation_status"
 	repository_usage "github.com/julianstephens/kiln/go/schema/repository/usage"
 	repository_version "github.com/julianstephens/kiln/go/schema/repository/version"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RepositoryPreparationCompletedPreparedCapabilitiesItem string
@@ -35,7 +35,7 @@ type RepositoryPreparationCompleted struct {
 	PreparationDurationSeconds float64                                                             `json:"preparation_duration_seconds" validate:"required,gte=0"`
 	PreparationStatus          repository_preparation_status.PreparationStatus                     `json:"preparation_status" validate:"required"`
 	PreparedCapabilities       []RepositoryPreparationCompletedPreparedCapabilitiesItem            `json:"prepared_capabilities" validate:"required,min=1"`
-	Repository                 repository_identifier.IDentifier                                    `json:"repository" validate:"required"`
+	Repository                 repository_identifier.Identifier                                    `json:"repository" validate:"required"`
 	RepositorySessionID        string                                                              `json:"repository_session_id" validate:"required,min=1"`
 	RepositoryVersion          repository_version.Version                                          `json:"repository_version" validate:"required"`
 	SourceSnapshotReference    *artifact_repository_snapshot_reference.RepositorySnapshotReference `json:"source_snapshot_reference,omitempty" validate:"omitempty"`
@@ -43,7 +43,5 @@ type RepositoryPreparationCompleted struct {
 }
 
 func (value RepositoryPreparationCompleted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

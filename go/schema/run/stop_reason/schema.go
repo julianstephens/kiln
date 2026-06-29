@@ -3,7 +3,7 @@
 package stop_reason
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type StopReasonCategory string
@@ -76,7 +76,5 @@ type StopReason struct {
 }
 
 func (value StopReason) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

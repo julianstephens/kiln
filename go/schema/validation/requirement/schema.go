@@ -3,9 +3,9 @@
 package requirement
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_limits "github.com/julianstephens/kiln/go/schema/budget/limits"
 	capability_scope "github.com/julianstephens/kiln/go/schema/capability/scope"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RequirementRequirementKind string
@@ -54,7 +54,5 @@ type Requirement struct {
 }
 
 func (value Requirement) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

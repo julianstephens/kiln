@@ -3,8 +3,8 @@
 package context_rendered
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ContextRenderedRenderTarget string
@@ -31,13 +31,11 @@ type ContextRendered struct {
 	RenderID                string                        `json:"render_id" validate:"required,min=1"`
 	RenderTarget            ContextRenderedRenderTarget   `json:"render_target" validate:"required"`
 	RenderedItemCount       int                           `json:"rendered_item_count" validate:"required,gte=0"`
-	RenderedItemIDs         []string                      `json:"rendered_item_ids,omitempty" validate:"omitempty"`
+	RenderedItemIds         []string                      `json:"rendered_item_ids,omitempty" validate:"omitempty"`
 	RenderedTokenEstimate   int                           `json:"rendered_token_estimate" validate:"required,gte=0"`
 	Truncated               *bool                         `json:"truncated,omitempty" validate:"omitempty"`
 }
 
 func (value ContextRendered) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

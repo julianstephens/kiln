@@ -3,7 +3,7 @@
 package cost
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type Cost struct {
@@ -15,7 +15,5 @@ type Cost struct {
 }
 
 func (value Cost) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

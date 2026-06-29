@@ -3,9 +3,9 @@
 package run_initialization_completed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_state "github.com/julianstephens/kiln/go/schema/budget/state"
 	capability_security_profile "github.com/julianstephens/kiln/go/schema/capability/security_profile"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -14,11 +14,9 @@ type RunInitializationCompleted struct {
 	EffectiveBudgets           budget_state.State                          `json:"effective_budgets" validate:"required"`
 	EffectiveCapabilityProfile capability_security_profile.SecurityProfile `json:"effective_capability_profile" validate:"required"`
 	InitializationDuration     int                                         `json:"initialization_duration" validate:"required,gte=0"`
-	SelectedAdapterIDs         []string                                    `json:"selected_adapter_ids,omitempty" validate:"omitempty,min=1"`
+	SelectedAdapterIds         []string                                    `json:"selected_adapter_ids,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RunInitializationCompleted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

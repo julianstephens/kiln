@@ -3,7 +3,7 @@
 package runtime_session_started
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -34,7 +34,5 @@ type RuntimeSessionStarted struct {
 }
 
 func (value RuntimeSessionStarted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

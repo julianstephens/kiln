@@ -3,8 +3,8 @@
 package source_request_payload
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	common_source_range "github.com/julianstephens/kiln/go/schema/common/source_range"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type SourceRequestPayload struct {
@@ -16,7 +16,5 @@ type SourceRequestPayload struct {
 }
 
 func (value SourceRequestPayload) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

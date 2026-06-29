@@ -3,7 +3,7 @@
 package provenance
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -22,13 +22,11 @@ type Provenance struct {
 	GenerationMethod  *string                  `json:"generation_method,omitempty" validate:"omitempty,min=1"`
 	ParserVersion     *string                  `json:"parser_version,omitempty" validate:"omitempty,min=1"`
 	QueryID           string                   `json:"query_id" validate:"required,min=1"`
-	SourceContentIDs  []string                 `json:"source_content_ids" validate:"required"`
+	SourceContentIds  []string                 `json:"source_content_ids" validate:"required"`
 	SourceOperationID string                   `json:"source_operation_id" validate:"required,min=1"`
 	SummarizerVersion *string                  `json:"summarizer_version,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Provenance) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

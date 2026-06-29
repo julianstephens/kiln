@@ -3,14 +3,12 @@
 package artifact_events
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ArtifactEvents struct {
 }
 
 func (value ArtifactEvents) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

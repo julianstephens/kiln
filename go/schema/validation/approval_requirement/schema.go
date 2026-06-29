@@ -3,7 +3,7 @@
 package approval_requirement
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ApprovalRequirementApprovalKind string
@@ -21,7 +21,5 @@ type ApprovalRequirement struct {
 }
 
 func (value ApprovalRequirement) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

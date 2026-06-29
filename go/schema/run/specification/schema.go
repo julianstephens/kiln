@@ -3,12 +3,12 @@
 package specification
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_limits "github.com/julianstephens/kiln/go/schema/budget/limits"
 	capability_security_profile "github.com/julianstephens/kiln/go/schema/capability/security_profile"
 	model_configuration "github.com/julianstephens/kiln/go/schema/model/configuration"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
 	run_task_specification "github.com/julianstephens/kiln/go/schema/run/task_specification"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type SpecificationOutputMode string
@@ -26,17 +26,15 @@ const (
 type Specification struct {
 	BudgetLimits       budget_limits.Limits                        `json:"budget_limits" validate:"required"`
 	CallerMetadata     map[string]any                              `json:"caller_metadata" validate:"required"`
-	IDempotencyKey     *string                                     `json:"idempotency_key,omitempty" validate:"omitempty,min=1"`
+	IdempotencyKey     *string                                     `json:"idempotency_key,omitempty" validate:"omitempty,min=1"`
 	ModelConfiguration model_configuration.Configuration           `json:"model_configuration" validate:"required"`
 	OutputMode         SpecificationOutputMode                     `json:"output_mode" validate:"required"`
-	Repository         repository_identifier.IDentifier            `json:"repository" validate:"required"`
+	Repository         repository_identifier.Identifier            `json:"repository" validate:"required"`
 	SecurityProfile    capability_security_profile.SecurityProfile `json:"security_profile" validate:"required"`
 	TaskSpecification  run_task_specification.TaskSpecification    `json:"task_specification" validate:"required"`
 	Validation         map[string]any                              `json:"validation,omitempty" validate:"omitempty"`
 }
 
 func (value Specification) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

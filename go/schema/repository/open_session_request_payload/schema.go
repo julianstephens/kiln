@@ -3,8 +3,8 @@
 package open_session_request_payload
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type OpenSessionRequestPayloadAllowedOperationsItem string
@@ -23,12 +23,10 @@ const (
 
 type OpenSessionRequestPayload struct {
 	AllowedOperations []OpenSessionRequestPayloadAllowedOperationsItem `json:"allowed_operations" validate:"required,min=1"`
-	Repository        repository_identifier.IDentifier                 `json:"repository" validate:"required"`
+	Repository        repository_identifier.Identifier                 `json:"repository" validate:"required"`
 	RunID             string                                           `json:"run_id" validate:"required,min=1"`
 }
 
 func (value OpenSessionRequestPayload) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

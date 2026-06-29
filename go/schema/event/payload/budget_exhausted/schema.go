@@ -3,8 +3,8 @@
 package budget_exhausted
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	budget_state "github.com/julianstephens/kiln/go/schema/budget/state"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -59,7 +59,5 @@ type BudgetExhausted struct {
 }
 
 func (value BudgetExhausted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

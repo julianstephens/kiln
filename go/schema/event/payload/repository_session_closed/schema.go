@@ -3,13 +3,13 @@
 package repository_session_closed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_diagnostic_log_reference "github.com/julianstephens/kiln/go/schema/artifact/diagnostic_log_reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	repository_error "github.com/julianstephens/kiln/go/schema/repository/error"
 	repository_preparation_status "github.com/julianstephens/kiln/go/schema/repository/preparation_status"
 	repository_usage "github.com/julianstephens/kiln/go/schema/repository/usage"
 	repository_version "github.com/julianstephens/kiln/go/schema/repository/version"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -44,7 +44,5 @@ type RepositorySessionClosed struct {
 }
 
 func (value RepositorySessionClosed) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,10 +3,10 @@
 package repository_session_opened
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
 	repository_preparation_status "github.com/julianstephens/kiln/go/schema/repository/preparation_status"
 	repository_version "github.com/julianstephens/kiln/go/schema/repository/version"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -25,14 +25,12 @@ const (
 type RepositorySessionOpened struct {
 	OpenedAt            time.Time                                        `json:"opened_at" validate:"required"`
 	PreparationStatus   repository_preparation_status.PreparationStatus  `json:"preparation_status" validate:"required"`
-	Repository          repository_identifier.IDentifier                 `json:"repository" validate:"required"`
+	Repository          repository_identifier.Identifier                 `json:"repository" validate:"required"`
 	RepositorySessionID string                                           `json:"repository_session_id" validate:"required,min=1"`
 	RepositoryVersion   repository_version.Version                       `json:"repository_version" validate:"required"`
 	SupportedOperations []RepositorySessionOpenedSupportedOperationsItem `json:"supported_operations,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RepositorySessionOpened) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

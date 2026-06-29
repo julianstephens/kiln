@@ -3,9 +3,9 @@
 package generate_payload
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	context_rendered "github.com/julianstephens/kiln/go/schema/context/rendered"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type GeneratePayload struct {
@@ -20,7 +20,5 @@ type GeneratePayload struct {
 }
 
 func (value GeneratePayload) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,8 +3,8 @@
 package context_plan_produced
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ContextPlanProducedPlanningStrategy string
@@ -36,7 +36,5 @@ type ContextPlanProduced struct {
 }
 
 func (value ContextPlanProduced) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

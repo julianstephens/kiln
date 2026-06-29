@@ -3,8 +3,8 @@
 package search_result
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_candidate "github.com/julianstephens/kiln/go/schema/repository/candidate"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type SearchResult struct {
@@ -14,7 +14,5 @@ type SearchResult struct {
 }
 
 func (value SearchResult) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

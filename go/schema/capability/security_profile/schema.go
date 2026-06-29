@@ -3,8 +3,8 @@
 package security_profile
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	capability_scope "github.com/julianstephens/kiln/go/schema/capability/scope"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type SecurityProfile struct {
@@ -20,7 +20,5 @@ type SecurityProfile struct {
 }
 
 func (value SecurityProfile) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

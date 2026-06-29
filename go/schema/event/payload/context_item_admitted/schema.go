@@ -3,7 +3,7 @@
 package context_item_admitted
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ContextItemAdmittedAdmissionReason string
@@ -36,7 +36,5 @@ type ContextItemAdmitted struct {
 }
 
 func (value ContextItemAdmitted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

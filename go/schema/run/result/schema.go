@@ -3,7 +3,6 @@
 package result
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_answer_reference "github.com/julianstephens/kiln/go/schema/artifact/answer_reference"
 	artifact_changed_file_manifest_reference "github.com/julianstephens/kiln/go/schema/artifact/changed_file_manifest_reference"
 	artifact_patch_reference "github.com/julianstephens/kiln/go/schema/artifact/patch_reference"
@@ -13,6 +12,7 @@ import (
 	run_error "github.com/julianstephens/kiln/go/schema/run/error"
 	run_output_mode "github.com/julianstephens/kiln/go/schema/run/output_mode"
 	run_stop_reason "github.com/julianstephens/kiln/go/schema/run/stop_reason"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ResultTerminalStatus string
@@ -47,7 +47,5 @@ type Result struct {
 }
 
 func (value Result) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

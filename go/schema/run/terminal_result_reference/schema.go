@@ -3,7 +3,7 @@
 package terminal_result_reference
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -26,7 +26,5 @@ type TerminalResultReference struct {
 }
 
 func (value TerminalResultReference) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

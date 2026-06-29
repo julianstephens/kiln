@@ -3,7 +3,7 @@
 package repository_version_pinned
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RepositoryVersionPinned struct {
@@ -13,7 +13,5 @@ type RepositoryVersionPinned struct {
 }
 
 func (value RepositoryVersionPinned) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

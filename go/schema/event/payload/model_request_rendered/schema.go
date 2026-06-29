@@ -3,9 +3,9 @@
 package model_request_rendered
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	model_configuration "github.com/julianstephens/kiln/go/schema/model/configuration"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -40,7 +40,5 @@ type ModelRequestRendered struct {
 }
 
 func (value ModelRequestRendered) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

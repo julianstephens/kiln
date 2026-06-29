@@ -3,8 +3,8 @@
 package turn_started
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -37,7 +37,5 @@ type TurnStarted struct {
 }
 
 func (value TurnStarted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,18 +3,16 @@
 package identifier
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
-type IDentifier struct {
+type Identifier struct {
 	ID                 string  `json:"id" validate:"required,min=1"`
 	VersionID          string  `json:"version_id" validate:"required,min=1"`
 	WorkspaceID        *string `json:"workspace_id,omitempty" validate:"omitempty,min=1"`
 	WorkspaceVersionID string  `json:"workspace_version_id" validate:"required,min=1"`
 }
 
-func (value IDentifier) Validate() error {
-	return validate.Struct(value)
+func (value Identifier) Validate() error {
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

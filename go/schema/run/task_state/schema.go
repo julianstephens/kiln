@@ -3,7 +3,7 @@
 package task_state
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type TaskState struct {
@@ -19,7 +19,5 @@ type TaskState struct {
 }
 
 func (value TaskState) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

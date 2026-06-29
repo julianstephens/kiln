@@ -3,9 +3,9 @@
 package diagnostic
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	common_source_range "github.com/julianstephens/kiln/go/schema/common/source_range"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type DiagnosticDiagnosticCode string
@@ -49,7 +49,5 @@ type Diagnostic struct {
 }
 
 func (value Diagnostic) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

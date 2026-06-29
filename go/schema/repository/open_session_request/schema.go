@@ -3,14 +3,12 @@
 package open_session_request
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type OpenSessionRequest struct {
 }
 
 func (value OpenSessionRequest) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

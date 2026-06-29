@@ -3,9 +3,9 @@
 package model_invocation_completed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -36,7 +36,5 @@ type ModelInvocationCompleted struct {
 }
 
 func (value ModelInvocationCompleted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

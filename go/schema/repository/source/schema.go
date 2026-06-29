@@ -3,9 +3,9 @@
 package source
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	common_byte_range "github.com/julianstephens/kiln/go/schema/common/byte_range"
 	common_source_range "github.com/julianstephens/kiln/go/schema/common/source_range"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type Source struct {
@@ -18,7 +18,5 @@ type Source struct {
 }
 
 func (value Source) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

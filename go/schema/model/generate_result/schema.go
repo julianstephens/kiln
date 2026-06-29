@@ -3,9 +3,9 @@
 package generate_result
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	model_usage "github.com/julianstephens/kiln/go/schema/model/usage"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type GenerateResultFinishReason string
@@ -37,7 +37,5 @@ type GenerateResult struct {
 }
 
 func (value GenerateResult) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

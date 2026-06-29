@@ -3,22 +3,20 @@
 package context_plan_applied
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ContextPlanApplied struct {
 	ActiveItems          []map[string]any `json:"active_items" validate:"required"`
-	AdmittedItemIDs      []string         `json:"admitted_item_ids,omitempty" validate:"omitempty"`
+	AdmittedItemIds      []string         `json:"admitted_item_ids,omitempty" validate:"omitempty"`
 	ContextID            string           `json:"context_id" validate:"required,min=1"`
 	ContextPlanID        string           `json:"context_plan_id" validate:"required,min=1"`
 	ContextStateRevision int              `json:"context_state_revision" validate:"required,gte=0"`
 	CurrentTokenEstimate int              `json:"current_token_estimate" validate:"required,gte=0"`
-	EvictedItemIDs       []string         `json:"evicted_item_ids,omitempty" validate:"omitempty"`
+	EvictedItemIds       []string         `json:"evicted_item_ids,omitempty" validate:"omitempty"`
 	ModelContextLimit    int              `json:"model_context_limit" validate:"required,gte=0"`
 }
 
 func (value ContextPlanApplied) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

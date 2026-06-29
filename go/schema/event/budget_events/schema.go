@@ -3,14 +3,12 @@
 package budget_events
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type BudgetEvents struct {
 }
 
 func (value BudgetEvents) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,9 +3,9 @@
 package error
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_diagnostic_log_reference "github.com/julianstephens/kiln/go/schema/artifact/diagnostic_log_reference"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ErrorCategory string
@@ -56,7 +56,5 @@ type Error struct {
 }
 
 func (value Error) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

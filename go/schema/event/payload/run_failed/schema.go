@@ -3,12 +3,12 @@
 package run_failed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	run_error "github.com/julianstephens/kiln/go/schema/run/error"
 	run_error_category "github.com/julianstephens/kiln/go/schema/run/error_category"
 	run_lifecycle_state "github.com/julianstephens/kiln/go/schema/run/lifecycle_state"
 	run_stop_reason "github.com/julianstephens/kiln/go/schema/run/stop_reason"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RunFailedCleanupStatus string
@@ -35,7 +35,5 @@ type RunFailed struct {
 }
 
 func (value RunFailed) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

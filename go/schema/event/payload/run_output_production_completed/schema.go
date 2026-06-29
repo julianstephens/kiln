@@ -3,13 +3,13 @@
 package run_output_production_completed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_answer_reference "github.com/julianstephens/kiln/go/schema/artifact/answer_reference"
 	artifact_changed_file_manifest_reference "github.com/julianstephens/kiln/go/schema/artifact/changed_file_manifest_reference"
 	artifact_patch_reference "github.com/julianstephens/kiln/go/schema/artifact/patch_reference"
 	artifact_report_reference "github.com/julianstephens/kiln/go/schema/artifact/report_reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	run_output_mode "github.com/julianstephens/kiln/go/schema/run/output_mode"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	validation_requirement "github.com/julianstephens/kiln/go/schema/validation/requirement"
 )
 
@@ -24,7 +24,5 @@ type RunOutputProductionCompleted struct {
 }
 
 func (value RunOutputProductionCompleted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

@@ -3,8 +3,8 @@
 package scope
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type Scope struct {
@@ -12,10 +12,10 @@ type Scope struct {
 	ExternalIntegrations []any                             `json:"external_integrations,omitempty" validate:"omitempty,min=1"`
 	Filesystem           map[string]any                    `json:"filesystem,omitempty" validate:"omitempty"`
 	InstallationID       *string                           `json:"installation_id,omitempty" validate:"omitempty,min=1"`
-	ModelIDs             []string                          `json:"model_ids,omitempty" validate:"omitempty,min=1"`
+	ModelIds             []string                          `json:"model_ids,omitempty" validate:"omitempty,min=1"`
 	NetworkDestinations  map[string]any                    `json:"network_destinations,omitempty" validate:"omitempty"`
 	OperationKinds       []string                          `json:"operation_kinds,omitempty" validate:"omitempty,min=1"`
-	Repository           *repository_identifier.IDentifier `json:"repository,omitempty" validate:"omitempty"`
+	Repository           *repository_identifier.Identifier `json:"repository,omitempty" validate:"omitempty"`
 	RepositorySessionID  *string                           `json:"repository_session_id,omitempty" validate:"omitempty,min=1"`
 	RunID                *string                           `json:"run_id,omitempty" validate:"omitempty,min=1"`
 	TenantID             *string                           `json:"tenant_id,omitempty" validate:"omitempty,min=1"`
@@ -23,7 +23,5 @@ type Scope struct {
 }
 
 func (value Scope) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

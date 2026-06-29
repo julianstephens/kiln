@@ -3,14 +3,12 @@
 package error_category
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ErrorCategory struct {
 }
 
 func (value ErrorCategory) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

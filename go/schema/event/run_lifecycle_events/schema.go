@@ -3,14 +3,12 @@
 package run_lifecycle_events
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RunLifecycleEvents struct {
 }
 
 func (value RunLifecycleEvents) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

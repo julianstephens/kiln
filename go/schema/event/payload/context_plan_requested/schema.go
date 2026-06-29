@@ -3,7 +3,7 @@
 package context_plan_requested
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ContextPlanRequestedPlanningGoal string
@@ -30,12 +30,10 @@ type ContextPlanRequested struct {
 	ContextPlanRequestID string                           `json:"context_plan_request_id" validate:"required,min=1"`
 	CurrentTokenEstimate int                              `json:"current_token_estimate" validate:"required,gte=0"`
 	ModelContextLimit    int                              `json:"model_context_limit" validate:"required,gte=0"`
-	PinnedItemIDs        []string                         `json:"pinned_item_ids,omitempty" validate:"omitempty"`
+	PinnedItemIds        []string                         `json:"pinned_item_ids,omitempty" validate:"omitempty"`
 	PlanningGoal         ContextPlanRequestedPlanningGoal `json:"planning_goal" validate:"required"`
 }
 
 func (value ContextPlanRequested) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

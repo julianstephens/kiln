@@ -3,11 +3,11 @@
 package run_completed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_validation_report_reference "github.com/julianstephens/kiln/go/schema/artifact/validation_report_reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	run_stop_reason "github.com/julianstephens/kiln/go/schema/run/stop_reason"
 	run_terminal_result_reference "github.com/julianstephens/kiln/go/schema/run/terminal_result_reference"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type RunCompleted struct {
@@ -18,7 +18,5 @@ type RunCompleted struct {
 }
 
 func (value RunCompleted) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

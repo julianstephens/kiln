@@ -3,10 +3,10 @@
 package model_invocation_failed
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	run_error "github.com/julianstephens/kiln/go/schema/run/error"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -46,7 +46,5 @@ type ModelInvocationFailed struct {
 }
 
 func (value ModelInvocationFailed) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

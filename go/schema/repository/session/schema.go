@@ -3,19 +3,17 @@
 package session
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type Session struct {
 	Capabilities []string                          `json:"capabilities" validate:"required,min=1"`
 	IndexStatus  string                            `json:"index_status" validate:"required,min=1"`
-	Repository   *repository_identifier.IDentifier `json:"repository,omitempty" validate:"omitempty"`
+	Repository   *repository_identifier.Identifier `json:"repository,omitempty" validate:"omitempty"`
 	SessionID    string                            `json:"session_id" validate:"required,min=1"`
 }
 
 func (value Session) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

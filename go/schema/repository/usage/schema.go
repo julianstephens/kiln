@@ -3,7 +3,7 @@
 package usage
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type Usage struct {
@@ -17,7 +17,5 @@ type Usage struct {
 }
 
 func (value Usage) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

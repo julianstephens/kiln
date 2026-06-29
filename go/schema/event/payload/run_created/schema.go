@@ -3,16 +3,16 @@
 package run_created
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	budget_limits "github.com/julianstephens/kiln/go/schema/budget/limits"
 	capability_security_profile "github.com/julianstephens/kiln/go/schema/capability/security_profile"
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	validation_requirement "github.com/julianstephens/kiln/go/schema/validation/requirement"
 )
 
 type RunCreated struct {
-	Repository               repository_identifier.IDentifier            `json:"repository" validate:"required"`
+	Repository               repository_identifier.Identifier            `json:"repository" validate:"required"`
 	RequestedBudgets         budget_limits.Limits                        `json:"requested_budgets" validate:"required"`
 	RequestedModel           string                                      `json:"requested_model" validate:"required,min=1"`
 	RequestedSecurityProfile capability_security_profile.SecurityProfile `json:"requested_security_profile" validate:"required"`
@@ -24,7 +24,5 @@ type RunCreated struct {
 }
 
 func (value RunCreated) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

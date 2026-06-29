@@ -3,9 +3,9 @@
 package model_egress_evaluated
 
 import (
-	validator "github.com/go-playground/validator/v10"
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	capability_decision "github.com/julianstephens/kiln/go/schema/capability/decision"
+	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
 
@@ -31,7 +31,5 @@ type ModelEgressEvaluated struct {
 }
 
 func (value ModelEgressEvaluated) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()

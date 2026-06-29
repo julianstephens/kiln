@@ -3,7 +3,7 @@
 package configuration
 
 import (
-	validator "github.com/go-playground/validator/v10"
+	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
 type ConfigurationToolCallMode string
@@ -28,7 +28,5 @@ type Configuration struct {
 }
 
 func (value Configuration) Validate() error {
-	return validate.Struct(value)
+	return shared.Validate(value)
 }
-
-var validate = validator.New()
