@@ -38,8 +38,6 @@ from . import (
     envelope,
     error_category,
     generate_payload,
-    generate_request,
-    generate_response,
     generate_result,
     identifier,
     item,
@@ -47,14 +45,10 @@ from . import (
     model_invocation_started,
     model_request_rendered,
     model_response_interpreted,
-    open_session_request,
     open_session_request_payload,
-    open_session_response,
     plan,
     policy_requirement,
     preparation_status,
-    protocol_request,
-    protocol_response,
     provenance,
     reference,
     relevance,
@@ -81,16 +75,12 @@ from . import (
     runtime_session_ready,
     runtime_session_started,
     schema_requirement,
-    search_request,
     search_request_payload,
-    search_response,
     search_result,
     session,
     source,
     source_range,
-    source_request,
     source_request_payload,
-    source_response,
     source_result,
     task_provenance,
     task_state,
@@ -263,10 +253,6 @@ class ModelConfiguration(RootModel[configuration.SchemaModel1]):
     root: configuration.SchemaModel1
 
 
-class ModelProtocolRequest(RootModel[protocol_request.SchemaModel]):
-    root: protocol_request.SchemaModel
-
-
 class ModelUsage(RootModel[usage_1.SchemaModel1]):
     root: usage_1.SchemaModel1
 
@@ -295,20 +281,6 @@ class RepositoryIdentifier(RootModel[identifier.Schema]):
     root: identifier.Schema
 
 
-class RepositoryOpenSessionRequestPayload(
-    RootModel[open_session_request_payload.Schema]
-):
-    root: open_session_request_payload.Schema
-
-
-class RepositoryProtocolRequest(RootModel[protocol_request.SchemaModel1]):
-    root: protocol_request.SchemaModel1
-
-
-class RepositoryProtocolResponse(RootModel[protocol_response.SchemaModel]):
-    root: protocol_response.SchemaModel
-
-
 class RepositoryProvenance(RootModel[provenance.SchemaModel1]):
     root: provenance.SchemaModel1
 
@@ -317,20 +289,8 @@ class RepositoryRelevance(RootModel[relevance.Schema]):
     root: relevance.Schema
 
 
-class RepositorySearchRequestPayload(RootModel[search_request_payload.Schema]):
-    root: search_request_payload.Schema
-
-
-class RepositorySession(RootModel[session.Schema]):
-    root: session.Schema
-
-
 class RepositorySource(RootModel[source.Schema]):
     root: source.Schema
-
-
-class RepositorySourceRequestPayload(RootModel[source_request_payload.Schema]):
-    root: source_request_payload.Schema
 
 
 class RepositoryUsage(RootModel[usage_1.SchemaModel]):
@@ -423,14 +383,6 @@ class Rule(BaseModel):
 
 class CommonByteRange(RootModel[byte_range.Schema]):
     root: byte_range.Schema
-
-
-class CommonProtocolRequest(RootModel[protocol_request.Schema]):
-    root: protocol_request.Schema
-
-
-class CommonProtocolResponse(RootModel[protocol_response.Schema]):
-    root: protocol_response.Schema
 
 
 class CommonSourceRange(RootModel[source_range.Schema]):
@@ -569,28 +521,30 @@ class ModelGeneratePayload(RootModel[generate_payload.SchemaModel1]):
     root: generate_payload.SchemaModel1
 
 
-class ModelGenerateResult(RootModel[generate_result.SchemaModel3]):
-    root: generate_result.SchemaModel3
-
-
-class ModelProtocolResponse(RootModel[protocol_response.SchemaModel1]):
-    root: protocol_response.SchemaModel1
-
-
 class RepositoryCandidate(RootModel[candidate.Schema]):
     root: candidate.Schema
+
+
+class RepositoryOpenSessionRequestPayload(
+    RootModel[open_session_request_payload.Schema]
+):
+    root: open_session_request_payload.Schema
 
 
 class RepositoryPreparationStatus(RootModel[preparation_status.Schema]):
     root: preparation_status.Schema
 
 
-class RepositorySearchResult(RootModel[search_result.Schema]):
-    root: search_result.Schema
+class RepositorySearchRequestPayload(RootModel[search_request_payload.Schema]):
+    root: search_request_payload.Schema
 
 
-class RepositorySourceResult(RootModel[source_result.Schema]):
-    root: source_result.Schema
+class RepositorySession(RootModel[session.Schema]):
+    root: session.Schema
+
+
+class RepositorySourceRequestPayload(RootModel[source_request_payload.Schema]):
+    root: source_request_payload.Schema
 
 
 class RunError(RootModel[error_1.SchemaModel1]):
@@ -657,24 +611,16 @@ class EventPayloadTurnFailed(RootModel[turn_failed.Schema]):
     root: turn_failed.Schema
 
 
-class ModelGenerateRequest(RootModel[generate_request.Schema]):
-    root: generate_request.Schema
+class ModelGenerateResult(RootModel[generate_result.SchemaModel3]):
+    root: generate_result.SchemaModel3
 
 
-class RepositoryOpenSessionRequest(RootModel[open_session_request.Schema]):
-    root: open_session_request.Schema
+class RepositorySearchResult(RootModel[search_result.Schema]):
+    root: search_result.Schema
 
 
-class RepositoryOpenSessionResponse(RootModel[open_session_response.Schema]):
-    root: open_session_response.Schema
-
-
-class RepositorySearchRequest(RootModel[search_request.Schema]):
-    root: search_request.Schema
-
-
-class RepositorySourceRequest(RootModel[source_request.Schema]):
-    root: source_request.Schema
+class RepositorySourceResult(RootModel[source_result.Schema]):
+    root: source_result.Schema
 
 
 class ContextItem(RootModel[item.Schema]):
@@ -689,18 +635,6 @@ class EventPayloadRepositoryPreparationCompleted(
     RootModel[repository_preparation_completed.Schema]
 ):
     root: repository_preparation_completed.Schema
-
-
-class ModelGenerateResponse(RootModel[generate_response.Schema]):
-    root: generate_response.Schema
-
-
-class RepositorySearchResponse(RootModel[search_response.Schema]):
-    root: search_response.Schema
-
-
-class RepositorySourceResponse(RootModel[source_response.Schema]):
-    root: source_response.Schema
 
 
 class KilnGeneratedPythonModelsBundle(BaseModel):
@@ -731,8 +665,6 @@ class KilnGeneratedPythonModelsBundle(BaseModel):
     capability_scope: CapabilityScope | None = None
     capability_security_profile: CapabilitySecurityProfile | None = None
     common_byte_range: CommonByteRange | None = None
-    common_protocol_request: CommonProtocolRequest | None = None
-    common_protocol_response: CommonProtocolResponse | None = None
     common_source_range: CommonSourceRange | None = None
     context_action: ContextAction | None = None
     context_item: ContextItem | None = None
@@ -829,11 +761,7 @@ class KilnGeneratedPythonModelsBundle(BaseModel):
     model_configuration: ModelConfiguration | None = None
     model_error: ModelError | None = None
     model_generate_payload: ModelGeneratePayload | None = None
-    model_generate_request: ModelGenerateRequest | None = None
-    model_generate_response: ModelGenerateResponse | None = None
     model_generate_result: ModelGenerateResult | None = None
-    model_protocol_request: ModelProtocolRequest | None = None
-    model_protocol_response: ModelProtocolResponse | None = None
     model_usage: ModelUsage | None = None
     repository_alternative_representation: (
         RepositoryAlternativeRepresentation | None
@@ -844,25 +772,17 @@ class KilnGeneratedPythonModelsBundle(BaseModel):
     repository_diagnostic: RepositoryDiagnostic | None = None
     repository_error: RepositoryError | None = None
     repository_identifier: RepositoryIdentifier | None = None
-    repository_open_session_request: RepositoryOpenSessionRequest | None = None
     repository_open_session_request_payload: (
         RepositoryOpenSessionRequestPayload | None
     ) = None
-    repository_open_session_response: RepositoryOpenSessionResponse | None = None
     repository_preparation_status: RepositoryPreparationStatus | None = None
-    repository_protocol_request: RepositoryProtocolRequest | None = None
-    repository_protocol_response: RepositoryProtocolResponse | None = None
     repository_provenance: RepositoryProvenance | None = None
     repository_relevance: RepositoryRelevance | None = None
-    repository_search_request: RepositorySearchRequest | None = None
     repository_search_request_payload: RepositorySearchRequestPayload | None = None
-    repository_search_response: RepositorySearchResponse | None = None
     repository_search_result: RepositorySearchResult | None = None
     repository_session: RepositorySession | None = None
     repository_source: RepositorySource | None = None
-    repository_source_request: RepositorySourceRequest | None = None
     repository_source_request_payload: RepositorySourceRequestPayload | None = None
-    repository_source_response: RepositorySourceResponse | None = None
     repository_source_result: RepositorySourceResult | None = None
     repository_usage: RepositoryUsage | None = None
     repository_validity: RepositoryValidity | None = None

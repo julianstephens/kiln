@@ -1,0 +1,5 @@
+{
+    "target_source": "src/main.go",
+    "representation_preference": "source",
+    "max_result_size": 0
+}

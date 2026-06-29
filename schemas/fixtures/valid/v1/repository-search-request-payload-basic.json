@@ -1,0 +1,6 @@
+{
+    "query": "Foo",
+    "mode": "lexical",
+    "limit": 10,
+    "minimum_score": 0
+}

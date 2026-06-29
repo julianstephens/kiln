@@ -1,5 +1,0 @@
-{
-    "protocol_version": "1",
-    "operation": "runtime.health",
-    "payload": {}
-}

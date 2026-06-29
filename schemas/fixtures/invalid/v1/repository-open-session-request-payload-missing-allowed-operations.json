@@ -1,0 +1,8 @@
+{
+    "run_id": "run_001",
+    "repository": {
+        "id": "repo_01",
+        "version_id": "rev_01",
+        "workspace_version_id": "wsv_01"
+    }
+}

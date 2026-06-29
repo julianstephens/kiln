@@ -1,8 +1,0 @@
-{
-    "protocol_version": "1",
-    "request_id": "req_07",
-    "operation": "repository.search",
-    "status": "fatal_error",
-    "error": "not_an_object",
-    "artifact_references": []
-}

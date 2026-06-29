@@ -19,19 +19,21 @@ default: check
 	test test-python test-go \
 	build build-python build-go \
 	validate-schemas \
+	generate generate-python generate-go \
 	clean check 
 
 help:
 	@printf '%s\n' \
 		"Kiln development commands:" \
 		"" \
-		"  make format        Format all Python and Go code" \
-		"  make format-check  Verify formatting without modifying files" \
-		"  make lint          Lint all Python and Go code" \
-		"  make test          Run all tests" \
-		"  make build         Build Python and Go artifacts" \
+		"  make format            Format all Python and Go code" \
+		"  make format-check      Verify formatting without modifying files" \
+		"  make lint              Lint all Python and Go code" \
+		"  make test              Run all tests" \
+		"  make build             Build Python and Go artifacts" \
 		"  make validate-schemas  Validate JSON schemas" \
-		"  make clean         Remove generated build artifacts"
+		"  make generate          Generate models from JSON schemas" \
+		"  make clean             Remove generated build artifacts"
 
 # ---------------------------------------------------------------------------
 # Formatting
@@ -103,6 +105,17 @@ build-go:
 # ---------------------------------------------------------------------------
 validate-schemas:
 	uv run python $(TOOLS_DIR)/schema_tools/validate.py
+
+# ---------------------------------------------------------------------------
+# Generate models from JSON Schemas
+# ---------------------------------------------------------------------------
+generate: generate-python generate-go
+
+generate-python:
+	uv run generatemodels
+
+generate-go:
+	uv run generategomodels
 
 # ---------------------------------------------------------------------------
 # Cleanup
