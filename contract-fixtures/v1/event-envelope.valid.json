@@ -1,0 +1,12 @@
+{
+  "event_id": "evt_contract_001",
+  "event_schema_version": "1.0.0",
+  "event_type": "repository.query_started",
+  "occurred_at": "2026-06-29T00:00:00Z",
+  "payload": {
+    "query": "schema generator",
+    "repository_session_id": "repo_session_contract_001"
+  },
+  "producer": "kiln.contract-tests",
+  "sequence": 1
+}

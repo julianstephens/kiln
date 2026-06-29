@@ -1,0 +1,7 @@
+{
+  "limit": 10,
+  "minimum_score": 0.25,
+  "mode": "hybrid",
+  "query": "schema generator",
+  "result_size_limit": 4096
+}
