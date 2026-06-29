@@ -45,7 +45,9 @@ def assert_round_trips(model_type: type[Any], fixture_name: str) -> None:
         ),
     ],
 )
-def test_contract_fixture_validates_and_serializes(model_type: type[Any], fixture_name: str) -> None:
+def test_contract_fixture_validates_and_serializes(
+    model_type: type[Any], fixture_name: str
+) -> None:
     assert_round_trips(model_type, fixture_name)
 
 
