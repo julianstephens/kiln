@@ -1,6 +1,28 @@
 # Kiln schemas
 
-This directory contains the language-neutral contracts used across Kiln process boundaries.
+This directory contains the language-neutral contracts used across Kiln process boundaries. Transport request and response payloads are programmatically wrapped in JSON-RPC envelopes, but the payloads themselves are defined by these schemas.
+
+## JSON-RPC transport boundary
+
+Kiln uses MCP-aligned stdio transport with JSON-RPC 2.0 envelopes. The JSON-RPC envelope is external to the Kiln schema set.
+
+Kiln schemas validate only:
+
+- `params` for request methods;
+- `result` for successful responses;
+- `error.data` for Kiln-specific structured errors.
+
+The JSON-RPC fields `jsonrpc`, `id`, `method`, `params`, `result`, and `error` are not Kiln domain schema fields.
+
+Initial private runtime methods include:
+
+- `runtime.initialize`
+- `runtime.health`
+- `runtime.shutdown`
+- `repository.open_session`
+- `repository.search`
+- `repository.get_source`
+- `model.generate`
 
 ## Schema versioning
 

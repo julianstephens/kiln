@@ -1,7 +1,0 @@
-{
-    "protocol_version": "1",
-    "request_id": "req_05",
-    "operation": "repository.search",
-    "status": "ok",
-    "artifact_references": []
-}

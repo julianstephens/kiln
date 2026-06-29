@@ -3,5 +3,5 @@ def test_generated_schema_package_imports() -> None:
 
     assert schemas.EventEnvelope is not None
     assert schemas.RunSpecification is not None
-    assert schemas.ModelGenerateRequest is not None
-    assert schemas.RepositoryOpenSessionRequest is not None
+    assert schemas.ModelGeneratePayload is not None
+    assert schemas.RepositoryOpenSessionRequestPayload is not None

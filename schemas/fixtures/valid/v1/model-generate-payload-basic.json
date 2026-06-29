@@ -1,0 +1,36 @@
+{
+    "model_id": "gpt-4.1",
+    "provider_id": "openai",
+    "rendered_context": {
+        "render_id": "context_render_01J2X8",
+        "context_id": "context_01J2X7",
+        "context_plan_id": "context_plan_01J2X9",
+        "render_target": "model_invocation",
+        "target_operation_id": "model_invocation_01J2XA",
+        "context_state_revision": 5,
+        "rendered_item_ids": [
+            "context_item_01J2XB"
+        ],
+        "rendered_items": [
+            {
+                "item_id": "context_item_01J2XB",
+                "order": 0,
+                "estimated_tokens": 900,
+                "render_role": "context"
+            }
+        ],
+        "rendered_item_count": 1,
+        "rendered_token_estimate": 900,
+        "model_context_limit": 128000,
+        "truncated": false,
+        "content_hash": "sha256:abc123",
+        "rendered_at": "2026-06-28T22:21:00Z"
+    },
+    "generation_parameters": {
+        "temperature": 0.2,
+        "max_output_tokens": 512
+    },
+    "response_constraints": {
+        "response_mode": "answer"
+    }
+}
