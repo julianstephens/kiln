@@ -24,3 +24,11 @@ class EmbeddedNewlineInMessageError(ValueError):
 
     def __init__(self) -> None:
         super().__init__("embedded newline in JSON-RPC frame")
+
+
+class InvalidJsonRpcFrameError(FramingError):
+    """Raised when a JSON-RPC frame is invalid or does not conform to the
+    specification."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(f"invalid JSON-RPC frame: {message}")

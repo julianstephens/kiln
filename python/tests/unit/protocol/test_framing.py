@@ -32,9 +32,8 @@ def test_validate_frame_accepts_valid_request_and_validates_params_with_mocker(
     payload = _load_fixture("repository-search-request-payload-basic.json")
     expected_payload = RepositorySearchRequestPayload.model_validate(
         payload
-    ).model_dump(round_trip=True)
-    spy = mocker.spy(framing, "validate_json")
-
+    ).model_dump(round_trip=True, mode="json")
+    spy = mocker.spy(framing, "validate_kiln_schema")
     frame = validate_frame(
         json.dumps(
             {
@@ -46,11 +45,11 @@ def test_validate_frame_accepts_valid_request_and_validates_params_with_mocker(
         ).encode()
     )
 
-    assert frame.jsonrpc == "2.0"
-    assert frame.method == "repository.search"
-    assert frame.params == expected_payload
-    assert frame.result is None
-    assert frame.error is None
+    assert frame["jsonrpc"] == "2.0"
+    assert frame["method"] == "repository.search"
+    assert frame["params"] == expected_payload
+    assert frame.get("result") is None
+    assert frame.get("error") is None
     spy.assert_called_once()
     assert spy.call_args.kwargs["data_type"] == "request"
 
@@ -58,7 +57,7 @@ def test_validate_frame_accepts_valid_request_and_validates_params_with_mocker(
 def test_validate_frame_accepts_valid_response() -> None:
     payload = _load_fixture("repository-search-result-basic.json")
     expected_payload = RepositorySearchResult.model_validate(payload).model_dump(
-        round_trip=True
+        round_trip=True, mode="json"
     )
 
     frame = validate_frame(
@@ -68,20 +67,22 @@ def test_validate_frame_accepts_valid_response() -> None:
                 "id": "res-1",
                 "method": "repository.search",
                 "result": payload,
-            }
+            },
+            default=str,
         ).encode()
     )
 
-    assert frame.method == "repository.search"
-    assert frame.params is None
-    assert frame.result == expected_payload
-    assert frame.error is None
+    assert frame["jsonrpc"] == "2.0"
+    assert frame["method"] == "repository.search"
+    assert frame.get("params") is None
+    assert frame["result"] == expected_payload
+    assert "error" not in frame
 
 
 def test_validate_frame_accepts_valid_error() -> None:
     payload = _load_fixture("repository-error-basic.json")
     expected_payload = RepositoryError.model_validate(payload).model_dump(
-        round_trip=True
+        round_trip=True, mode="json"
     )
 
     frame = validate_frame(
@@ -90,15 +91,71 @@ def test_validate_frame_accepts_valid_error() -> None:
                 "jsonrpc": "2.0",
                 "id": "err-1",
                 "method": "repository.search",
-                "error": payload,
+                "error": {
+                    "code": -32001,
+                    "message": "repository error",
+                    "data": payload,
+                },
             }
         ).encode()
     )
 
-    assert frame.method == "repository.search"
-    assert frame.params is None
-    assert frame.result is None
-    assert frame.error == expected_payload
+    assert frame["jsonrpc"] == "2.0"
+    assert frame["method"] == "repository.search"
+    assert frame.get("params") is None
+    assert frame.get("result") is None
+    assert frame["error"] == {
+        "code": -32001,
+        "message": "repository error",
+        "data": expected_payload,
+    }
+
+
+def test_validate_frame_accepts_success_response_without_method() -> None:
+    payload = _load_fixture("repository-search-result-basic.json")
+
+    frame = validate_frame(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": "res-1",
+                "result": payload,
+            },
+            default=str,
+        ).encode()
+    )
+
+    assert frame["jsonrpc"] == "2.0"
+    assert frame["id"] == "res-1"
+    assert "method" not in frame
+    assert frame["result"] == payload
+
+
+def test_validate_frame_accepts_error_response_without_method() -> None:
+    payload = _load_fixture("repository-error-basic.json")
+
+    frame = validate_frame(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": "err-1",
+                "error": {
+                    "code": -32001,
+                    "message": "repository error",
+                    "data": payload,
+                },
+            }
+        ).encode()
+    )
+
+    assert frame["jsonrpc"] == "2.0"
+    assert frame["id"] == "err-1"
+    assert "method" not in frame
+    assert frame["error"] == {
+        "code": -32001,
+        "message": "repository error",
+        "data": payload,
+    }
 
 
 def test_validate_frame_rejects_oversized_message() -> None:
@@ -175,7 +232,17 @@ def test_validate_frame_requires_id() -> None:
 
 def test_validate_frame_requires_method() -> None:
     with pytest.raises(FramingError, match="missing required field 'method'"):
-        validate_frame(json.dumps({"jsonrpc": "2.0", "id": "1"}).encode())
+        validate_frame(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "1",
+                    "params": _load_fixture(
+                        "repository-search-request-payload-basic.json"
+                    ),
+                }
+            ).encode()
+        )
 
 
 def test_validate_frame_rejects_unsupported_method() -> None:
@@ -190,6 +257,18 @@ def test_validate_frame_rejects_unsupported_method() -> None:
                 }
             ).encode()
         )
+
+
+def test_unknown_method_is_jsonrpc_valid_but_invalid_at_method_layer() -> None:
+    frame = {
+        "jsonrpc": "2.0",
+        "id": "1",
+        "method": "unknown.method",
+        "params": {},
+    }
+
+    with pytest.raises(FramingError, match="unsupported method 'unknown.method'"):
+        validate_frame(json.dumps(frame).encode())
 
 
 def test_validate_frame_rejects_when_no_payload_present() -> None:
@@ -214,10 +293,38 @@ def test_validate_frame_rejects_result_and_error_together() -> None:
                     "id": "1",
                     "method": "repository.search",
                     "result": _load_fixture("repository-search-result-basic.json"),
-                    "error": _load_fixture("repository-error-basic.json"),
+                    "error": {
+                        "code": -32001,
+                        "message": "repository error",
+                        "data": _load_fixture("repository-error-basic.json"),
+                    },
                 }
             ).encode()
         )
+
+
+def test_error_data_contains_kiln_specific_details() -> None:
+    payload = _load_fixture("repository-error-basic.json")
+    expected_payload = RepositoryError.model_validate(payload).model_dump(
+        round_trip=True, mode="json"
+    )
+
+    frame = validate_frame(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": "err-1",
+                "method": "repository.search",
+                "error": {
+                    "code": -32001,
+                    "message": "repository error",
+                    "data": payload,
+                },
+            }
+        ).encode()
+    )
+
+    assert frame["error"]["data"] == expected_payload
 
 
 def test_validate_frame_rejects_invalid_request_payload_shape() -> None:
