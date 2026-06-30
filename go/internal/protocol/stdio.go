@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 
 type Peer struct {
 	in       io.Reader
-	out      io.Writer
+	out      *bufio.Writer
 	maxBytes int
 }
 
@@ -18,7 +19,7 @@ type Peer struct {
 func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 	return &Peer{
 		in:       in,
-		out:      out,
+		out:      bufio.NewWriter(out),
 		maxBytes: maxBytes,
 	}
 }
@@ -66,7 +67,7 @@ func (p *Peer) Send(msg Message) error {
 		return err
 	}
 
-	return nil
+	return p.out.Flush()
 }
 
 func messageToJSONObject(msg Message) (JSONObject, error) {
