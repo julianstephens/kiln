@@ -70,6 +70,12 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
     if not isinstance(manifest, dict):
         raise GenerateModelsError(f"{manifest_path}: expected JSON object")
 
+    schema_set_version = manifest.get("schema_set_version")
+    if not isinstance(schema_set_version, str) or not schema_set_version:
+        raise GenerateModelsError(
+            f"{manifest_path}: schema_set_version must be a non-empty string"
+        )
+
     compatibility_major = manifest.get("compatibility_major")
     if (
         not isinstance(compatibility_major, int)
@@ -180,7 +186,13 @@ def write_bundle_schema(path: Path, schema_keys: list[str], *, domain: str, majo
     path.write_text(json.dumps(bundle, indent=4) + "\n", encoding="utf-8")
 
 
-def write_package_init(output_root: Path, domains: list[str]) -> None:
+def write_package_init(
+    output_root: Path,
+    domains: list[str],
+    *,
+    compatibility_major: int,
+    schema_set_version: str,
+) -> None:
     init_path = output_root / "__init__.py"
     init_path.parent.mkdir(parents=True, exist_ok=True)
     domain_modules = [python_name(domain) for domain in domains]
@@ -190,7 +202,11 @@ def write_package_init(output_root: Path, domains: list[str]) -> None:
         + "\nfrom __future__ import annotations\n\n"
         + "from importlib import import_module\n"
         + "from types import ModuleType\n\n"
+        + f"COMPATIBILITY_MAJOR = {compatibility_major}\n"
+        + f"SCHEMA_SET_VERSION = {schema_set_version!r}\n\n"
         + "__all__ = [\n"
+        + '    "COMPATIBILITY_MAJOR",\n'
+        + '    "SCHEMA_SET_VERSION",\n'
         + all_entries
         + "]\n\n"
         + "def __getattr__(name: str) -> ModuleType:\n"
@@ -308,6 +324,7 @@ def main() -> int:
     try:
         manifest = load_manifest(schema_root)
         major = manifest["compatibility_major"]
+        schema_set_version = manifest["schema_set_version"]
         schema_keys = selected_schema_keys(
             manifest,
             only_entrypoints=args.only_entrypoints,
@@ -352,7 +369,12 @@ def main() -> int:
                     bundle_path.unlink(missing_ok=True)
 
         if not args.dry_run:
-            write_package_init(output_root, domains)
+            write_package_init(
+                output_root,
+                domains,
+                compatibility_major=major,
+                schema_set_version=schema_set_version,
+            )
 
     except GenerateModelsError as exc:
         print(f"model generation failed: {exc}", file=sys.stderr)
