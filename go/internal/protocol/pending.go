@@ -43,14 +43,24 @@ func (p *PendingRequests) Pop(id string) (PendingRequest, bool) {
 // If the response is invalid or does not match the pending request, it returns an error.
 func ValidateResponseAgainstPendingRequest(req PendingRequest, response Message) error {
 	method := req.Method
+	spec, ok := KilnMethods[method]
+	if !ok {
+		return NewInvalidJSONRPCRequestError("unsupported method: "+method, false, nil)
+	}
 	switch resp := response.(type) {
 	case SuccessResponse:
-		_, err := KilnMethods[method].ValidateResult(resp.Result)
+		if spec.ValidateResult == nil {
+			return nil
+		}
+		_, err := spec.ValidateResult(resp.Result)
 		if err != nil {
 			return NewInvalidJSONRPCRequestError("invalid result: "+err.Error(), false, nil)
 		}
 	case ErrorResponse:
-		_, err := KilnMethods[method].ValidateErrorData(resp.Error.Data)
+		if spec.ValidateErrorData == nil || resp.Error.Data == nil {
+			return nil
+		}
+		_, err := spec.ValidateErrorData(resp.Error.Data)
 		if err != nil {
 			return NewInvalidJSONRPCRequestError("invalid error data: "+err.Error(), false, nil)
 		}

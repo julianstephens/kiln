@@ -1,17 +1,15 @@
 package protocol
 
 import (
-	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 )
 
 type Peer struct {
-	in       *bufio.Reader
-	out      *bufio.Writer
+	in       io.Reader
+	out      io.Writer
 	maxBytes int
 }
 
@@ -19,8 +17,8 @@ type Peer struct {
 // The Peer can be used to send and receive JSON-RPC messages over the provided streams.
 func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 	return &Peer{
-		in:       bufio.NewReader(in),
-		out:      bufio.NewWriter(out),
+		in:       in,
+		out:      out,
 		maxBytes: maxBytes,
 	}
 }
@@ -28,20 +26,15 @@ func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 // Receive reads a JSON-RPC message from the input stream, decodes it, and parses it into a strongly typed Message (Request, SuccessResponse, or ErrorResponse).
 // It returns an error if the message cannot be read, decoded, or parsed.
 func (p *Peer) Receive(ctx context.Context) (Message, error) {
-	line, err := p.in.ReadBytes('\n')
-	line = bytes.TrimSuffix(line, []byte("\n"))
+	line := make([]byte, p.maxBytes+1)
+	n, err := p.in.Read(line)
 	if err != nil {
-		if errors.Is(err, bufio.ErrBufferFull) {
-			return nil, NewFrameTooLargeError(len(line), p.maxBytes)
-		}
 		if err == io.EOF {
-			if len(line) > p.maxBytes {
-				return nil, NewFrameTooLargeError(len(line), p.maxBytes)
-			}
 			return nil, NewRuntimeStreamClosedError("input stream closed", false, nil)
 		}
 		return nil, NewReadStreamError("error reading from input stream: "+err.Error(), false, nil)
 	}
+	line = bytes.TrimSuffix(line[:n], []byte("\n"))
 
 	if bytes.Contains(line, []byte("\n")) {
 		return nil, ErrEmbeddedNewline
@@ -73,7 +66,7 @@ func (p *Peer) Send(msg Message) error {
 		return err
 	}
 
-	return p.out.Flush()
+	return nil
 }
 
 func messageToJSONObject(msg Message) (JSONObject, error) {
