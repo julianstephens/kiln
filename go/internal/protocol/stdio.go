@@ -9,7 +9,7 @@ import (
 )
 
 type Peer struct {
-	in       io.Reader
+	in       *bufio.Reader
 	out      *bufio.Writer
 	maxBytes int
 }
@@ -18,7 +18,7 @@ type Peer struct {
 // The Peer can be used to send and receive JSON-RPC messages over the provided streams.
 func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 	return &Peer{
-		in:       in,
+		in:       bufio.NewReader(in),
 		out:      bufio.NewWriter(out),
 		maxBytes: maxBytes,
 	}
@@ -27,21 +27,21 @@ func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 // Receive reads a JSON-RPC message from the input stream, decodes it, and parses it into a strongly typed Message (Request, SuccessResponse, or ErrorResponse).
 // It returns an error if the message cannot be read, decoded, or parsed.
 func (p *Peer) Receive(ctx context.Context) (Message, error) {
-	line := make([]byte, p.maxBytes+1)
-	n, err := p.in.Read(line)
+	line, err := readLineBounded(p.in, p.maxBytes)
 	if err != nil {
-		if err == io.EOF {
-			return nil, NewRuntimeStreamClosedError("input stream closed", false, nil)
-		}
-		return nil, NewReadStreamError("error reading from input stream: "+err.Error(), false, nil)
+		return nil, err
 	}
-	line = bytes.TrimSuffix(line[:n], []byte("\n"))
+	payload := bytes.TrimSuffix(line, []byte("\n"))
 
-	if bytes.Contains(line, []byte("\n")) {
+	if len(payload) == 0 {
+		return nil, NewInvalidJSONRPCFrameError("empty message")
+	}
+
+	if bytes.Contains(payload, []byte("\n")) {
 		return nil, ErrEmbeddedNewline
 	}
 
-	raw, err := DecodeFrame(line, p.maxBytes)
+	raw, err := DecodeFrame(payload, p.maxBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -97,5 +97,35 @@ func messageToJSONObject(msg Message) (JSONObject, error) {
 		}, nil
 	default:
 		return nil, NewFramingError(fmt.Errorf("unknown message type: %T", msg))
+	}
+}
+
+func readLineBounded(r *bufio.Reader, maxBytes int) ([]byte, error) {
+	var frame []byte
+
+	for {
+		chunk, err := r.ReadSlice('\n')
+		frame = append(frame, chunk...)
+
+		if len(frame) > maxBytes {
+			return nil, NewFrameTooLargeError(len(frame), maxBytes)
+		}
+
+		if err == nil {
+			return frame, nil
+		}
+
+		if err == bufio.ErrBufferFull {
+			continue
+		}
+
+		if err == io.EOF {
+			if len(frame) == 0 {
+				return nil, NewRuntimeStreamClosedError("input stream closed", false, nil)
+			}
+			return nil, NewReadStreamError("partial frame before EOF", false, nil)
+		}
+
+		return nil, NewReadStreamError("error reading from input stream: "+err.Error(), false, nil)
 	}
 }

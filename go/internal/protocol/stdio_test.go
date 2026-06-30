@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"strings"
 	"testing"
 
@@ -150,4 +151,126 @@ func TestPeerSend_WritesSingleNewlineTerminatedFrame(t *testing.T) {
 			utest.AssertDeepEqual(t, decoded["id"], tc.wantID)
 		})
 	}
+}
+
+func TestPeerReceive_RejectsPartialFrameBeforeDelimiter(t *testing.T) {
+	t.Parallel()
+
+	in := bytes.NewBufferString(`{"jsonrpc":"2.0","id":1,"method":"repository.search","params":{"query":"x"}}`)
+	out := &bytes.Buffer{}
+	peer := protocol.NewPeer(in, out, 1024)
+
+	got, err := peer.Receive(context.Background())
+
+	utest.AssertNil(t, got)
+	utest.AssertNotNil(t, err)
+	perr, ok := err.(*protocol.Error)
+	utest.AssertTrue(t, ok, "expected *protocol.Error")
+	if ok {
+		utest.AssertEqual(t, perr.Code, protocol.CodeReadStreamError)
+	}
+	utest.AssertErrorContains(t, err, "partial frame before EOF")
+}
+
+func TestPeerReceive_ReadsTwoFramesFromOneStream(t *testing.T) {
+	t.Parallel()
+
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"repository.search","params":{"query":"first"}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"repository.search","params":{"query":"second"}}`,
+	}, "\n") + "\n"
+
+	peer := protocol.NewPeer(bytes.NewBufferString(input), &bytes.Buffer{}, 1024)
+
+	first, err := peer.Receive(context.Background())
+	utest.RequireNoError(t, err)
+
+	second, err := peer.Receive(context.Background())
+	utest.RequireNoError(t, err)
+
+	firstID := int64(1)
+	secondID := int64(2)
+	utest.AssertDeepEqual(t, first, protocol.Request{
+		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+		ID:      protocol.ID{Number: &firstID},
+		Method:  "repository.search",
+		Params:  map[string]any{"query": "first"},
+	})
+	utest.AssertDeepEqual(t, second, protocol.Request{
+		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+		ID:      protocol.ID{Number: &secondID},
+		Method:  "repository.search",
+		Params:  map[string]any{"query": "second"},
+	})
+}
+
+func TestPeerReceive_ReassemblesPartialChunksIntoOneFrame(t *testing.T) {
+	t.Parallel()
+
+	chunked := &chunkedReader{
+		chunks: []string{
+			`{"jsonrpc":"2.0",`,
+			`"id":1,`,
+			`"method":"repository.search",`,
+			`"params":{"query":"chunked"}}`,
+			"\n",
+		},
+	}
+
+	peer := protocol.NewPeer(chunked, &bytes.Buffer{}, 1024)
+	got, err := peer.Receive(context.Background())
+	utest.RequireNoError(t, err)
+
+	id := int64(1)
+	utest.AssertDeepEqual(t, got, protocol.Request{
+		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+		ID:      protocol.ID{Number: &id},
+		Method:  "repository.search",
+		Params:  map[string]any{"query": "chunked"},
+	})
+}
+
+func TestPeerReceive_RejectsOversizedFrameBeforeJSONDecode(t *testing.T) {
+	t.Parallel()
+
+	input := strings.Repeat("x", 129) + "\n"
+	peer := protocol.NewPeer(bytes.NewBufferString(input), &bytes.Buffer{}, 128)
+
+	got, err := peer.Receive(context.Background())
+
+	utest.AssertNil(t, got)
+	utest.AssertNotNil(t, err)
+	perr, ok := err.(*protocol.Error)
+	utest.AssertTrue(t, ok, "expected *protocol.Error")
+	if ok {
+		utest.AssertEqual(t, perr.Code, protocol.CodeFrameTooLarge)
+	}
+	utest.AssertErrorContains(t, err, "exceeds maximum size")
+}
+
+type chunkedReader struct {
+	chunks []string
+	index  int
+	offset int
+}
+
+func (r *chunkedReader) Read(p []byte) (int, error) {
+	if r.index >= len(r.chunks) {
+		return 0, io.EOF
+	}
+
+	chunk := r.chunks[r.index]
+	if r.offset >= len(chunk) {
+		r.index++
+		r.offset = 0
+		return r.Read(p)
+	}
+
+	n := copy(p, chunk[r.offset:])
+	r.offset += n
+	if r.offset >= len(chunk) {
+		r.index++
+		r.offset = 0
+	}
+	return n, nil
 }
