@@ -190,6 +190,15 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 			wantErrContains: "request id must be string or number",
 		},
 		{
+			name: "request fractional id rejected",
+			raw: map[string]any{
+				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"id":      1.25,
+				"method":  "repository.search",
+			},
+			wantErrContains: "request id must be string or number",
+		},
+		{
 			name: "request method empty",
 			raw: map[string]any{
 				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
@@ -226,6 +235,15 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 			wantErrContains: "success response id must be string or number",
 		},
 		{
+			name: "success response fractional id rejected",
+			raw: map[string]any{
+				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"id":      1.25,
+				"result":  map[string]any{},
+			},
+			wantErrContains: "success response id must be string or number",
+		},
+		{
 			name: "success response result wrong type",
 			raw: map[string]any{
 				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
@@ -250,6 +268,18 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 			raw: map[string]any{
 				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
 				"id":      true,
+				"error": map[string]any{
+					"code":    float64(-1),
+					"message": "bad",
+				},
+			},
+			wantErrContains: "error response id must be string, number, or null",
+		},
+		{
+			name: "error response fractional id rejected",
+			raw: map[string]any{
+				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"id":      1.25,
 				"error": map[string]any{
 					"code":    float64(-1),
 					"message": "bad",

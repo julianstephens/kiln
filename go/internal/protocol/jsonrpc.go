@@ -1,5 +1,7 @@
 package protocol
 
+import "math"
+
 const DEFAULT_JSONRPC_VERSION = "2.0"
 
 type ID struct {
@@ -98,7 +100,10 @@ func parseRequest(raw map[string]any) (Request, error) {
 	if !ok || id == nil {
 		return Request{}, NewInvalidJSONRPCFrameError("request id is required")
 	}
-	parsedID := parseID(id)
+	parsedID, ok := parseID(id)
+	if !ok {
+		return Request{}, NewInvalidJSONRPCFrameError("request id must be string or number")
+	}
 
 	if !isValidNonNullID(parsedID) {
 		return Request{}, NewInvalidJSONRPCFrameError("request id must be string or number")
@@ -132,7 +137,10 @@ func parseSuccessResponse(raw map[string]any) (SuccessResponse, error) {
 		return SuccessResponse{}, NewInvalidJSONRPCFrameError("success response id is required")
 	}
 
-	parsedID := parseID(id)
+	parsedID, ok := parseID(id)
+	if !ok {
+		return SuccessResponse{}, NewInvalidJSONRPCFrameError("success response id must be string or number")
+	}
 
 	if !isValidNonNullID(parsedID) {
 		return SuccessResponse{}, NewInvalidJSONRPCFrameError("success response id must be string or number")
@@ -156,7 +164,10 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 		return ErrorResponse{}, NewInvalidJSONRPCFrameError("error response id field is required, but may be null")
 	}
 
-	parsedID := parseID(id)
+	parsedID, ok := parseID(id)
+	if !ok {
+		return ErrorResponse{}, NewInvalidJSONRPCFrameError("error response id must be string, number, or null")
+	}
 
 	if id != nil && !isValidNonNullID(parsedID) {
 		return ErrorResponse{}, NewInvalidJSONRPCFrameError("error response id must be string, number, or null")
@@ -197,15 +208,18 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 	}, nil
 }
 
-func parseID(id any) ID {
+func parseID(id any) (ID, bool) {
 	switch v := id.(type) {
 	case string:
-		return ID{String: &v}
+		return ID{String: &v}, true
 	case float64:
+		if v != math.Trunc(v) {
+			return ID{}, false
+		}
 		num := int64(v)
-		return ID{Number: &num}
+		return ID{Number: &num}, true
 	default:
-		return ID{Null: true}
+		return ID{Null: true}, true
 	}
 }
 
