@@ -26,7 +26,6 @@ __all__ = [
     "workspace",
 ]
 
-
 def __getattr__(name: str) -> ModuleType:
     if name not in __all__:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
