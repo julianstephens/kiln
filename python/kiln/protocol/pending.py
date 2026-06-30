@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from .jsonrpc import JsonRpcErrorResponse, JsonRpcSuccessResponse
-from .method_validation import validate_error_data, validate_success_result
+from .method import validate_error_data, validate_success_result
 
 
 @dataclass(frozen=True)

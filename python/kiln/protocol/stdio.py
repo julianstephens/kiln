@@ -13,7 +13,7 @@ from .framing import DEFAULT_MAX_MESSAGE_BYTES, decode_frame, encode_frame
 from .jsonrpc import JsonRpcMessage, JsonRpcRequest, parse_jsonrpc_message
 
 
-class StdioJsonRpcPeer:
+class Peer:
     """A JSON-RPC peer that communicates over standard input and output streams."""
 
     _max_message_bytes: int
@@ -77,3 +77,26 @@ class StdioJsonRpcPeer:
         """
         line = encode_frame(message.model_dump(mode="json"))
         await self._stdin.send(line)
+
+    async def request(self, message: JsonRpcRequest) -> JsonRpcMessage:
+        """Send a JSON-RPC request to the peer and wait for a response.
+
+        Args:
+            message: The JSON-RPC request to send.
+
+        Returns:
+            The received JSON-RPC message as a validated Pydantic model.
+
+        Raises:
+            RuntimeStreamClosedError: If the stream is closed unexpectedly.
+            JsonRpcFrameExceedsSizeLimitError: If the received frame exceeds the size
+                limit.
+            EmbeddedNewlineInMessageError: If the received frame contains an embedded
+                newline.
+            FramingError: If the received frame is invalid or does not conform to the
+                JSON-RPC specification.
+            InvalidJsonRpcFrameError: If the received message is invalid or does not
+                conform to the JSON-RPC specification.
+        """
+        await self.send(message)
+        return await self.receive()

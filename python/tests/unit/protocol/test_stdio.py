@@ -8,7 +8,7 @@ from kiln.protocol.errors import (
     RuntimeStreamClosedError,
 )
 from kiln.protocol.jsonrpc import JsonRpcRequest, JsonRpcSuccessResponse
-from kiln.protocol.stdio_jsonrpc import StdioJsonRpcPeer
+from kiln.protocol.stdio import Peer
 
 
 class DummyStdin:
@@ -39,7 +39,7 @@ async def test_receive_decodes_line_into_typed_jsonrpc_message() -> None:
         "id": "1",
         "result": {"ok": True},
     }
-    peer = StdioJsonRpcPeer(
+    peer = Peer(
         stdin=DummyStdin(),  # type: ignore
         stdout=DummyStdout(json.dumps(raw).encode()),  # type: ignore[arg-type]
     )
@@ -53,7 +53,7 @@ async def test_receive_decodes_line_into_typed_jsonrpc_message() -> None:
 @pytest.mark.anyio
 async def test_send_writes_exactly_one_newline_terminated_frame() -> None:
     stdin = DummyStdin()
-    peer = StdioJsonRpcPeer(stdin=stdin, stdout=DummyStdout())  # type: ignore[arg-type]
+    peer = Peer(stdin=stdin, stdout=DummyStdout())  # type: ignore[arg-type]
 
     await peer.send(
         JsonRpcRequest(
@@ -71,7 +71,7 @@ async def test_send_writes_exactly_one_newline_terminated_frame() -> None:
 
 @pytest.mark.anyio
 async def test_eof_maps_to_runtime_stream_closed_error() -> None:
-    peer = StdioJsonRpcPeer(stdin=DummyStdin(), stdout=DummyStdout(b""))  # type: ignore[arg-type]
+    peer = Peer(stdin=DummyStdin(), stdout=DummyStdout(b""))  # type: ignore[arg-type]
 
     with pytest.raises(RuntimeStreamClosedError):
         await peer.receive()
@@ -79,7 +79,7 @@ async def test_eof_maps_to_runtime_stream_closed_error() -> None:
 
 @pytest.mark.anyio
 async def test_incomplete_read_maps_to_runtime_stream_closed_error() -> None:
-    peer = StdioJsonRpcPeer(
+    peer = Peer(
         stdin=DummyStdin(),  # type: ignore
         stdout=DummyStdout(err=IncompleteRead()),  # type: ignore[arg-type]
     )
@@ -90,7 +90,7 @@ async def test_incomplete_read_maps_to_runtime_stream_closed_error() -> None:
 
 @pytest.mark.anyio
 async def test_delimiter_not_found_maps_to_frame_size_error() -> None:
-    peer = StdioJsonRpcPeer(
+    peer = Peer(
         stdin=DummyStdin(),  # type: ignore
         stdout=DummyStdout(err=DelimiterNotFound(128)),  # type: ignore[arg-type]
         max_message_bytes=128,
