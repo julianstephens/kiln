@@ -40,7 +40,7 @@ async def test_receive_decodes_line_into_typed_jsonrpc_message() -> None:
         "result": {"ok": True},
     }
     peer = StdioJsonRpcPeer(
-        stdin=DummyStdin(),
+        stdin=DummyStdin(),  # type: ignore
         stdout=DummyStdout(json.dumps(raw).encode()),  # type: ignore[arg-type]
     )
 
@@ -80,7 +80,7 @@ async def test_eof_maps_to_runtime_stream_closed_error() -> None:
 @pytest.mark.anyio
 async def test_incomplete_read_maps_to_runtime_stream_closed_error() -> None:
     peer = StdioJsonRpcPeer(
-        stdin=DummyStdin(),
+        stdin=DummyStdin(),  # type: ignore
         stdout=DummyStdout(err=IncompleteRead()),  # type: ignore[arg-type]
     )
 
@@ -91,7 +91,7 @@ async def test_incomplete_read_maps_to_runtime_stream_closed_error() -> None:
 @pytest.mark.anyio
 async def test_delimiter_not_found_maps_to_frame_size_error() -> None:
     peer = StdioJsonRpcPeer(
-        stdin=DummyStdin(),
+        stdin=DummyStdin(),  # type: ignore
         stdout=DummyStdout(err=DelimiterNotFound(128)),  # type: ignore[arg-type]
         max_message_bytes=128,
     )

@@ -1,12 +1,14 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .errors import InvalidJsonRpcFrameError
 
 
 class JsonRpcRequest(BaseModel):
     """A JSON-RPC request message."""
+
+    model_config = ConfigDict(extra="forbid")
 
     jsonrpc: Literal["2.0"]
     id: str | int
@@ -17,6 +19,8 @@ class JsonRpcRequest(BaseModel):
 class JsonRpcSuccessResponse(BaseModel):
     """A JSON-RPC success response message."""
 
+    model_config = ConfigDict(extra="forbid")
+
     jsonrpc: Literal["2.0"]
     id: str | int
     result: dict[str, Any]
@@ -25,6 +29,8 @@ class JsonRpcSuccessResponse(BaseModel):
 class JsonRpcErrorObject(BaseModel):
     """A JSON-RPC error object."""
 
+    model_config = ConfigDict(extra="forbid")
+
     code: int
     message: str
     data: dict[str, Any] | None = None
@@ -32,6 +38,8 @@ class JsonRpcErrorObject(BaseModel):
 
 class JsonRpcErrorResponse(BaseModel):
     """A JSON-RPC error response message."""
+
+    model_config = ConfigDict(extra="forbid")
 
     jsonrpc: Literal["2.0"]
     id: str | int | None
