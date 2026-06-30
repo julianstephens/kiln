@@ -11,7 +11,12 @@ from __future__ import annotations
 from importlib import import_module
 from types import ModuleType
 
+COMPATIBILITY_MAJOR = 1
+SCHEMA_SET_VERSION = '1.0.0'
+
 __all__ = [
+    "COMPATIBILITY_MAJOR",
+    "SCHEMA_SET_VERSION",
     "common",
     "artifact",
     "budget",
