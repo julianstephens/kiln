@@ -1,9 +1,17 @@
 import os
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO
 
+import anyio
+
+from ._runtime_os.posix import terminate_posix_process_tree
+from ._runtime_os.win32 import (
+    ServerProcess,
+    create_windows_process,
+    terminate_windows_process_tree,
+)
 from .errors import (
     MissingRuntimeBinaryError,
     StdinUnavailableError,
@@ -13,45 +21,47 @@ from .errors import (
 
 @dataclass
 class RuntimeProcess:
-    process: subprocess.Popen[bytes]
+    process: ServerProcess
 
     @property
-    def stdin(self) -> IO[bytes]:
+    def stdin(self):
         if self.process.stdin is None:
             raise StdinUnavailableError
         return self.process.stdin
 
     @property
-    def stdout(self) -> IO[bytes]:
+    def stdout(self):
         if self.process.stdout is None:
             raise StdoutUnavailableError
         return self.process.stdout
 
     @classmethod
-    def start(cls, binary: Path | None = None) -> "RuntimeProcess":
+    async def start(cls, binary: Path | None = None) -> "RuntimeProcess":
         binary = binary or _find_runtime_binary()
 
-        process = subprocess.Popen(
-            [str(binary)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=None,
-            env=_runtime_environment(),
-        )
+        if sys.platform == "win32":
+            process = await create_windows_process(
+                command=[str(binary)],
+                errlog=sys.stderr,
+                env=_runtime_environment(),
+            )
+        else:
+            process = await anyio.open_process(
+                command=[str(binary)],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=sys.stderr,
+                env=_runtime_environment(),
+                start_new_session=True,
+            )
 
         return cls(process=process)
 
-    def close(self) -> None:
-        if self.process.poll() is not None:
-            return
-
-        self.process.terminate()
-
-        try:
-            self.process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            self.process.kill()
-            self.process.wait()
+    async def aclose(self) -> None:
+        if sys.platform == "win32":
+            await terminate_windows_process_tree(self.process)
+        else:
+            await terminate_posix_process_tree(self.process)  # type: ignore
 
 
 def _find_runtime_binary() -> Path:
