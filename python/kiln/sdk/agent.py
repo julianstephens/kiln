@@ -27,7 +27,7 @@ class Agent:
         self._client = client
 
     @classmethod
-    def open(
+    async def open(
         cls,
         repository: str | Path,
         *,
@@ -38,7 +38,7 @@ class Agent:
         if not repository_path.is_dir():
             raise RepositoryNotFoundError(str(repository_path))
 
-        process = RuntimeProcess.start()
+        process = await RuntimeProcess.start()
         client = RuntimeClient(process)
 
         return cls(
@@ -60,11 +60,11 @@ class Agent:
             budget=self._config.budget,
         )
 
-    def close(self) -> None:
-        self._process.close()
+    async def close(self) -> None:
+        await self._process.aclose()
 
-    def __enter__(self) -> "Agent":
+    async def __aenter__(self) -> "Agent":
         return self
 
-    def __exit__(self, *_: object) -> None:
-        self.close()
+    async def __aexit__(self, *_: object) -> None:
+        await self.close()
