@@ -20,8 +20,8 @@ class RuntimeClient:
         return self._process.stdout  # type: ignore
 
     @classmethod
-    def start(cls, binary: Path | None = None) -> "RuntimeClient":
-        process = RuntimeProcess.start(binary)
+    async def start(cls, binary: Path | None = None) -> "RuntimeClient":
+        process = await RuntimeProcess.start(binary)
         return cls(process)
 
     def create_run(
