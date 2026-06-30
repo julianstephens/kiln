@@ -12,8 +12,9 @@ DEFAULT_OUTPUT_ROOT = (
     Path(__file__).resolve().parents[2] / "python" / "kiln" / "schemas"
 )
 
-BUNDLE_ID = (
-    "https://kiln.cyborgdev.cloud/schemas/generated/python-models-bundle.schema.json"
+BUNDLE_ID_FORMAT = (
+    "https://kiln.cyborgdev.cloud/schemas/generated/"
+    "python-models-{domain}.schema.json"
 )
 
 HEADER = '''"""
@@ -168,10 +169,21 @@ def ensure_schema_files_exist(
             )
 
 
+def group_schema_keys_by_domain(schema_keys: list[str]) -> dict[str, list[str]]:
+    groups: dict[str, list[str]] = {}
+
+    for schema_key in schema_keys:
+        domain, _contract = parse_schema_key(schema_key)
+        groups.setdefault(domain, []).append(schema_key)
+
+    return groups
+
+
 def write_bundle_schema(
     path: Path,
     schema_keys: list[str],
     *,
+    domain: str,
     major: int,
 ) -> None:
     defs: dict[str, Any] = {}
@@ -181,10 +193,11 @@ def write_bundle_schema(
             "$ref": schema_ref_for_key(schema_key, major=major)
         }
 
+    domain_name = python_name(domain)
     bundle = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": BUNDLE_ID,
-        "title": "Kiln generated Python models bundle",
+        "$id": BUNDLE_ID_FORMAT.format(domain=domain_name),
+        "title": f"Kiln {domain_name} generated Python models bundle",
         "type": "object",
         "$defs": defs,
         "properties": {
@@ -194,19 +207,28 @@ def write_bundle_schema(
         "additionalProperties": False,
     }
 
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(bundle, indent=4) + "\n", encoding="utf-8")
 
 
-def write_init(output_root: Path) -> None:
+def write_package_init(output_root: Path, domains: list[str]) -> None:
     init_path = output_root / "__init__.py"
     init_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if init_path.exists():
-        current = init_path.read_text(encoding="utf-8")
-        if "Generated Pydantic v2 models for Kiln JSON Schemas" in current:
-            return
+    domain_modules = [python_name(domain) for domain in domains]
+    imports = "".join(f"from . import {module}\n" for module in domain_modules)
+    all_entries = "".join(f'    "{module}",\n' for module in domain_modules)
 
-    init_path.write_text(HEADER, encoding="utf-8")
+    content = (
+        HEADER
+        + "\nfrom __future__ import annotations\n\n"
+        + imports
+        + "\n__all__ = [\n"
+        + all_entries
+        + "]\n"
+    )
+
+    init_path.write_text(content, encoding="utf-8")
 
 
 def clean_output_root(output_root: Path, *, dry_run: bool) -> None:
@@ -333,30 +355,38 @@ def main() -> int:
         if not args.no_clean:
             clean_output_root(output_root, dry_run=args.dry_run)
 
-        bundle_path = schema_root / ".python-models-bundle.schema.json"
+        schema_groups = group_schema_keys_by_domain(schema_keys)
+        bundle_root = schema_root / ".python-models-bundles"
 
         try:
-            if args.dry_run:
-                print(f"would write temporary bundle schema: {bundle_path}")
-            else:
-                write_bundle_schema(
-                    bundle_path,
-                    schema_keys,
-                    major=major,
-                )
+            for domain, domain_schema_keys in schema_groups.items():
+                domain_name = python_name(domain)
+                bundle_path = bundle_root / f"{domain_name}.schema.json"
+                domain_output_root = output_root / domain_name
 
-            run_datamodel_codegen(
-                bundle_path=bundle_path,
-                schema_root=schema_root,
-                output_root=output_root,
-                extra_args=args.extra_arg,
-                dry_run=args.dry_run,
-            )
+                if args.dry_run:
+                    print(f"would write temporary bundle schema: {bundle_path}")
+                else:
+                    write_bundle_schema(
+                        bundle_path,
+                        domain_schema_keys,
+                        domain=domain,
+                        major=major,
+                    )
+
+                run_datamodel_codegen(
+                    bundle_path=bundle_path,
+                    schema_root=schema_root,
+                    output_root=domain_output_root,
+                    extra_args=args.extra_arg,
+                    dry_run=args.dry_run,
+                )
         finally:
             if not args.dry_run:
-                bundle_path.unlink(missing_ok=True)
+                shutil.rmtree(bundle_root, ignore_errors=True)
 
-        write_init(output_root)
+        if not args.dry_run:
+            write_package_init(output_root, list(schema_groups))
 
     except GenerateModelsError as exc:
         print(f"model generation failed: {exc}", file=sys.stderr)
