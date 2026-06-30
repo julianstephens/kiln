@@ -32,3 +32,19 @@ class InvalidJsonRpcFrameError(FramingError):
 
     def __init__(self, message: str) -> None:
         super().__init__(f"invalid JSON-RPC frame: {message}")
+
+
+class UnsupportedMethodError(FramingError):
+    """Raised when a JSON-RPC method is not supported by the protocol."""
+
+    def __init__(self, method: str) -> None:
+        super().__init__(f"unsupported JSON-RPC method: {method}")
+
+
+class KilnPayloadValidationError(FramingError):
+    """Raised when a Kiln payload is invalid or does not conform to the schema."""
+
+    def __init__(self, method: str, part: str, details: str) -> None:
+        super().__init__(
+            f"invalid Kiln payload: method={method}, part={part}, details={details}"
+        )

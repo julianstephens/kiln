@@ -1,41 +1,16 @@
-from typing import Any, Literal
-
 from anyio.abc import ByteSendStream
-from anyio.streams.buffered import BufferedByteReceiveStream, IncompleteRead
-from pydantic import BaseModel
+from anyio.streams.buffered import (
+    BufferedByteReceiveStream,
+    DelimiterNotFound,
+    IncompleteRead,
+)
 
 from .errors import (
-    EmbeddedNewlineInMessageError,
-    FramingError,
-    InvalidJsonRpcFrameError,
+    JsonRpcFrameExceedsSizeLimitError,
     RuntimeStreamClosedError,
 )
-from .framing import DEFAULT_MAX_MESSAGE_BYTES, validate_frame
-
-
-class JsonRpcRequest(BaseModel):
-    jsonrpc: Literal["2.0"]
-    id: str | int
-    method: str
-    params: dict[str, Any] | None = None
-
-
-class JsonRpcSuccessResponse(BaseModel):
-    jsonrpc: Literal["2.0"]
-    id: str | int
-    result: dict[str, Any]
-
-
-class JsonRpcErrorObject(BaseModel):
-    code: int
-    message: str
-    data: dict[str, Any] | None = None
-
-
-class JsonRpcErrorResponse(BaseModel):
-    jsonrpc: Literal["2.0"]
-    id: str | int | None
-    error: JsonRpcErrorObject
+from .framing import DEFAULT_MAX_MESSAGE_BYTES, decode_frame, encode_frame
+from .jsonrpc import JsonRpcMessage, JsonRpcRequest, parse_jsonrpc_message
 
 
 class StdioJsonRpcPeer:
@@ -51,88 +26,54 @@ class StdioJsonRpcPeer:
         stdout: BufferedByteReceiveStream,
         max_message_bytes: int = DEFAULT_MAX_MESSAGE_BYTES,
     ) -> None:
-        self._max_message_bytes = max_message_bytes
         self._stdin = stdin
         self._stdout = stdout
+        self._max_message_bytes = max_message_bytes
 
-    async def _read_line(self) -> bytes:
-        """Read a line from the standard output stream.
-
-        Returns:
-            bytes: The line read from the stream.
-        """
-        try:
-            return await self._stdout.receive_until(b"\n", self._max_message_bytes)
-        except IncompleteRead as e:
-            raise RuntimeStreamClosedError from e
-        except Exception as e:
-            raise FramingError(message=f"failed to read line from stdout: {e}") from e
-
-    async def _write_line(self, line: bytes) -> None:
-        """Write a line to the standard input stream.
-
-        Args:
-            line: The line to write to the stream.
-        """
-        await self._stdin.send(line + b"\n")
-
-    async def receive(self) -> JsonRpcSuccessResponse | JsonRpcErrorResponse:
-        """Read a JSON-RPC frame from the standard output stream.
+    async def receive(self) -> JsonRpcMessage:
+        """Receive a JSON-RPC message from the peer.
 
         Returns:
-            JsonRpcSuccessResponse | JsonRpcErrorResponse: The validated JSON-RPC frame.
+            The received JSON-RPC message as a validated Pydantic model.
 
         Raises:
-            EmbeddedNewlineInMessageError: If an embedded newline is found in the frame.
-            RuntimeStreamClosedError: If the standard output stream is closed
-            unexpectedly.
-            FramingError: If the frame is invalid or does not conform to the JSON-RPC
-            specification.
+            RuntimeStreamClosedError: If the stream is closed unexpectedly.
+            JsonRpcFrameExceedsSizeLimitError: If the received frame exceeds the size
+                limit.
+            EmbeddedNewlineInMessageError: If the received frame contains an embedded
+                newline.
+            FramingError: If the received frame is invalid or does not conform to the
+                JSON-RPC specification.
+            InvalidJsonRpcFrameError: If the received message is invalid or does not
+                conform to the JSON-RPC specification.
         """
-        line = await self._read_line()
-        if b"\n" in line:
-            raise EmbeddedNewlineInMessageError
+        try:
+            line = await self._stdout.receive_until(
+                b"\n",
+                self._max_message_bytes,
+            )
+        except DelimiterNotFound as exc:
+            raise JsonRpcFrameExceedsSizeLimitError(
+                size=self._max_message_bytes,
+                limit=self._max_message_bytes,
+            ) from exc
+        except IncompleteRead as exc:
+            raise RuntimeStreamClosedError from exc
+
         if not line:
             raise RuntimeStreamClosedError
-        data = validate_frame(line, self._max_message_bytes)
-        if "result" in data:
-            try:
-                res = JsonRpcSuccessResponse.model_validate(data)
-            except Exception as e:
-                raise InvalidJsonRpcFrameError(
-                    message=f"invalid JSON-RPC response frame: {e}"
-                ) from e
-            return res
-        if "error" in data:
-            try:
-                err = JsonRpcErrorResponse.model_validate(data)
-            except Exception as e:
-                raise InvalidJsonRpcFrameError(
-                    message=f"invalid JSON-RPC error frame: {e}"
-                ) from e
-            return err
-        raise InvalidJsonRpcFrameError(
-            message="received JSON-RPC frame without 'result' or 'error' field"
-        )
 
-    async def send(self, payload: bytes):
-        """Send a JSON-RPC frame to the standard input stream.
+        raw = decode_frame(line, self._max_message_bytes)
+        return parse_jsonrpc_message(raw)
+
+    async def send(self, message: JsonRpcRequest) -> None:
+        """Send a JSON-RPC request to the peer.
 
         Args:
-            payload: The JSON-RPC frame as bytes.
+            message: The JSON-RPC request to send.
 
         Raises:
-            EmbeddedNewlineInMessageError: If an embedded newline is found in the frame.
-            FramingError: If the frame is invalid or does not conform to the JSON-RPC
-            specification.
+            RuntimeStreamClosedError: If the stream is closed unexpectedly.
         """
-        if b"\n" in payload:
-            raise EmbeddedNewlineInMessageError
-        data = validate_frame(payload, self._max_message_bytes)
-        try:
-            jsonrpc_req = JsonRpcRequest.model_validate(data)
-        except Exception as e:
-            raise InvalidJsonRpcFrameError(
-                message=f"invalid JSON-RPC request frame: {e}"
-            ) from e
-        await self._write_line(jsonrpc_req.model_dump_json().encode())
+        line = encode_frame(message.model_dump(mode="json"))
+        await self._stdin.send(line)

@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from kiln.schemas import (
     ModelError,
@@ -16,17 +15,22 @@ from kiln.schemas import (
     RepositorySourceResult,
 )
 
-from .errors import FramingError
+from .errors import KilnPayloadValidationError, UnsupportedMethodError
+from .jsonrpc import JsonRpcErrorResponse, JsonRpcRequest, JsonRpcSuccessResponse
 
 
 @dataclass(frozen=True)
 class KilnMethodSpec:
+    """Specification for a Kiln JSON-RPC method, including the expected parameter,
+    result, and error data models."""
+
     method: str
     params_model: type[BaseModel] | None = None
     result_model: type[BaseModel] | None = None
     error_data_model: type[BaseModel] | None = None
 
 
+# Kiln method specifications for supported JSON-RPC methods.
 KILN_METHODS = {
     "repository.open_session": KilnMethodSpec(
         method="repository.open_session",
@@ -55,70 +59,101 @@ KILN_METHODS = {
 }
 
 
-def validate_kiln_schema(
-    *,
-    data_type: Literal["request", "response", "error"],
-    schema: type[BaseModel],
-    frame: dict,
-) -> BaseModel:
-    """Validate JSON-RPC frame against the given schema.
+def get_method_spec(method: str) -> KilnMethodSpec:
+    """Get the KilnMethodSpec for the given method.
 
     Args:
-        data_type: The type of the JSON-RPC frame, either "request", "response",
-        or "error".
-        schema: The Pydantic model class to validate against.
-        frame: The JSON-RPC frame as a dictionary.
+        method: The JSON-RPC method name.
 
     Returns:
-        The validated Pydantic model instance.
+        The KilnMethodSpec for the given method.
+    Raises:
+        FramingError: If the method is not supported.
+    """
+    try:
+        return KILN_METHODS[method]
+    except KeyError as e:
+        raise UnsupportedMethodError(method) from e
+
+
+def validate_request_params(request: JsonRpcRequest) -> BaseModel | None:
+    """Validate the request parameters for the given method.
+
+    Args:
+        request: The JSON-RPC request as a Pydantic model.
+
+    Returns:
+        The validated Pydantic model instance or None if no params model is defined.
 
     Raises:
-        FramingError: If the frame is invalid or does not conform to the schema.
+        KilnPayloadValidationError: If the parameters are invalid.
     """
-    data = None
-    if data_type == "request":
-        if "params" not in frame:
-            raise FramingError(
-                message=(
-                    "invalid JSON-RPC frame: missing required field 'params' "
-                    f"for method '{frame.get('method')}'"
-                )
-            )
-        data = frame["params"]
-    if data_type == "response":
-        if "result" not in frame:
-            raise FramingError(
-                message=(
-                    "invalid JSON-RPC frame: missing required field 'result' "
-                    f"for method '{frame.get('method')}'"
-                )
-            )
-        data = frame["result"]
-    if data_type == "error":
-        if "error" not in frame:
-            raise FramingError(
-                message=(
-                    "invalid JSON-RPC frame: missing required field 'error' "
-                    f"for method '{frame.get('method')}'"
-                )
-            )
-        data = frame["error"]
-
-    if not isinstance(data, dict):
-        raise FramingError(
-            message=(
-                f"invalid JSON-RPC frame: {data_type} must be a JSON object "
-                f"for method '{frame.get('method')}'"
-            )
-        )
+    spec = get_method_spec(request.method)
+    if spec.params_model is None:
+        return None
+    params = request.params or {}
     try:
-        validated_data = schema.model_validate(data)
-    except Exception as e:
-        raise FramingError(
-            message=(
-                "invalid JSON-RPC frame: payload validation failed "
-                f"for schema '{schema.__name__}': {e}"
-            )
+        return spec.params_model.model_validate(params)
+    except ValidationError as e:
+        raise KilnPayloadValidationError(
+            method=request.method, part="params", details=str(e)
         ) from e
-    else:
-        return validated_data
+
+
+def validate_success_result(
+    *, method: str, response: JsonRpcSuccessResponse
+) -> BaseModel | None:
+    """Validate the success result for the given method.
+
+    Args:
+        method: The JSON-RPC method name.
+        response: The JSON-RPC success response as a Pydantic model.
+
+    Returns:
+        BaseModel | None: The validated Pydantic model instance or None if
+            no result model is defined.
+
+    Raises:
+        KilnPayloadValidationError: If the result is invalid.
+    """
+    spec = get_method_spec(method)
+    if spec.result_model is None:
+        return None
+    try:
+        return spec.result_model.model_validate(response.result)
+    except ValidationError as e:
+        raise KilnPayloadValidationError(
+            method=method, part="result", details=str(e)
+        ) from e
+
+
+def validate_error_data(
+    *, method: str, response: JsonRpcErrorResponse
+) -> BaseModel | None:
+    """Validate the error data for the given method.
+
+    Args:
+        method: The JSON-RPC method name.
+        response: The JSON-RPC error response as a Pydantic model.
+
+    Returns:
+        BaseModel | None: The validated Pydantic model instance or None if no error data
+            model is defined.
+
+    Raises:
+        KilnPayloadValidationError: If the error data is invalid.
+    """
+    spec = get_method_spec(method)
+    if spec.error_data_model is None:
+        return None
+
+    data = response.error.data
+    if data is None:
+        return None
+
+    try:
+        return spec.error_data_model.model_validate(data)
+    except ValidationError as e:
+        raise KilnPayloadValidationError(
+            method=method, part="error.data", details=str(e)
+        ) from e
