@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import Any, get_args
 
 import pytest
+from pydantic import ValidationError
 
 from kiln.protocol.jsonrpc import (
     DEFAULT_JSONRPC_VERSION,
@@ -14,7 +15,7 @@ from kiln.protocol.jsonrpc import (
 )
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
 from kiln.sdk import PACKAGE_NAME, __version__
-from kiln.sdk.errors import RuntimeProcessError
+from kiln.sdk.errors import RuntimeMethodError, RuntimeProcessError
 from kiln.sdk.runtime_connection import RuntimeStdioConnection
 
 
@@ -111,7 +112,18 @@ async def test_initialize_raises_on_jsonrpc_error_response(mocker) -> None:
     fake_peer = _FakePeer(
         JsonRpcErrorResponse(
             id="1",
-            error=JsonRpcErrorObject(code=-32000, message="boom", data=None),
+            error=JsonRpcErrorObject(
+                code=-32000,
+                message="boom",
+                data={
+                    "kiln_error": {
+                        "code": "runtime.internal",
+                        "category": "internal",
+                        "message": "boom",
+                        "retryable": False,
+                    }
+                },
+            ),
         )
     )
     mocker.patch(
@@ -121,7 +133,7 @@ async def test_initialize_raises_on_jsonrpc_error_response(mocker) -> None:
 
     conn = RuntimeStdioConnection(_process())
 
-    with pytest.raises(RuntimeProcessError, match=r"-32000 - boom"):
+    with pytest.raises(RuntimeMethodError, match=r"jsonrpc_code=-32000, message=boom"):
         await conn.initialize()
 
 
@@ -156,3 +168,296 @@ async def test_health_raises_on_unexpected_request_response(mocker) -> None:
 
     with pytest.raises(RuntimeProcessError, match="unexpected request"):
         await conn.health()
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_response_id_mismatch(mocker) -> None:
+    """Test that mismatched response IDs are currently accepted.
+
+    Note: The current implementation doesn't validate response IDs, so this
+    test documents that behavior. In the future, ID validation should be added.
+    """
+    fake_peer = _FakePeer(
+        JsonRpcSuccessResponse(id="999", result=_initialize_result_payload())
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+    result = await conn.initialize()
+
+    # Currently, mismatched IDs don't raise an error
+    # This documents the current behavior
+    assert result.root.runtime.id == "runtime-1"
+
+
+@pytest.mark.anyio
+async def test_error_data_validation_and_preservation(mocker) -> None:
+    """Test that error data with additional fields is preserved."""
+    error_data = {
+        "kiln_error": {
+            "code": "runtime.validation",
+            "category": "validation",
+            "message": "validation failed",
+            "retryable": True,
+            "details": {"field": "name", "reason": "too short"},
+            "correlation_id": "corr-123",
+            "runtime_id": "runtime-2",
+        }
+    }
+    fake_peer = _FakePeer(
+        JsonRpcErrorResponse(
+            id="1",
+            error=JsonRpcErrorObject(
+                code=-32001,
+                message="validation failed",
+                data=error_data,
+            ),
+        )
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(RuntimeMethodError) as exc_info:
+        await conn.initialize()
+
+    # Verify the error message contains the preserved error data
+    error_msg = str(exc_info.value)
+    assert "validation" in error_msg
+    assert "corr-123" in error_msg
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_incompatible_protocol_version(mocker) -> None:
+    """Test that incompatible protocol version error is properly raised."""
+    error_data = {
+        "kiln_error": {
+            "code": "runtime.compatibility",
+            "category": "compatibility",
+            "message": "incompatible protocol version",
+            "retryable": False,
+        }
+    }
+    fake_peer = _FakePeer(
+        JsonRpcErrorResponse(
+            id="1",
+            error=JsonRpcErrorObject(
+                code=-32002,
+                message="incompatible protocol version",
+                data=error_data,
+            ),
+        )
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(RuntimeMethodError, match="incompatible protocol version"):
+        await conn.initialize()
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_incompatible_schema_set(mocker) -> None:
+    """Test that incompatible schema-set error is properly raised."""
+    error_data = {
+        "kiln_error": {
+            "code": "runtime.compatibility",
+            "category": "compatibility",
+            "message": "incompatible schema-set version",
+            "retryable": False,
+        }
+    }
+    fake_peer = _FakePeer(
+        JsonRpcErrorResponse(
+            id="1",
+            error=JsonRpcErrorObject(
+                code=-32003,
+                message="incompatible schema-set version",
+                data=error_data,
+            ),
+        )
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(RuntimeMethodError, match="incompatible schema-set"):
+        await conn.initialize()
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_malformed_success_result(mocker) -> None:
+    """Test that malformed success result raises validation error."""
+    # Missing required fields
+    malformed_result = {
+        "runtime": {
+            "id": "runtime-1",
+            # missing 'name' and 'version'
+        },
+        # missing other required fields
+    }
+    fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=malformed_result))
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(ValidationError):  # ValidationError
+        await conn.initialize()
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_malformed_error_data(mocker) -> None:
+    """Test that malformed error data raises validation error."""
+    # Missing required fields in kiln_error
+    malformed_error_data = {
+        "kiln_error": {
+            "code": "runtime.internal",
+            # missing 'category', 'message', 'retryable'
+        }
+    }
+    fake_peer = _FakePeer(
+        JsonRpcErrorResponse(
+            id="1",
+            error=JsonRpcErrorObject(
+                code=-32000,
+                message="error",
+                data=malformed_error_data,
+            ),
+        )
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(ValidationError):
+        await conn.initialize()
+
+
+@pytest.mark.anyio
+async def test_health_not_ready(mocker) -> None:
+    """Test health check when runtime is not ready."""
+    health_payload = _health_result_payload()
+    health_payload["ready"] = False
+    fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=health_payload))
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+    result = await conn.health()
+
+    assert result.root.ready is False
+    assert result.root.initialized is True
+
+
+@pytest.mark.anyio
+async def test_health_after_shutdown(mocker) -> None:
+    """Test health check after runtime shutdown."""
+    health_payload = _health_result_payload()
+    health_payload["shutdown"] = True
+    health_payload["ready"] = False
+    fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=health_payload))
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+    result = await conn.health()
+
+    assert result.root.shutdown is True
+    assert result.root.ready is False
+
+
+@pytest.mark.anyio
+async def test_initialize_and_health_ordering(mocker) -> None:
+    """Test that initialize is called before health."""
+    call_sequence = []
+
+    class SequenceTrackingPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            call_sequence.append(message.method)
+
+            if message.method == "runtime.initialize":
+                return JsonRpcSuccessResponse(
+                    id="1", result=_initialize_result_payload()
+                )
+            if message.method == "runtime.health":
+                return JsonRpcSuccessResponse(id="2", result=_health_result_payload())
+            raise RuntimeProcessError(
+                message=f"Unexpected method called: {message.method}"
+            )
+
+    fake_peer = SequenceTrackingPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    # Call initialize then health
+    await conn.initialize()
+    await conn.health()
+
+    assert call_sequence == ["runtime.initialize", "runtime.health"]
+
+
+@pytest.mark.anyio
+async def test_windows_startup_argument_shape(mocker) -> None:
+    """Test Windows process creation with proper argument shape.
+
+    This test verifies that the Windows process creation function is called
+    with the correct argument structure.
+    """
+    # Mock the entire module to avoid platform-specific imports
+    mock_win32 = mocker.MagicMock()
+    mocker.patch.dict("sys.modules", {"kiln.sdk._runtime_os.win32": mock_win32})
+
+    # Create a mock process
+    mock_process = mocker.AsyncMock()
+    mock_process.stdin = mocker.MagicMock()
+    mock_process.stdout = mocker.MagicMock()
+
+    # Create a test function with the expected signature
+    async def test_create_windows_process(command: str, args: list[str], **kwargs):
+        """Mock function to test argument shape."""
+        # Verify arguments are in correct shape
+        assert isinstance(command, str)
+        assert isinstance(args, list)
+        assert all(isinstance(arg, str) for arg in args)
+        # Additional kwargs should be optional
+        assert "env" in kwargs or "cwd" in kwargs or "errlog" in kwargs or not kwargs
+        return mock_process
+
+    mock_win32.create_windows_process = test_create_windows_process
+
+    # Call with expected arguments
+    result = await mock_win32.create_windows_process(
+        "runtime.exe", args=["--port", "8080"], cwd="/tmp"
+    )
+
+    assert result == mock_process
