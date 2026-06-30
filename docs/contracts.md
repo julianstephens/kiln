@@ -109,6 +109,94 @@ Operations and events should identify:
 
 This allows a model request, tool call, budget reservation, and resulting context changes to be reconstructed as one causal chain.
 
+### 1.8 Error contracts
+
+Errors that cross component or protocol boundaries must preserve a stable Kiln error object.
+
+A transport may wrap the error in its own envelope. For JSON-RPC transports, the stable Kiln error object is carried under `error.data.kiln_error`. Other transports must preserve the same semantic object even if the envelope differs.
+
+#### Stable shape
+
+A Kiln error contains:
+
+```json
+{
+  "code": "runtime.unsupported_protocol_version",
+  "category": "compatibility",
+  "message": "Unsupported runtime protocol version",
+  "retryable": false,
+  "details": {},
+  "correlation_id": "corr_...",
+  "runtime_id": "runtime_..."
+}
+```
+
+Required fields:
+
+| Field | Meaning |
+| --- | --- |
+| `code` | Stable dotted Kiln error code. Clients may branch on this value. |
+| `category` | Stable coarse error category. |
+| `message` | Human-readable diagnostic message. Not for branching. |
+| `retryable` | Whether retrying the same operation may succeed without changing inputs. |
+| `details` | Error-specific structured details. Empty when no structured details exist. |
+
+Optional fields:
+
+| Field | Meaning |
+| --- | --- |
+| `correlation_id` | Request, operation, or workflow correlation identity, when available. |
+| `runtime_id` | Runtime session identity, when available. |
+| `run_id` | Run identity, when the error belongs to a run. |
+| `operation_id` | Operation identity, when the error belongs to a tracked operation. |
+
+#### Categories
+
+Stable error categories are:
+
+| Category | Meaning |
+| --- | --- |
+| `compatibility` | Version, schema-set, or compatibility negotiation failed. |
+| `validation` | Caller input, method params, or returned data failed validation. |
+| `lifecycle` | Operation is not legal in the current object or session state. |
+| `authorization` | Requested authority was not granted. |
+| `budget` | Budget reservation, commitment, deadline, or exhaustion failed. |
+| `not_found` | Referenced object does not exist in the caller's scope. |
+| `conflict` | Request conflicts with a current version, state, or concurrent operation. |
+| `shutdown` | Component is draining, shutting down, or already shut down. |
+| `internal` | Component failed unexpectedly. |
+
+#### Code ownership
+
+Error-code prefixes identify the domain that owns the error semantics.
+
+Initial prefixes:
+
+| Prefix | Owner |
+| --- | --- |
+| `runtime.` | Runtime process/session protocol. |
+| `run.` | Run coordinator and run lifecycle. |
+| `repository.` | Repository session manager and repository worker protocol. |
+| `model.` | Model gateway and model adapter boundary. |
+| `capability.` | Capability broker and authorization decisions. |
+| `budget.` | Budget manager. |
+| `artifact.` | Artifact storage and integrity checks. |
+| `validation.` | Validation package and validation execution. |
+
+A component must not reuse another component's prefix for different semantics.
+
+#### Stability rules
+
+The required Kiln error fields are compatibility-stable.
+
+Implementations may add new `details` keys, but they must not remove or rename required fields without a compatibility-major change.
+
+Clients may branch on `code`, `category`, and `retryable`. Clients must not branch on `message`.
+
+The `details` object is intentionally error-specific. Clients must not require unknown detail keys unless they are documented for a specific error code.
+
+Components should preserve the full Kiln error object when converting errors into language-native exceptions, persisted events, health diagnostics, or protocol responses.
+
 ---
 
 ## 2. Identity and scope contracts
@@ -536,308 +624,82 @@ Task state manager.
 
 #### Invariants
 
-- Task state is distinct from the raw conversation transcript.
-- Model output may propose updates, but the runtime validates and commits them.
-- Task state must not override trusted constraints in `TaskSpecification`.
-- Historical revisions may be referenced for replay.
+- Task state is runtime-authored, not model-authored.
+- Model outputs may propose updates, but the runtime validates and records them.
+- Task state changes are traceable to operations and events.
 
 ---
 
-### 3.6 StopReason
+### 3.6 Operation
 
 #### Meaning
 
-Explains why a run entered a terminal state.
+Represents one bounded unit of work performed by or through the runtime.
+
+Examples:
+
+- repository search;
+- source retrieval;
+- graph expansion;
+- model invocation;
+- context rendering;
+- validation step;
+- artifact creation.
 
 #### Owner
 
-Stop controller.
-
-#### Categories
-
-- success;
-- budget exhausted;
-- cancelled;
-- policy denied;
-- model failed;
-- repository failed;
-- tool failed;
-- validation failed;
-- runtime interrupted;
-- internal error.
+The component that initiates the operation, usually the runtime coordinator or agent loop.
 
 #### Contains
 
-- stable reason code;
-- terminal class;
-- human-readable summary;
-- responsible component;
-- causal event reference;
-- retryability classification;
-- optional diagnostic artifact reference.
-
-#### Invariants
-
-- Exactly one primary stop reason is assigned.
-- Additional diagnostics do not replace the primary reason.
-- A model-proposed completion does not itself create a success reason.
-
----
-
-### 3.7 RunResult
-
-#### Meaning
-
-Represents the final externally consumable outcome of a run.
-
-#### Owner
-
-Run coordinator.
-
-#### Contains
-
-- run identity;
-- terminal status;
-- primary stop reason;
-- final answer artifact or inline value;
-- patch artifact when produced;
-- changed-file manifest reference;
-- validation-report reference when validation ran;
-- usage summary;
-- event-stream range or reference;
-- context-ledger reference;
-- additional artifact references.
-
-#### Invariants
-
-- Created only after the run is terminal.
-- Immutable after creation.
-- Does not imply publication occurred.
-- A successful result requiring validation cannot be publication-eligible without a passing validation report.
-
----
-
-## 4. Repository evidence contracts
-
-### 4.1 RepositoryRequest
-
-#### Meaning
-
-Represents one typed request to the repository engine through an open `RepositorySession`.
-
-#### Owner
-
-Runtime repository adapter.
-
-#### Kinds
-
-- prepare;
-- search;
-- get source;
-- get file;
-- expand graph;
-- find callers;
-- find callees;
-- get summary;
-- get representation;
-- invalidate;
-- refresh.
-
-#### Contains
-
-- request identity;
-- repository-session identity;
+- operation identity;
 - operation kind;
-- structured parameters;
-- result limits;
+- run identity;
+- parent operation or turn identity;
+- lifecycle status;
+- deadline;
+- capability reference;
 - budget reservation reference;
-- causation and correlation identities.
+- input reference;
+- output reference;
+- error reference.
+
+#### Lifecycle
+
+```text
+planned
+  → reserved
+  → running
+  → succeeded | failed | cancelled | denied | exhausted
+```
 
 #### Invariants
 
-- The session, not caller-supplied parameters, determines repository scope.
-- Request size and result limits are bounded.
-- Unknown operation kinds fail closed.
-- Every accepted request produces one terminal response or cancellation result.
+- Budgeted operations reserve budget before execution.
+- Capability-guarded operations cite a grant or denial.
+- Operation results are immutable once committed.
+- An operation does not change top-level run state directly.
 
 ---
 
-### 4.2 RepositoryCandidate
+## 4. Context contracts
+
+### 4.1 ContextItem
 
 #### Meaning
 
-Represents one structured piece of repository evidence available for policy evaluation.
+Represents a unit of information that may be available to, admitted into, evicted from, or observed by the model context.
 
-#### Owner
+A context item is not necessarily prompt text. It may be:
 
-Repository engine creates it; runtime validates it.
-
-#### Contains
-
-- content identity;
-- repository identity;
-- repository version;
-- workspace version;
-- semantic kind;
-- source location;
-- qualified name where applicable;
-- representation kind;
-- content or artifact reference;
-- estimated token cost;
-- relevance metadata;
-- graph metadata;
-- alternative representations;
-- provenance;
-- freshness status.
-
-#### Semantic kinds
-
-Examples include:
-
-- file;
-- symbol;
-- signature;
-- source range;
-- repository summary;
-- package summary;
-- file summary;
-- graph path;
-- search match;
-- diagnostic.
-
-#### Representation kinds
-
-Examples include:
-
-- full source;
-- filtered source;
-- signature;
-- summary;
-- outline;
-- search snippet;
-- relation list;
-- hierarchical summary.
-
-#### Freshness states
-
-- current;
-- stale;
-- historical;
-- unknown.
-
-#### Invariants
-
-- Content identity is stable for the represented repository fact and version.
-- Candidate token cost is advisory.
-- `current` means it matches the active repository and workspace versions.
-- Stale candidates cannot be admitted as current context.
-- Historical candidates must be explicitly labeled when shown to a model.
-- Candidate provenance identifies how the evidence was derived.
-- Alternative representations refer to the same underlying content identity or explicitly declare their relationship.
-
----
-
-### 4.3 Provenance
-
-#### Meaning
-
-Explains where a piece of evidence or output came from and how it was derived.
-
-#### Owner
-
-The component creating the evidence or artifact.
-
-#### Contains
-
-- source object identities;
-- repository and workspace versions;
-- producing operation;
-- transformation or representation kind;
-- producer version;
-- creation time;
-- content hash;
-- optional confidence information.
-
-#### Invariants
-
-- Provenance is immutable.
-- Derived evidence references its source evidence or source location.
-- Provenance never grants authority.
-
----
-
-### 4.4 InvalidationRecord
-
-#### Meaning
-
-Records which repository evidence became stale because of a workspace mutation or configuration change.
-
-#### Owner
-
-Repository consistency manager.
-
-#### Contains
-
-- invalidation identity;
-- prior and new workspace versions;
-- mutation references;
-- affected files;
-- affected content identities where known;
-- affected relation classes;
-- reason;
-- creation time;
-- refresh status.
-
-#### Invariants
-
-- Created atomically with the workspace-version transition.
-- It may conservatively invalidate more evidence than strictly necessary.
-- Evidence identified by an unresolved invalidation cannot be treated as current.
-
----
-
-### 4.5 RefreshRequest
-
-#### Meaning
-
-Requests synchronization of the mutable current index with a workspace version.
-
-#### Owner
-
-Repository consistency manager.
-
-#### Contains
-
-- refresh identity;
-- repository session;
-- target workspace version;
-- refresh mode;
-- affected paths or invalidation references;
-- completion requirements;
-- budget reservation.
-
-#### Modes
-
-- eager incremental;
-- lazy incremental;
-- batched incremental;
-- full rebuild.
-
-#### Invariants
-
-- The runtime selects or approves the refresh mode.
-- A completed refresh identifies the workspace version to which the index is synchronized.
-- Full rebuild is required when incremental correctness cannot be guaranteed.
-
----
-
-## 5. Context contracts
-
-### 5.1 ContextItem
-
-#### Meaning
-
-Represents one piece of information tracked by the runtime for possible or actual model use.
+- source code;
+- a symbol outline;
+- a repository search result;
+- a graph edge set;
+- a task-state summary;
+- a validation report;
+- a prior model observation;
+- a rendered message segment reference.
 
 #### Owner
 
@@ -846,46 +708,61 @@ Context manager.
 #### Contains
 
 - context-item identity;
-- source type;
-- source object identity;
-- repository and workspace versions when applicable;
-- active representation;
-- lifecycle state;
+- semantic kind;
+- trust level;
+- source object reference;
+- repository/workspace version binding where applicable;
+- artifact reference for large content;
 - estimated token cost;
-- first-seen turn;
-- last-used turn;
-- admission reason;
-- pin status;
 - provenance;
-- replacement or compression relationship.
-
-#### Lifecycle states
-
-- available;
-- active;
-- observed;
-- compressed;
-- evicted;
-- rejected;
-- stale.
-
-`pinned` is an attribute, not a lifecycle state.
+- observation status;
+- eviction status.
 
 #### Invariants
 
-- One context item has one active representation at a time.
-- A stale item cannot become active as current evidence without refresh or historical labeling.
-- Activation, eviction, compression, and replacement are runtime-controlled transitions.
-- Observed means the item appeared in at least one committed model request.
-- Eviction does not delete provenance or history.
+- Repository-derived items carry repository and workspace version identities.
+- Untrusted content is never merged into trusted instruction fields.
+- Availability does not imply admission to active context.
+- Admission decisions are recorded.
+- Eviction preserves auditability.
 
 ---
 
-### 5.2 ContextState
+### 4.2 ContextPlan
 
 #### Meaning
 
-Represents the current context ledger for a run.
+Represents a proposed change to active model context.
+
+#### Owner
+
+Context policy proposes it; context manager validates and applies it.
+
+#### Contains
+
+- plan identity;
+- triggering operation;
+- candidate items;
+- proposed admissions;
+- proposed evictions;
+- rejected candidates;
+- estimated active token total;
+- policy rationale or rule trace.
+
+#### Invariants
+
+- A context plan is a proposal until applied.
+- Applying a plan must not exceed configured context limits.
+- The runtime may reject a policy proposal that violates trust, version, or budget rules.
+- A plan does not directly invoke the model.
+
+---
+
+### 4.3 ContextLedger
+
+#### Meaning
+
+Records what information was available, admitted, rendered, observed by the model, or evicted over the run.
 
 #### Owner
 
@@ -893,136 +770,201 @@ Context manager.
 
 #### Contains
 
-- pinned item identities;
-- available item identities;
-- active item identities and ordering;
-- observed item identities;
-- stale item identities;
-- current token estimate;
-- model-context limit;
-- context-state revision.
+- run identity;
+- active context revisions;
+- context-item references;
+- admission and eviction events;
+- rendered request references;
+- model observation markers;
+- final context summary.
 
 #### Invariants
 
-- Active items are a subset of valid, non-stale items unless explicitly historical.
-- Pinned instructions cannot be evicted by ordinary policy actions.
-- The active ordering used by the renderer is deterministic for a committed state.
-- Context state changes emit events.
+- It is reconstructable from context events and artifacts.
+- It records model-visible context, not just selected candidates.
+- It preserves trust boundaries.
+- It supports replay and audit.
 
 ---
 
-### 5.3 ContextPlan
+## 5. Repository evidence contracts
+
+### 5.1 RepositoryCandidate
 
 #### Meaning
 
-Represents a policy's proposed context and retrieval actions for one planning step.
+Represents structured evidence returned by repository retrieval.
+
+A repository candidate is evidence available to the runtime. It is not automatically admitted into model context.
 
 #### Owner
 
-Context policy creates it; runtime validates and applies it.
+Repository engine produces it; runtime validates and stores or references it.
 
 #### Contains
 
-- plan identity;
-- run and turn identities;
-- input context-state revision;
-- proposed actions;
-- rationale metadata;
-- estimated budget impact;
-- policy identity and version.
-
-#### Actions
-
-- retrieve;
-- admit;
-- reject;
-- compress;
-- replace;
-- evict;
-- preserve;
-- pin;
-- defer.
+- candidate identity;
+- repository-session identity;
+- repository identity;
+- repository version;
+- workspace version;
+- evidence kind;
+- source location;
+- symbol identity where applicable;
+- content or artifact reference;
+- representation kind;
+- estimated token cost;
+- match or relation metadata;
+- completeness flag;
+- confidence or derivation metadata.
 
 #### Invariants
 
-- A plan is declarative and has no direct side effects.
-- Retrieval actions are proposals; the runtime performs repository operations.
-- The runtime rejects plans based on stale input state.
-- The runtime rejects actions that exceed authority, budget, or version rules.
-- Applying a plan produces a distinct committed context-state revision.
+- It must match the repository session scope.
+- It must not claim a different repository, repository version, or workspace version than the session permits.
+- It must identify whether content is full source, excerpt, outline, summary, or graph evidence.
+- It is untrusted content for prompt construction.
+- It may become unavailable if the session closes, but its persisted reference remains auditable.
 
 ---
 
-### 5.4 RenderedContext
+### 5.2 SourceLocation
 
 #### Meaning
 
-Represents the exact provider-neutral content prepared for one model invocation.
+Identifies a precise location in repository content.
 
 #### Owner
 
-Context renderer.
+Repository engine.
 
 #### Contains
 
-- rendering identity;
-- run and turn identities;
-- ordered messages or blocks;
+- repository identity;
+- repository version;
+- workspace version;
+- repository-relative path;
+- optional symbol identity;
+- optional byte range;
+- optional line range;
+- encoding or normalization metadata.
+
+#### Invariants
+
+- Paths are repository-relative and normalized.
+- Locations cannot escape the repository scope.
+- Line ranges are display aids; byte ranges or content hashes are authoritative where exact replay matters.
+
+---
+
+## 6. Model contracts
+
+### 6.1 ModelRequest
+
+#### Meaning
+
+Represents one provider-neutral request to a model.
+
+#### Owner
+
+Model gateway.
+
+#### Contains
+
+- request identity;
+- run identity;
+- turn identity;
+- model configuration reference;
+- rendered messages or artifact references;
 - tool definitions;
-- included context-item identities;
-- content-to-provenance mapping;
-- estimated token count;
-- rendering rules and version;
-- artifact reference for full rendered content when stored externally.
+- generation parameters;
+- input-token estimate;
+- output-token reservation;
+- egress decision reference;
+- provenance mapping.
 
 #### Invariants
 
-- Immutable after creation.
-- Completely determines what is submitted to the model gateway, subject only to authorized egress redaction.
-- Included repository evidence identifies its trust class and provenance.
-- The full rendered form is recoverable for audit when retention policy permits.
+- A request is immutable once sent.
+- It references exactly what was rendered for the model.
+- It has already passed egress control.
+- It does not embed unapproved secrets or excluded content.
 
 ---
 
-## 6. Budget contracts
-
-### 6.1 BudgetLimits
+### 6.2 ModelResponse
 
 #### Meaning
 
-Declares maximum resource consumption for a run or sub-operation.
+Represents one normalized response from a model provider.
 
 #### Owner
 
-Run coordinator establishes it from the accepted specification and installation policy.
+Model gateway.
 
-#### Domains
+#### Contains
 
-- model input tokens;
-- model output tokens;
-- model calls;
-- tool calls;
-- repository requests;
-- elapsed wall time;
-- monetary cost;
-- command time;
-- command output size;
-- artifact size;
-- context churn or repeated-token cost.
+- response identity;
+- request identity;
+- provider response reference;
+- normalized message content;
+- tool-call or proposal data;
+- stop reason;
+- token usage;
+- safety or refusal metadata where applicable;
+- raw-response artifact reference when retained.
 
 #### Invariants
 
-- Limits are immutable after run creation unless a trusted authority explicitly grants an increase.
-- A child-operation budget cannot exceed its parent budget.
-- Missing domains use explicit unlimited or disabled semantics; absence is not ambiguous.
+- A model response is untrusted until interpreted by the runtime.
+- Token usage is reported to the budget manager.
+- Tool calls are proposals, not effects.
+- The raw provider response may be artifact-backed.
 
 ---
 
-### 6.2 BudgetState
+### 6.3 ModelProposal
 
 #### Meaning
 
-Represents current reserved, committed, and remaining usage.
+Represents a model-suggested action after response interpretation.
+
+Examples:
+
+- retrieve more repository evidence;
+- continue reasoning;
+- produce final answer;
+- request validation;
+- declare inability to proceed.
+
+#### Owner
+
+Agent loop or model-response interpreter.
+
+#### Contains
+
+- proposal identity;
+- source response identity;
+- proposal kind;
+- structured arguments;
+- confidence or rationale where available;
+- validation status.
+
+#### Invariants
+
+- A proposal has no effect until accepted by the runtime.
+- Unsupported proposal kinds are rejected.
+- Accepted proposals create explicit operations or lifecycle transitions.
+
+---
+
+## 7. Budget contracts
+
+### 7.1 BudgetState
+
+#### Meaning
+
+Represents current limits, reservations, commitments, and exhaustion state for a run.
 
 #### Owner
 
@@ -1030,34 +972,28 @@ Budget manager.
 
 #### Contains
 
-For each budget domain:
-
-- configured limit;
-- reserved amount;
-- committed amount;
-- remaining amount;
-- exhaustion status.
-
-It also contains:
-
-- state revision;
-- latest transaction sequence;
-- estimate-versus-actual metrics.
+- run identity;
+- configured limits;
+- current committed usage;
+- active reservations;
+- exhausted domains;
+- reconciliation metadata;
+- update sequence.
 
 #### Invariants
 
-- Reserved plus committed usage cannot exceed a hard limit.
-- Remaining usage is derived, not independently assigned.
-- Budget state changes occur through transactions.
-- Provider-reported actual usage is reconciled even when it exceeds an estimate.
+- Usage cannot exceed hard limits after commit.
+- A budgeted operation must reserve before execution.
+- Reservations either commit or release.
+- Exhaustion is explicit and names the exhausted domain.
 
 ---
 
-### 6.3 BudgetReservation
+### 7.2 BudgetReservation
 
 #### Meaning
 
-Temporarily allocates resources before an operation begins.
+Represents a temporary hold against one or more budget domains before an operation executes.
 
 #### Owner
 
@@ -1068,172 +1004,36 @@ Budget manager.
 - reservation identity;
 - run identity;
 - operation identity;
-- budget domains and amounts;
-- creation time;
+- budget domain;
+- estimated amount;
 - expiry;
-- status;
-- estimate source.
+- status.
 
 #### Lifecycle
 
 ```text
-proposed
-  → reserved
-  → committed | released | expired
+reserved
+  → committed | released | expired | denied
 ```
 
 #### Invariants
 
-- An operation requiring budget cannot begin without an active reservation.
-- A reservation is bound to one operation.
-- Commit records actual usage and releases any unused amount.
-- Failed operations still commit resources actually consumed.
+- Reservations are bounded by amount and expiry.
+- A committed reservation records actual usage.
+- Expired reservations cannot commit.
+- Denied reservations prevent the associated operation from executing.
 
 ---
 
-### 6.4 BudgetTransaction
+## 8. Capability contracts
+
+### 8.1 CapabilityGrant
 
 #### Meaning
 
-Records an immutable change to budget state.
+Represents explicit runtime authority to perform a class of operation within a scope.
 
-#### Owner
-
-Budget manager.
-
-#### Kinds
-
-- reserve;
-- commit;
-- release;
-- expire;
-- adjust by trusted authority;
-- reconcile actual usage.
-
-#### Contains
-
-- transaction identity;
-- reservation identity where applicable;
-- domain amounts;
-- before and after state revisions;
-- causal operation;
-- timestamp;
-- reason.
-
-#### Invariants
-
-- Transactions are append-only.
-- Reconciliation never rewrites earlier estimates.
-- Estimation error remains observable.
-
----
-
-## 7. Capability and tool contracts
-
-### 7.1 SecurityProfile
-
-#### Meaning
-
-Defines the maximum authority a run may receive.
-
-#### Owner
-
-Trusted product or installation configuration.
-
-#### Contains
-
-- filesystem-read scopes;
-- filesystem-write scopes;
-- process-execution rules;
-- network rules;
-- model-egress rules;
-- external-integration rules;
-- artifact and validation rules;
-- approval requirements;
-- default-deny settings.
-
-#### Invariants
-
-- The model cannot modify the security profile.
-- A run specification may request less authority but cannot expand the profile.
-- Defaults deny authority not explicitly granted.
-
----
-
-### 7.2 CapabilityScope
-
-#### Meaning
-
-Represents the bounded set of resources and operations to which a capability rule, grant, request, or decision applies.
-
-A capability scope identifies where authority may be exercised. It does not itself grant authority.
-
-#### Owner
-
-The component that establishes the enclosing security profile, capability grant, or capability decision.
-
-The capability broker validates and resolves scopes before they become effective.
-
-#### Contains
-
-A scope may constrain authority by:
-
-- installation identity;
-- tenant identity;
-- workspace identity;
-- repository identity;
-- repository version;
-- workspace version;
-- run identity;
-- repository-session identity;
-- artifact identity or artifact class;
-- filesystem roots or path patterns;
-- network destinations;
-- external-integration identities;
-- model providers or model identities;
-- validation execution;
-- operation kinds.
-
-A scope may also contain:
-
-- explicit exclusions;
-- depth or traversal limits;
-- read, write, execute, or egress restrictions;
-- validity bounds inherited from the enclosing grant;
-- scope version or normalization metadata.
-
-#### Composition
-
-Scopes may be narrowed through intersection.
-
-For example:
-
-- a security profile may permit repository reads within a workspace;
-- a run may request access to one repository;
-- a repository session may bind access to one repository version;
-- the effective grant scope is the intersection of those constraints.
-
-A child scope cannot expand its parent scope.
-
-#### Invariants
-
-- A scope is descriptive and does not independently authorize an operation.
-- Effective authority requires both an applicable `CapabilityGrant` and a matching scope.
-- Missing scope dimensions do not imply unrestricted access.
-- Caller-supplied identities cannot expand the runtime-established scope.
-- Scope narrowing is explicit and inspectable.
-- Scope comparison and intersection are deterministic.
-- Resource identities are treated as opaque values.
-- Repository evidence must remain bound to the repository and workspace versions in its effective scope.
-- A scope attached to an immutable grant or decision is immutable.
-
----
-
-### 7.3 CapabilityGrant
-
-#### Meaning
-
-Represents runtime authorization to perform a category of operation within a specific scope.
+Capabilities are not user-facing permissions. They are runtime-internal execution authorities derived from security profile, policy, and current state.
 
 #### Owner
 
@@ -1242,450 +1042,128 @@ Capability broker.
 #### Contains
 
 - grant identity;
-- capability type;
-- run identity;
-- resource scope;
-- allowed operation constraints;
-- creation source;
-- approval metadata;
-- start and expiry times;
-- revocation state.
+- subject component;
+- operation kind;
+- scope;
+- constraints;
+- expiry or revocation state;
+- derivation reason.
 
 #### Invariants
 
-- Grants are explicit, scoped, revocable, and non-transitive.
-- Possession of one grant does not imply another.
-- Grants cannot exceed the security profile.
-- Every effectful operation identifies the grant under which it was authorized.
+- Possessing an object identity is not a capability.
+- Grants are scoped and least-privilege.
+- Grants cannot be expanded by the subject that receives them.
+- Capability checks are recorded for sensitive operations.
 
 ---
 
-### 7.4 CapabilityDecision
+### 8.2 CapabilityDecision
 
 #### Meaning
 
-Represents the broker's immutable authorization decision for one requested operation.
+Represents the result of checking whether an operation is authorized.
 
 #### Owner
 
 Capability broker.
 
-#### Outcomes
-
-- allowed;
-- denied;
-- narrowed;
-- approval required.
-
 #### Contains
 
 - decision identity;
-- request identity;
-- applicable grant identities;
-- outcome;
-- effective scope;
-- reason code;
-- approval reference;
-- timestamp.
+- requested operation;
+- requested scope;
+- subject;
+- allowed or denied outcome;
+- grant reference when allowed;
+- denial reason when denied;
+- policy trace.
 
 #### Invariants
 
-- Every effectful operation has exactly one terminal capability decision.
-- Denials are recorded and returned as structured results.
-- Narrowed authority is explicit and inspectable.
+- Every sensitive operation has a decision.
+- Denied decisions do not create grants.
+- Decisions are immutable audit records.
 
 ---
 
-### 7.5 ToolDefinition
+## 9. Event contracts
+
+### 9.1 Event
 
 #### Meaning
 
-Describes an operation the model may propose.
+Represents one immutable fact that occurred in Kiln.
+
+Events are audit and replay records. They are not commands.
 
 #### Owner
 
-Tool registry.
-
-#### Contains
-
-- tool identity;
-- version;
-- description;
-- argument contract;
-- result contract;
-- required capabilities;
-- side-effect classification;
-- timeout and output limits;
-- trust classification.
-
-#### Invariants
-
-- Registration does not grant authority.
-- Workers cannot introduce unknown runtime operations dynamically.
-- Model-visible definitions derive from trusted registered definitions.
-
----
-
-### 7.6 ToolCall
-
-#### Meaning
-
-Represents one model-proposed invocation of a registered tool.
-
-#### Owner
-
-Agent loop normalizes it; runtime owns execution lifecycle.
-
-#### Contains
-
-- tool-call identity;
-- run and turn identities;
-- tool identity and version;
-- structured arguments;
-- requesting model-response identity;
-- required capabilities;
-- status;
-- budget-reservation reference.
-
-#### Lifecycle
-
-```text
-proposed
-  → validated
-  → authorized
-  → executing
-  → completed | denied | failed | cancelled
-```
-
-#### Invariants
-
-- Arguments are schema-validated before authorization.
-- A proposed tool call has no side effect.
-- Execution requires both budget and capability approval.
-- Arbitrary shell strings are not valid command-tool arguments by default.
-
----
-
-### 7.7 ToolResult
-
-#### Meaning
-
-Represents the immutable outcome of one tool call.
-
-#### Owner
-
-Tool executor and result processor.
-
-#### Contains
-
-- tool-result identity;
-- tool-call identity;
-- terminal status;
-- structured summary;
-- diagnostics;
-- actual resource usage;
-- raw-output artifact references;
-- produced context-candidate identities;
-- changed-resource references;
-- error classification.
-
-#### Invariants
-
-- Raw output does not enter model context directly.
-- Result candidates pass through context policy.
-- A denied call produces a structured denied result.
-- Tool results never grant new capabilities.
-
----
-
-## 8. Model contracts
-
-### 8.1 ModelConfiguration
-
-#### Meaning
-
-Declares the selected model and invocation constraints.
-
-#### Owner
-
-Run specification selects it; model gateway validates it.
-
-#### Contains
-
-- model identity;
-- provider or local adapter identity;
-- context limit;
-- supported tool-call mode;
-- tokenizer or counting strategy;
-- generation parameters;
-- allowed endpoint;
-- credential reference;
-- streaming preference.
-
-#### Invariants
-
-- Credentials are referenced, not embedded.
-- Configuration cannot bypass egress or budget rules.
-- Model capabilities are validated before the first invocation.
-
----
-
-### 8.2 ModelRequest
-
-#### Meaning
-
-Represents the exact authorized request submitted to a model adapter.
-
-#### Owner
-
-Model gateway.
-
-#### Contains
-
-- model-request identity;
-- run and turn identities;
-- rendered-context identity;
-- model configuration;
-- ordered messages;
-- tool definitions;
-- reserved output limit;
-- provider-specific preflight token count;
-- budget-reservation reference;
-- egress-decision reference;
-- full-request artifact reference where required.
-
-#### Invariants
-
-- Immutable after submission.
-- Requires approved context, egress decision, and budget reservation.
-- Rendered input plus reserved output does not exceed the model context limit.
-- Repository content included in the request remains provenance-addressable.
-
----
-
-### 8.3 EgressDecision
-
-#### Meaning
-
-Represents authorization for data to leave the local execution boundary for model inference.
-
-#### Owner
-
-Model egress controller.
-
-#### Outcomes
-
-- allowed;
-- denied;
-- redacted;
-- approval required.
-
-#### Contains
-
-- decision identity;
-- model-request or rendered-context identity;
-- provider and endpoint;
-- included content identities;
-- excluded or redacted content identities;
-- byte and token estimates;
-- secret-scan result;
-- applicable policy;
-- reason.
-
-#### Invariants
-
-- Every remote model request has one terminal egress decision.
-- Redaction produces a new rendered or request representation rather than mutating history.
-- Egress authorization does not grant arbitrary network access.
-
----
-
-### 8.4 ModelResponse
-
-#### Meaning
-
-Represents the normalized immutable outcome of one model invocation.
-
-#### Owner
-
-Model gateway.
-
-#### Contains
-
-- model-response identity;
-- model-request identity;
-- generated content or artifact reference;
-- proposed tool calls;
-- finish reason;
-- provider-reported usage;
-- latency and provider metadata;
-- safety or refusal metadata;
-- error classification when applicable.
-
-#### Invariants
-
-- Model output is untrusted.
-- Proposed tool calls have no effect until normalized, validated, budgeted, and authorized.
-- Provider-reported usage is submitted to the budget manager for reconciliation.
-- A response does not directly mutate task, context, workspace, or run state.
-
----
-
-## 9. Workspace contracts
-
-### 9.1 WorkspaceMutation
-
-#### Meaning
-
-Represents one authorized change to the mutable task workspace.
-
-#### Owner
-
-Workspace manager.
-
-#### Kinds
-
-- create file;
-- replace file;
-- patch file;
-- delete file;
-- rename file.
-
-#### Contains
-
-- mutation identity;
-- run identity;
-- prior workspace version;
-- target path;
-- operation kind;
-- previous content hash where applicable;
-- new content or artifact reference;
-- capability-decision reference;
-- producing tool-call reference;
-- timestamp.
-
-#### Invariants
-
-- The target path is resolved within the authorized workspace scope.
-- Mutation and new workspace-version creation are atomic.
-- The mutation never changes Git remotes or credentials unless a separate explicit capability exists.
-- A successful mutation creates invalidation work.
-
----
-
-### 9.2 ChangedFileManifest
-
-#### Meaning
-
-Represents the normalized set of file changes between the base repository version and a workspace version.
-
-#### Owner
-
-Workspace manager.
-
-#### Contains
-
-- manifest identity;
-- base repository version;
-- target workspace version;
-- ordered changed-file records;
-- operation kind per path;
-- old and new content hashes;
-- summary statistics;
-- content hash of the manifest.
-
-#### Invariants
-
-- Immutable after creation.
-- Deterministic for the same base and target state.
-- Does not itself contain publication authority.
-
----
-
-### 9.3 PatchArtifact
-
-#### Meaning
-
-Represents a portable change set produced from a base repository version and target workspace version.
-
-#### Owner
-
-Workspace manager.
-
-#### Contains
-
-- artifact reference;
-- base repository version;
-- target workspace version;
-- changed-file-manifest identity;
-- patch format;
-- content hash;
-- generation metadata.
-
-#### Invariants
-
-- Applying it to the declared base either reproduces the intended target changes or fails cleanly.
-- Immutable after creation.
-- Patch production does not imply validation or publication eligibility.
-
----
-
-## 10. Event and artifact contracts
-
-### 10.1 Event
-
-#### Meaning
-
-Represents one immutable first-class fact about execution.
-
-#### Owner
-
-The component responsible for the fact creates it; event store sequences it.
+Component that commits the fact; persistence layer stores it.
 
 #### Contains
 
 - event identity;
-- run identity;
-- monotonically increasing run sequence;
+- event kind;
 - timestamp;
-- event type;
-- schema version;
-- structured fact payload;
-- artifact references;
-- causation identity;
+- sequence within stream;
+- scope;
+- subject reference;
+- causal operation;
 - correlation identity;
-- producing component;
-- integrity metadata.
-
-#### Event classes
-
-- run lifecycle;
-- repository lifecycle;
-- workspace mutation;
-- context lifecycle;
-- budget transaction;
-- capability decision;
-- model invocation;
-- tool invocation;
-- validation lifecycle;
-- recovery;
-- error and retry.
+- payload reference or payload;
+- schema version.
 
 #### Invariants
 
 - Events are append-only.
-- Events describe what happened rather than storing full large payloads.
-- Sequence is unique and ordered within a run.
-- An event is committed before dependent materialized state becomes externally visible.
-- Events reference immutable artifacts for large content.
+- Event ordering is stable within a stream.
+- Events do not contain large unbounded payloads inline.
+- State changes that require events commit atomically with the event.
 
 ---
 
-### 10.2 ArtifactReference
+### 9.2 EventStream
 
 #### Meaning
 
-Identifies immutable binary or textual content stored as a database blob.
+Represents an ordered sequence of events for a scope.
+
+Common streams:
+
+- installation stream;
+- workspace stream;
+- repository stream;
+- run stream;
+- validation stream.
+
+#### Owner
+
+Persistence layer.
+
+#### Contains
+
+- stream identity;
+- stream scope;
+- ordered event sequence;
+- high-water mark;
+- retention policy.
+
+#### Invariants
+
+- Events have a total order within their stream.
+- Cross-stream ordering requires causal or correlation references.
+- Consumers may resume from a known sequence.
+
+---
+
+## 10. Artifact contracts
+
+### 10.1 ArtifactReference
+
+#### Meaning
+
+Identifies immutable stored content.
 
 #### Owner
 
@@ -1694,143 +1172,58 @@ Artifact store.
 #### Contains
 
 - artifact identity;
-- installation or tenant scope;
-- run identity when run-owned;
-- artifact kind;
-- content type;
+- content kind;
+- storage backend reference;
+- byte length;
 - content hash;
-- uncompressed size;
-- stored size;
-- compression method;
-- retention class;
-- creation time;
-- optional encryption metadata.
+- encoding;
+- schema version where applicable;
+- creation metadata.
 
 #### Invariants
 
-- Artifact bytes are immutable.
-- Content hash is verified at write and read boundaries.
-- Duplicate content may be deduplicated without changing artifact semantics.
-- Access is scope-checked; knowing an artifact identity is insufficient.
-- Deletion follows retention and reference rules.
-
----
-
-### 10.3 Artifact
-
-#### Meaning
-
-Represents the actual content identified by an `ArtifactReference`.
-
-#### Owner
-
-Artifact store.
-
-#### Typical kinds
-
-- rendered model request;
-- model response;
-- repository snapshot;
-- source representation;
-- patch;
-- changed-file manifest;
-- command output;
-- test output;
-- context snapshot;
-- validation report;
-- final answer;
-- provenance bundle.
-
-#### Invariants
-
-- Stored in the installation database as a blob in the initial architecture.
-- May be compressed.
-- Subject to maximum-size and retention policies.
-- The storage abstraction must permit a future non-database backend without changing higher-level contracts.
+- Artifact content is immutable.
+- Content hash verifies integrity.
+- Artifact references do not imply read authority outside their scope.
+- Artifacts may be garbage-collected only according to retention policy and with preserved audit semantics.
 
 ---
 
 ## 11. Validation contracts
 
-### 11.1 ValidationSpecification
+### 11.1 ValidationRequest
 
 #### Meaning
 
-Declares the trusted checks required before a proposed change may be accepted or published.
+Represents a request to validate a proposed output or workspace state.
 
 #### Owner
 
-Trusted run configuration or hosted workflow policy.
-
-#### Contains
-
-- validation profile identity and version;
-- patch-application requirements;
-- allowed and prohibited paths;
-- formatter, linter, type-check, build, and test requirements;
-- secret and dependency checks;
-- command restrictions;
-- resource budgets;
-- approval rules;
-- publication requirements.
-
-#### Invariants
-
-- Model output cannot weaken it.
-- Required checks are explicit and versioned.
-- Validation commands are subject to their own capability and sandbox rules.
-
----
-
-### 11.2 ValidationRequest
-
-#### Meaning
-
-Represents one immutable request to validate a proposed run output in a clean execution boundary.
-
-#### Owner
-
-Run coordinator.
+Runtime creates it; validation package executes it.
 
 #### Contains
 
 - validation identity;
 - run identity;
-- base repository version;
-- repository-snapshot artifact reference;
-- patch-artifact reference;
-- changed-file-manifest reference;
-- validation specification;
-- security profile reference;
-- validation budget;
-- expected report contract version;
-- causation metadata.
-
-#### Lifecycle
-
-```text
-created
-  → dispatched
-  → running
-  → completed | failed | cancelled | exhausted
-```
-
-An interrupted validation may be redispatched from the immutable request.
+- workspace version;
+- validation profile;
+- required checks;
+- budget or timeout constraints;
+- input artifact references.
 
 #### Invariants
 
-- Persisted before the run commits the transition to `validating`.
-- Does not reference the live mutable agent workspace.
-- Contains only immutable inputs.
-- Does not grant model, publication, or general repository authority.
+- Validation runs against an explicit workspace version.
+- Validation does not mutate the run result directly.
+- Validation result is evidence for a lifecycle transition.
 
 ---
 
-### 11.3 ValidationReport
+### 11.2 ValidationResult
 
 #### Meaning
 
-Represents the immutable structured outcome of one validation execution.
+Represents immutable validation evidence.
 
 #### Owner
 
@@ -1839,76 +1232,27 @@ Validation package.
 #### Contains
 
 - validation identity;
-- request identity;
-- terminal status;
-- patch-applicability result;
-- observed changed-file manifest;
-- policy-check results;
-- command and test results;
-- security-check results;
-- artifact references for detailed output;
-- publication-eligibility decision;
-- approval requirement;
-- failure reasons;
-- validator version and environment metadata.
-
-#### Statuses
-
-- passed;
-- failed;
-- error;
-- cancelled;
-- exhausted.
+- status;
+- check results;
+- diagnostics;
+- produced artifacts;
+- started and completed timestamps.
 
 #### Invariants
 
-- Immutable after creation.
-- `failed` means validation ran and requirements were not met.
-- `error` means validation could not reliably determine compliance.
-- Publication eligibility is false unless all required checks passed.
-- The runtime validates the report's request identity and contract version before accepting it.
+- It references exactly what was validated.
+- It does not itself change run state.
+- The run coordinator decides lifecycle transitions based on validation result.
 
 ---
 
-### 11.4 ValidationExecution
+## 12. Terminal result contracts
+
+### 12.1 RunResult
 
 #### Meaning
 
-Represents the recoverable out-of-process execution of one `ValidationRequest`.
-
-#### Owner
-
-Validation package and run coordinator jointly coordinate it; the validation package owns execution internals.
-
-#### Contains
-
-- execution identity;
-- validation-request identity;
-- worker identity;
-- start and completion times;
-- execution status;
-- budget state;
-- report reference;
-- retry count;
-- recovery metadata.
-
-#### Invariants
-
-- Runs in a clean temporary workspace.
-- Materializes the declared base snapshot and applies the declared patch.
-- Has no model or publication credentials.
-- May be restarted from the immutable request after interruption.
-- Temporary workspace is destroyed after terminal completion.
-
----
-
-## 12. Recovery contracts
-
-### 12.1 RecoveryRecord
-
-#### Meaning
-
-Records a runtime decision to resume or terminate an interrupted run.
+Represents the final public result of a run.
 
 #### Owner
 
@@ -1916,157 +1260,87 @@ Run coordinator.
 
 #### Contains
 
-- recovery identity;
 - run identity;
-- interrupted lifecycle state;
-- last committed event sequence;
-- pending-operation identity;
-- decision;
-- reason;
-- resumed operation identity where applicable;
-- timestamp.
-
-#### Decisions
-
-- resume repository preparation;
-- restart validation;
-- fail interrupted run.
+- terminal status;
+- stop reason;
+- final answer or output reference;
+- usage summary;
+- context ledger reference;
+- event stream bounds;
+- artifact references;
+- validation summary where applicable;
+- replay completeness classification.
 
 #### Invariants
 
-- Only `preparing_repository` and `validating` may resume initially.
-- Recovery never assumes an uncommitted side effect completed.
-- Resumed operations are idempotent or begin from a verified durable checkpoint.
+- There is exactly one `RunResult` per terminal run.
+- It references the final committed run state.
+- It does not expose restricted artifacts without authorization.
+- It preserves enough references for audit and replay.
 
 ---
 
-## 13. Cross-contract relationships
+## 13. Deferred contracts
 
-```text
-Installation
-  └── Workspace
-        └── Repository
-              ├── RepositoryVersion
-              └── WorkspaceVersion lineage
+The following contracts are intentionally deferred from the first vertical slice:
 
-RunSpecification
-  └── Run
-        ├── RunState
-        ├── TaskState
-        ├── RepositorySession
-        ├── ContextState
-        │     └── ContextItem
-        ├── BudgetState
-        │     ├── BudgetReservation
-        │     └── BudgetTransaction
-        ├── CapabilityGrant
-        ├── Event stream
-        └── RunResult
+- workspace mutation;
+- patch representation;
+- command execution;
+- test execution;
+- publication;
+- hosted task ingress;
+- hosted runner lease;
+- external integration credentials;
+- learned policy state.
 
-RepositorySession
-  ├── RepositoryRequest
-  └── RepositoryCandidate
+Deferred contracts must not be smuggled into first-slice objects as unstructured blobs.
 
-ContextPolicy
-  └── ContextPlan
-        └── ContextState transition
+Where a deferred capability is needed later, it should receive its own explicit contract with:
 
-RenderedContext
-  └── ModelRequest
-        ├── EgressDecision
-        ├── BudgetReservation
-        └── ModelResponse
-              └── ToolCall
-                    ├── CapabilityDecision
-                    └── ToolResult
-
-WorkspaceMutation
-  ├── WorkspaceVersion
-  ├── InvalidationRecord
-  └── RefreshRequest
-
-RunResult
-  ├── PatchArtifact
-  ├── ChangedFileManifest
-  └── ValidationRequest
-        └── ValidationExecution
-              └── ValidationReport
-```
+- owner;
+- scope;
+- lifecycle;
+- invariants;
+- event expectations;
+- artifact semantics.
 
 ---
 
-## 14. Contract-level invariants
+## 14. First-slice contract boundary
 
-The following rules apply across all contracts.
+The first implementation slice should exercise:
 
-1. Model output is always a proposal.
-2. Repository and tool results do not enter model context directly.
-3. Policies propose retrieval; only the runtime performs it.
-4. Every effectful operation has a capability decision.
-5. Every resource-consuming operation has an appropriate budget reservation.
-6. Every remote model invocation has an egress decision.
-7. Every repository-derived object is bound to repository and workspace versions.
-8. Every workspace mutation creates a new workspace version and invalidation record.
-9. Stale evidence cannot be used as current evidence.
-10. Provider-specific token counts govern preflight model reservation.
-11. Provider-reported actual usage is reconciled without rewriting estimates.
-12. Events contain first-class facts; large content is stored as artifact blobs.
-13. Artifact bytes are immutable and content-addressed.
-14. Scoped sessions prevent arbitrary cross-repository queries.
-15. Logical database scoping is not treated as adversarial tenant isolation.
-16. A run has one terminal state and one primary stop reason.
-17. Only repository preparation and validation are recoverable initially.
-18. Validation consumes immutable inputs in a clean execution boundary.
-19. Validation cannot publish, and the agent runtime cannot self-approve publication.
-20. Publication credentials never enter the agent or validation execution boundaries.
+- installation;
+- workspace;
+- repository;
+- repository version;
+- workspace version;
+- repository session;
+- run specification;
+- run;
+- run state;
+- task state;
+- operation;
+- context item;
+- context plan;
+- context ledger;
+- repository candidate;
+- model request;
+- model response;
+- model proposal;
+- budget state;
+- budget reservation;
+- capability grant;
+- capability decision;
+- event;
+- artifact reference;
+- run result.
 
----
+It should not exercise:
 
-## 15. Initial vertical-slice subset
-
-The first implementation does not need every contract in full.
-
-It must implement the following minimum subset:
-
-- `Installation`;
-- `Workspace`;
-- `Repository`;
-- `RepositoryVersion`;
-- `WorkspaceVersion` with an initial synchronized version;
-- `RepositorySession`;
-- `RunSpecification`;
-- `TaskSpecification`;
-- `Run`;
-- `RunState`;
-- `TaskState`;
-- `RepositoryRequest`;
-- `RepositoryCandidate`;
-- `ContextItem`;
-- `ContextState`;
-- `ContextPlan`;
-- `RenderedContext`;
-- `BudgetLimits`;
-- `BudgetState`;
-- `BudgetReservation`;
-- `BudgetTransaction`;
-- read-only `SecurityProfile`;
-- repository-read `CapabilityGrant` and `CapabilityDecision`;
-- read-only `ToolDefinition`, `ToolCall`, and `ToolResult`;
-- `ModelConfiguration`;
-- `ModelRequest`;
-- `EgressDecision`;
-- `ModelResponse`;
-- `Event`;
-- `ArtifactReference` and `Artifact`;
-- `StopReason`;
-- `RunResult`.
-
-The first vertical slice may defer:
-
-- workspace mutations;
-- invalidation and refresh;
-- patch artifacts;
-- validation contracts in active use;
+- mutable workspace editing;
+- patches;
 - command execution;
 - publication.
 
