@@ -11,6 +11,7 @@ DEFAULT_SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas"
 DEFAULT_OUTPUT_ROOT = (
     Path(__file__).resolve().parents[2] / "python" / "kiln" / "schemas"
 )
+SCHEMA_ID_BASE = "https://kiln.cyborgdev.cloud/schemas"
 
 BUNDLE_ID_FORMAT = (
     "https://kiln.cyborgdev.cloud/schemas/generated/"
@@ -145,7 +146,7 @@ def selected_schema_keys(
 
 def schema_ref_for_key(schema_key: str, *, major: int) -> str:
     domain, contract = parse_schema_key(schema_key)
-    return f"{domain}/v{major}/{contract}.schema.json"
+    return f"{SCHEMA_ID_BASE}/{domain}/v{major}/{contract}.schema.json"
 
 
 def schema_path_for_key(schema_root: Path, schema_key: str, *, major: int) -> Path:
