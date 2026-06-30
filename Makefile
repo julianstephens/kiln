@@ -5,7 +5,7 @@ TOOLS_DIR := devtools
 GO_DIR := go
 DIST_DIR := dist
 
-RUFF ?= uvx ruff --config kiln/pyproject.toml
+RUFF ?= uv run --package kiln-sdk ruff --config kiln/pyproject.toml
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
