@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas"
-DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parents[2] / "python" / "kiln" / "schemas"
+DEFAULT_OUTPUT_ROOT = (
+    Path(__file__).resolve().parents[2] / "python" / "kiln" / "schemas"
+)
 SCHEMA_ID_BASE = "https://kiln.cyborgdev.cloud/schemas"
 BUNDLE_ID_FORMAT = f"{SCHEMA_ID_BASE}/python-models-{{domain}}.schema.json"
 SHARED_SCHEMA_DOMAINS = ("common",)
@@ -70,6 +72,12 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
     if not isinstance(manifest, dict):
         raise GenerateModelsError(f"{manifest_path}: expected JSON object")
 
+    schema_set_version = manifest.get("schema_set_version")
+    if not isinstance(schema_set_version, str) or not schema_set_version:
+        raise GenerateModelsError(
+            f"{manifest_path}: schema_set_version must be a non-empty string"
+        )
+
     compatibility_major = manifest.get("compatibility_major")
     if (
         not isinstance(compatibility_major, int)
@@ -110,7 +118,9 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
     return manifest
 
 
-def selected_schema_keys(manifest: dict[str, Any], *, only_entrypoints: bool) -> list[str]:
+def selected_schema_keys(
+    manifest: dict[str, Any], *, only_entrypoints: bool
+) -> list[str]:
     field = "entrypoints" if only_entrypoints else "schemas"
     values = manifest.get(field)
     if not isinstance(values, list) or not values:
@@ -135,7 +145,9 @@ def schema_path_for_key(schema_root: Path, schema_key: str, *, major: int) -> Pa
     )
 
 
-def ensure_schema_files_exist(schema_root: Path, schema_keys: list[str], *, major: int) -> None:
+def ensure_schema_files_exist(
+    schema_root: Path, schema_keys: list[str], *, major: int
+) -> None:
     for schema_key in schema_keys:
         schema_path = schema_path_for_key(schema_root, schema_key, major=major)
         if not schema_path.exists():
@@ -154,14 +166,22 @@ def group_schema_keys_by_domain(schema_keys: list[str]) -> dict[str, list[str]]:
 
 def ordered_domains(schema_groups: dict[str, list[str]]) -> list[str]:
     domains = list(schema_groups)
-    shared_domains = [domain for domain in SHARED_SCHEMA_DOMAINS if domain in schema_groups]
-    non_shared_domains = [domain for domain in domains if domain not in SHARED_SCHEMA_DOMAINS]
+    shared_domains = [
+        domain for domain in SHARED_SCHEMA_DOMAINS if domain in schema_groups
+    ]
+    non_shared_domains = [
+        domain for domain in domains if domain not in SHARED_SCHEMA_DOMAINS
+    ]
     return [*shared_domains, *non_shared_domains]
 
 
-def write_bundle_schema(path: Path, schema_keys: list[str], *, domain: str, major: int) -> None:
+def write_bundle_schema(
+    path: Path, schema_keys: list[str], *, domain: str, major: int
+) -> None:
     defs = {
-        def_name_for_key(schema_key): {"$ref": schema_ref_for_key(schema_key, major=major)}
+        def_name_for_key(schema_key): {
+            "$ref": schema_ref_for_key(schema_key, major=major)
+        }
         for schema_key in schema_keys
     }
     domain_name = python_name(domain)
@@ -180,7 +200,13 @@ def write_bundle_schema(path: Path, schema_keys: list[str], *, domain: str, majo
     path.write_text(json.dumps(bundle, indent=4) + "\n", encoding="utf-8")
 
 
-def write_package_init(output_root: Path, domains: list[str]) -> None:
+def write_package_init(
+    output_root: Path,
+    domains: list[str],
+    *,
+    compatibility_major: int,
+    schema_set_version: str,
+) -> None:
     init_path = output_root / "__init__.py"
     init_path.parent.mkdir(parents=True, exist_ok=True)
     domain_modules = [python_name(domain) for domain in domains]
@@ -190,13 +216,17 @@ def write_package_init(output_root: Path, domains: list[str]) -> None:
         + "\nfrom __future__ import annotations\n\n"
         + "from importlib import import_module\n"
         + "from types import ModuleType\n\n"
+        + f"COMPATIBILITY_MAJOR = {compatibility_major}\n"
+        + f"SCHEMA_SET_VERSION = {schema_set_version!r}\n\n"
         + "__all__ = [\n"
+        + '    "COMPATIBILITY_MAJOR",\n'
+        + '    "SCHEMA_SET_VERSION",\n'
         + all_entries
         + "]\n\n"
         + "def __getattr__(name: str) -> ModuleType:\n"
         + "    if name not in __all__:\n"
-        + "        raise AttributeError(f\"module {__name__!r} has no attribute {name!r}\")\n"
-        + "    module = import_module(f\"{__name__}.{name}\")\n"
+        + '        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")\n'
+        + '    module = import_module(f"{__name__}.{name}")\n'
         + "    globals()[name] = module\n"
         + "    return module\n"
     )
@@ -308,6 +338,7 @@ def main() -> int:
     try:
         manifest = load_manifest(schema_root)
         major = manifest["compatibility_major"]
+        schema_set_version = manifest["schema_set_version"]
         schema_keys = selected_schema_keys(
             manifest,
             only_entrypoints=args.only_entrypoints,
@@ -352,7 +383,12 @@ def main() -> int:
                     bundle_path.unlink(missing_ok=True)
 
         if not args.dry_run:
-            write_package_init(output_root, domains)
+            write_package_init(
+                output_root,
+                domains,
+                compatibility_major=major,
+                schema_set_version=schema_set_version,
+            )
 
     except GenerateModelsError as exc:
         print(f"model generation failed: {exc}", file=sys.stderr)

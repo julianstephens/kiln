@@ -710,7 +710,7 @@ def render_version_file(*, compatibility_major: int, schema_set_version: str) ->
         "package schema\n\n"
         "const (\n"
         f"\tCompatibilityMajor = {compatibility_major}\n"
-        f"\tSchemaSetVersion = {schema_set_version!r}\n"
+        f'\tSchemaSetVersion = "{schema_set_version}"\n'
         ")\n"
     )
 
