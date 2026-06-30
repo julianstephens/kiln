@@ -120,15 +120,99 @@ The runtime must reject non-health domain methods before successful initializati
 
 ---
 
-## 4. Method: `runtime.initialize`
+## 4. Runtime error contract
 
-### 4.1 Purpose
+Runtime methods return JSON-RPC errors using the standard JSON-RPC `error` object.
+
+Kiln-specific runtime error semantics live under `error.data.kiln_error`.
+
+Clients may use the JSON-RPC `error.code` to distinguish broad JSON-RPC classes, but stable Kiln behavior must branch on `error.data.kiln_error.code`.
+
+### 4.1 Stable shape
+
+Every Kiln runtime error that reaches the SDK must use this conceptual shape:
+
+```json
+{
+  "code": -32001,
+  "message": "Unsupported runtime protocol version",
+  "data": {
+    "kiln_error": {
+      "code": "runtime.unsupported_protocol_version",
+      "category": "compatibility",
+      "message": "Unsupported runtime protocol version",
+      "retryable": false,
+      "details": {
+        "requested_protocol_version": "2026-01-01",
+        "supported_protocol_versions": ["2026-06-30"]
+      }
+    }
+  }
+}
+```
+
+The stable `kiln_error` fields are:
+
+| Field | Required | Meaning |
+| --- | ---: | --- |
+| `code` | yes | Stable dotted Kiln error code. Clients may branch on this value. |
+| `category` | yes | Stable coarse category. |
+| `message` | yes | Human-readable diagnostic message. Not for branching. |
+| `retryable` | yes | Whether retrying the same operation may succeed without changing inputs. |
+| `details` | yes | Error-specific object. Empty when no structured details exist. |
+| `correlation_id` | no | Request or operation correlation identity, when available. |
+| `runtime_id` | no | Runtime session identity, when available. |
+
+The `details` object is intentionally error-specific. Clients must not require unknown detail keys to be present unless they are documented for a specific `kiln_error.code`.
+
+### 4.2 Categories
+
+Runtime error categories are:
+
+| Category | Meaning |
+| --- | --- |
+| `compatibility` | Protocol, schema-set, or compatibility-major negotiation failed. |
+| `validation` | Method params or runtime method result validation failed. |
+| `lifecycle` | Method is not legal in the current runtime session state. |
+| `shutdown` | Runtime is draining, shutting down, or already shut down. |
+| `internal` | Runtime failed unexpectedly. |
+
+### 4.3 Code ownership
+
+Runtime protocol errors use the `runtime.` prefix.
+
+Examples:
+
+- `runtime.unsupported_protocol_version`
+- `runtime.incompatible_schema_set_version`
+- `runtime.incompatible_compatibility_major`
+- `runtime.already_initialized_with_different_params`
+- `runtime.method_requires_initialization`
+- `runtime.draining`
+- `runtime.shutdown`
+- `runtime.internal_error`
+
+Run lifecycle errors, repository-worker errors, model errors, and capability errors must use their own prefixes.
+
+### 4.4 Stability rules
+
+The runtime error shape is stable across methods.
+
+The runtime may add new `details` keys, but it must not remove or rename stable top-level `kiln_error` fields without a compatibility-major change.
+
+The SDK must preserve the full `kiln_error` object when raising typed exceptions or returning diagnostics.
+
+---
+
+## 5. Method: `runtime.initialize`
+
+### 5.1 Purpose
 
 `runtime.initialize` establishes compatibility between the Python SDK and the Go runtime.
 
 It is not a capability exchange. The result may advertise supported method namespaces or runtime features, but authority remains governed by security-profile, scope, grant, and decision contracts.
 
-### 4.2 Params
+### 5.2 Params
 
 Conceptual shape:
 
@@ -154,7 +238,7 @@ Required fields:
 | `client.name` | SDK or client name for diagnostics. |
 | `client.version` | SDK or client version for diagnostics. |
 
-### 4.3 Result
+### 5.3 Result
 
 Conceptual shape:
 
@@ -194,13 +278,13 @@ Required result semantics:
 - `supported_methods` advertises specific JSON-RPC methods currently supported by the runtime.
 - `build` contains diagnostic metadata and must not be used for authorization.
 
-### 4.4 Repeated initialization
+### 5.4 Repeated initialization
 
 A repeated `runtime.initialize` request with identical compatibility params may return the same initialized result.
 
-A repeated `runtime.initialize` request with conflicting compatibility params must fail closed.
+A repeated `runtime.initialize` request with conflicting compatibility params must fail closed with `runtime.already_initialized_with_different_params`.
 
-### 4.5 Failure behavior
+### 5.5 Failure behavior
 
 The runtime must fail closed when compatibility cannot be established.
 
@@ -211,9 +295,16 @@ Unsupported runtime protocol version:
   "code": -32001,
   "message": "Unsupported runtime protocol version",
   "data": {
-    "kiln_error_code": "runtime.unsupported_protocol_version",
-    "requested_protocol_version": "2026-01-01",
-    "supported_protocol_versions": ["2026-06-30"]
+    "kiln_error": {
+      "code": "runtime.unsupported_protocol_version",
+      "category": "compatibility",
+      "message": "Unsupported runtime protocol version",
+      "retryable": false,
+      "details": {
+        "requested_protocol_version": "2026-01-01",
+        "supported_protocol_versions": ["2026-06-30"]
+      }
+    }
   }
 }
 ```
@@ -225,9 +316,16 @@ Incompatible schema-set version:
   "code": -32002,
   "message": "Incompatible schema-set version",
   "data": {
-    "kiln_error_code": "runtime.incompatible_schema_set_version",
-    "requested_schema_set_version": "v0",
-    "supported_schema_set_versions": ["v1"]
+    "kiln_error": {
+      "code": "runtime.incompatible_schema_set_version",
+      "category": "compatibility",
+      "message": "Incompatible schema-set version",
+      "retryable": false,
+      "details": {
+        "requested_schema_set_version": "v0",
+        "supported_schema_set_versions": ["v1"]
+      }
+    }
   }
 }
 ```
@@ -239,26 +337,33 @@ Incompatible compatibility major:
   "code": -32003,
   "message": "Incompatible runtime compatibility major",
   "data": {
-    "kiln_error_code": "runtime.incompatible_compatibility_major",
-    "requested_compatibility_major": 0,
-    "supported_compatibility_majors": [1]
+    "kiln_error": {
+      "code": "runtime.incompatible_compatibility_major",
+      "category": "compatibility",
+      "message": "Incompatible runtime compatibility major",
+      "retryable": false,
+      "details": {
+        "requested_compatibility_major": 0,
+        "supported_compatibility_majors": [1]
+      }
+    }
   }
 }
 ```
 
-Malformed params use the project JSON-RPC validation error shape.
+Malformed params use the project JSON-RPC validation error shape and should include a `kiln_error` object with category `validation` when the request reached a Kiln runtime method handler.
 
 ---
 
-## 5. Method: `runtime.health`
+## 6. Method: `runtime.health`
 
-### 5.1 Purpose
+### 6.1 Purpose
 
 `runtime.health` reports whether the runtime process is currently able to accept work.
 
 It is a diagnostic and readiness method. It does not create a run, resume a run, or grant authority.
 
-### 5.2 Params
+### 6.2 Params
 
 Conceptual shape:
 
@@ -266,7 +371,7 @@ Conceptual shape:
 {}
 ```
 
-### 5.3 Result
+### 6.3 Result
 
 Conceptual shape:
 
@@ -288,9 +393,9 @@ Required fields:
 | `ready` | Runtime can accept new work. |
 | `draining` | Runtime is shutting down or refusing new work. |
 | `shutdown` | Runtime has entered shutdown state or observed process shutdown. |
-| `last_fatal_startup_error` | Structured fatal startup error, when present. |
+| `last_fatal_startup_error` | Stable `kiln_error` object for a fatal startup error, when present. |
 
-### 5.4 Health state matrix
+### 6.4 Health state matrix
 
 | Runtime condition | `initialized` | `ready` | `draining` | `shutdown` |
 | --- | ---: | ---: | ---: | ---: |
@@ -304,7 +409,7 @@ When `last_fatal_startup_error` is present, `ready` must be false.
 
 ---
 
-## 6. Relationship to run lifecycle
+## 7. Relationship to run lifecycle
 
 Runtime lifecycle is process/session lifecycle.
 
@@ -316,7 +421,7 @@ The run lifecycle begins only when a run specification is accepted and a run ent
 
 ---
 
-## 7. Relationship to repository-worker protocol
+## 8. Relationship to repository-worker protocol
 
 The runtime protocol governs Python SDK to Go runtime communication.
 
@@ -326,7 +431,7 @@ The repository-worker handshake is a separate milestone and must not be implemen
 
 ---
 
-## 8. Out of scope for CYB-206
+## 9. Out of scope for CYB-206
 
 CYB-206 defines only the runtime initialization and health control plane.
 
