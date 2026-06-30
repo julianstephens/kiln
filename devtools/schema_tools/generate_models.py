@@ -17,6 +17,12 @@ BUNDLE_ID_FORMAT = (
     "python-models-{domain}.schema.json"
 )
 
+# Shared schema domains are generated as first-class modules and are the canonical
+# import location for shared public model entrypoints. Non-shared domains may still
+# contain private generator helper models for referenced schema fragments; those
+# helpers are intentionally not exported outside their domain package.
+SHARED_SCHEMA_DOMAINS = ("common",)
+
 HEADER = '''"""
 Generated Pydantic v2 models for Kiln JSON Schemas.
 
@@ -179,6 +185,14 @@ def group_schema_keys_by_domain(schema_keys: list[str]) -> dict[str, list[str]]:
     return groups
 
 
+def ordered_domains(schema_groups: dict[str, list[str]]) -> list[str]:
+    domains = list(schema_groups)
+    shared_domains = [domain for domain in SHARED_SCHEMA_DOMAINS if domain in schema_groups]
+    non_shared_domains = [domain for domain in domains if domain not in SHARED_SCHEMA_DOMAINS]
+
+    return [*shared_domains, *non_shared_domains]
+
+
 def write_bundle_schema(
     path: Path,
     schema_keys: list[str],
@@ -216,16 +230,22 @@ def write_package_init(output_root: Path, domains: list[str]) -> None:
     init_path.parent.mkdir(parents=True, exist_ok=True)
 
     domain_modules = [python_name(domain) for domain in domains]
-    imports = "".join(f"from . import {module}\n" for module in domain_modules)
     all_entries = "".join(f'    "{module}",\n' for module in domain_modules)
 
     content = (
         HEADER
         + "\nfrom __future__ import annotations\n\n"
-        + imports
-        + "\n__all__ = [\n"
+        + "from importlib import import_module\n"
+        + "from types import ModuleType\n\n"
+        + "__all__ = [\n"
         + all_entries
-        + "]\n"
+        + "]\n\n"
+        + "def __getattr__(name: str) -> ModuleType:\n"
+        + "    if name not in __all__:\n"
+        + "        raise AttributeError(f\"module {__name__!r} has no attribute {name!r}\")\n"
+        + "    module = import_module(f\"{__name__}.{name}\")\n"
+        + "    globals()[name] = module\n"
+        + "    return module\n"
     )
 
     init_path.write_text(content, encoding="utf-8")
@@ -356,10 +376,12 @@ def main() -> int:
             clean_output_root(output_root, dry_run=args.dry_run)
 
         schema_groups = group_schema_keys_by_domain(schema_keys)
+        domains = ordered_domains(schema_groups)
         bundle_root = schema_root / ".python-models-bundles"
 
         try:
-            for domain, domain_schema_keys in schema_groups.items():
+            for domain in domains:
+                domain_schema_keys = schema_groups[domain]
                 domain_name = python_name(domain)
                 bundle_path = bundle_root / f"{domain_name}.schema.json"
                 domain_output_root = output_root / domain_name
@@ -386,7 +408,7 @@ def main() -> int:
                 shutil.rmtree(bundle_root, ignore_errors=True)
 
         if not args.dry_run:
-            write_package_init(output_root, list(schema_groups))
+            write_package_init(output_root, domains)
 
     except GenerateModelsError as exc:
         print(f"model generation failed: {exc}", file=sys.stderr)
