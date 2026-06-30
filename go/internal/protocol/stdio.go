@@ -81,20 +81,20 @@ func messageToJSONObject(msg Message) (JSONObject, error) {
 	case Request:
 		return JSONObject{
 			"jsonrpc": m.JSONRPC,
-			"id":      m.ID,
+			"id":      m.ID.JSONValue(),
 			"method":  m.Method,
 			"params":  m.Params,
 		}, nil
 	case SuccessResponse:
 		return JSONObject{
 			"jsonrpc": m.JSONRPC,
-			"id":      m.ID,
+			"id":      m.ID.JSONValue(),
 			"result":  m.Result,
 		}, nil
 	case ErrorResponse:
 		return JSONObject{
 			"jsonrpc": m.JSONRPC,
-			"id":      m.ID,
+			"id":      m.ID.JSONValue(),
 			"error": map[string]any{
 				"code":    m.Error.Code,
 				"message": m.Error.Message,

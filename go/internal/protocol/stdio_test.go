@@ -84,26 +84,70 @@ func TestPeerReceive_TableDriven(t *testing.T) {
 func TestPeerSend_WritesSingleNewlineTerminatedFrame(t *testing.T) {
 	t.Parallel()
 
-	out := &bytes.Buffer{}
-	peer := protocol.NewPeer(bytes.NewBuffer(nil), out, 1024)
+	stringID := "req-1"
+	numericID := int64(1)
+	nullID := protocol.ID{Null: true}
 
-	idValue := int64(1)
-	err := peer.Send(protocol.Request{
-		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
-		ID:      protocol.ID{Number: &idValue},
-		Method:  "repository.search",
-		Params:  map[string]any{"query": "x"},
-	})
-	utest.RequireNoError(t, err)
+	tests := []struct {
+		name   string
+		msg    protocol.Message
+		wantID any
+	}{
+		{
+			name: "id number encoded as 1",
+			msg: protocol.Request{
+				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				ID:      protocol.ID{Number: &numericID},
+				Method:  "repository.search",
+				Params:  map[string]any{"query": "x"},
+			},
+			wantID: float64(1),
+		},
+		{
+			name: "id string encoded as req-1",
+			msg: protocol.Request{
+				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				ID:      protocol.ID{String: &stringID},
+				Method:  "repository.search",
+				Params:  map[string]any{"query": "x"},
+			},
+			wantID: "req-1",
+		},
+		{
+			name: "error response id null encoded as null",
+			msg: protocol.ErrorResponse{
+				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				ID:      nullID,
+				Error: protocol.ErrorObject{
+					Code:    -32000,
+					Message: "something failed",
+				},
+			},
+			wantID: nil,
+		},
+	}
 
-	written := out.Bytes()
-	utest.AssertTrue(t, len(written) > 0, "expected output bytes")
-	utest.AssertTrue(t, written[len(written)-1] == '\n', "expected newline-terminated frame")
-	utest.AssertEqual(t, bytes.Count(written, []byte("\n")), 1)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	trimmed := bytes.TrimSuffix(written, []byte("\n"))
-	var decoded map[string]any
-	utest.RequireNoError(t, json.Unmarshal(trimmed, &decoded))
-	utest.AssertEqual(t, decoded["jsonrpc"].(string), protocol.DEFAULT_JSONRPC_VERSION)
-	utest.AssertEqual(t, decoded["method"].(string), "repository.search")
+			out := &bytes.Buffer{}
+			peer := protocol.NewPeer(bytes.NewBuffer(nil), out, 1024)
+
+			err := peer.Send(tc.msg)
+			utest.RequireNoError(t, err)
+
+			written := out.Bytes()
+			utest.AssertTrue(t, len(written) > 0, "expected output bytes")
+			utest.AssertTrue(t, written[len(written)-1] == '\n', "expected newline-terminated frame")
+			utest.AssertEqual(t, bytes.Count(written, []byte("\n")), 1)
+
+			trimmed := bytes.TrimSuffix(written, []byte("\n"))
+			var decoded map[string]any
+			utest.RequireNoError(t, json.Unmarshal(trimmed, &decoded))
+			utest.AssertEqual(t, decoded["jsonrpc"].(string), protocol.DEFAULT_JSONRPC_VERSION)
+			utest.AssertDeepEqual(t, decoded["id"], tc.wantID)
+		})
+	}
 }

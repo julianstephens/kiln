@@ -8,6 +8,19 @@ type ID struct {
 	Null   bool
 }
 
+func (id ID) JSONValue() any {
+	switch {
+	case id.String != nil:
+		return *id.String
+	case id.Number != nil:
+		return *id.Number
+	case id.Null:
+		return nil
+	default:
+		return nil
+	}
+}
+
 type Request struct {
 	JSONRPC string         `json:"jsonrpc"`
 	ID      ID             `json:"id"`
