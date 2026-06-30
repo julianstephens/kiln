@@ -5,6 +5,7 @@ from kiln.protocol.jsonrpc import (
     JsonRpcErrorResponse,
     JsonRpcRequest,
     JsonRpcSuccessResponse,
+    new_request_id,
 )
 from kiln.protocol.stdio import BufferedByteReceiveStream, Peer
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
@@ -55,7 +56,9 @@ class RuntimeStdioConnection:
         )
         res = await self.peer.request(
             JsonRpcRequest(
-                id="", method="runtime.initialize", params=params.model_dump()
+                id=new_request_id(),
+                method="runtime.initialize",
+                params=params.model_dump(),
             )
         )
 
