@@ -20,6 +20,7 @@ dev = [
     "pytest-mock>=3.14.1",
     "pytest-cov>=7.1.0",
     "pytest-xdist>=3.8.0",
+    "ruff>=0.15.20",
 ]
 
 [tool.ruff]

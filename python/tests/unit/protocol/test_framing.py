@@ -246,7 +246,7 @@ def test_validate_frame_requires_method() -> None:
 
 
 def test_validate_frame_rejects_unsupported_method() -> None:
-    with pytest.raises(FramingError, match="unsupported method 'unknown.method'"):
+    with pytest.raises(FramingError, match=r"unsupported method 'unknown\.method'"):
         validate_frame(
             json.dumps(
                 {
@@ -267,7 +267,7 @@ def test_unknown_method_is_jsonrpc_valid_but_invalid_at_method_layer() -> None:
         "params": {},
     }
 
-    with pytest.raises(FramingError, match="unsupported method 'unknown.method'"):
+    with pytest.raises(FramingError, match=r"unsupported method 'unknown\.method'"):
         validate_frame(json.dumps(frame).encode())
 
 

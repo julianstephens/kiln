@@ -58,8 +58,7 @@ def validate_frame(
     if jsonrpc_version != "2.0":
         raise FramingError(
             message=(
-                "invalid JSON-RPC frame: unsupported "
-                f"jsonrpc version {jsonrpc_version}"
+                f"invalid JSON-RPC frame: unsupported jsonrpc version {jsonrpc_version}"
             )
         )
 
@@ -87,8 +86,7 @@ def validate_frame(
     if payload_fields_set == 0:
         raise FramingError(
             message=(
-                f"invalid JSON-RPC frame: no valid payload found "
-                f"for method '{method}'"
+                f"invalid JSON-RPC frame: no valid payload found for method '{method}'"
             )
         )
     if has_params and (has_result or has_error):
