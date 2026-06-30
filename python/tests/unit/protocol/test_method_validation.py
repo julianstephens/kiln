@@ -15,7 +15,7 @@ from kiln.protocol.method_validation import (
     validate_request_params,
     validate_success_result,
 )
-from kiln.schemas import (
+from kiln.schemas.repository import (
     RepositoryError,
     RepositorySearchRequestPayload,
     RepositorySearchResult,
