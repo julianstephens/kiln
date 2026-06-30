@@ -8,20 +8,9 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas"
-DEFAULT_OUTPUT_ROOT = (
-    Path(__file__).resolve().parents[2] / "python" / "kiln" / "schemas"
-)
+DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parents[2] / "python" / "kiln" / "schemas"
 SCHEMA_ID_BASE = "https://kiln.cyborgdev.cloud/schemas"
-
-BUNDLE_ID_FORMAT = (
-    "https://kiln.cyborgdev.cloud/schemas/generated/"
-    "python-models-{domain}.schema.json"
-)
-
-# Shared schema domains are generated as first-class modules and are the canonical
-# import location for shared public model entrypoints. Non-shared domains may still
-# contain private generator helper models for referenced schema fragments; those
-# helpers are intentionally not exported outside their domain package.
+BUNDLE_ID_FORMAT = f"{SCHEMA_ID_BASE}/generated/python-models-{{domain}}.schema.json"
 SHARED_SCHEMA_DOMAINS = ("common",)
 
 HEADER = '''"""
@@ -41,13 +30,10 @@ class GenerateModelsError(Exception):
 def python_name(value: str) -> str:
     normalized = re.sub(r"[^0-9a-zA-Z_]", "_", value)
     normalized = re.sub(r"_+", "_", normalized).strip("_").lower()
-
     if not normalized:
         raise GenerateModelsError(f"could not convert {value!r} to a Python name")
-
     if normalized[0].isdigit():
         normalized = f"schema_{normalized}"
-
     return normalized
 
 
@@ -57,12 +43,10 @@ def def_name_for_key(schema_key: str) -> str:
 
 def parse_schema_key(schema_key: str) -> tuple[str, str]:
     parts = schema_key.split("/", maxsplit=1)
-
     if len(parts) != 2 or not parts[0] or not parts[1]:
         raise GenerateModelsError(
             f"invalid schema key {schema_key!r}; expected '<domain>/<contract>'"
         )
-
     return parts[0], parts[1]
 
 
@@ -83,7 +67,6 @@ def load_json(path: Path) -> Any:
 def load_manifest(schema_root: Path) -> dict[str, Any]:
     manifest_path = schema_root / "manifest.json"
     manifest = load_json(manifest_path)
-
     if not isinstance(manifest, dict):
         raise GenerateModelsError(f"{manifest_path}: expected JSON object")
 
@@ -100,7 +83,6 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
     schemas = manifest.get("schemas")
     if not isinstance(schemas, list) or not schemas:
         raise GenerateModelsError(f"{manifest_path}: schemas must be a non-empty array")
-
     for index, schema_key in enumerate(schemas):
         if not isinstance(schema_key, str) or not schema_key:
             raise GenerateModelsError(
@@ -114,33 +96,25 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
             raise GenerateModelsError(
                 f"{manifest_path}: entrypoints must be a non-empty array"
             )
-
         schema_key_set = set(schemas)
-
         for index, schema_key in enumerate(entrypoints):
             if not isinstance(schema_key, str) or not schema_key:
                 raise GenerateModelsError(
                     f"{manifest_path}: entrypoints[{index}] must be a non-empty string"
                 )
             parse_schema_key(schema_key)
-
             if schema_key not in schema_key_set:
                 raise GenerateModelsError(
                     f"{manifest_path}: entrypoint {schema_key!r} is not declared in schemas"
                 )
-
     return manifest
 
 
-def selected_schema_keys(
-    manifest: dict[str, Any], *, only_entrypoints: bool
-) -> list[str]:
+def selected_schema_keys(manifest: dict[str, Any], *, only_entrypoints: bool) -> list[str]:
     field = "entrypoints" if only_entrypoints else "schemas"
     values = manifest.get(field)
-
     if not isinstance(values, list) or not values:
         raise GenerateModelsError(f"manifest field {field!r} must be a non-empty array")
-
     return list(values)
 
 
@@ -152,7 +126,6 @@ def schema_ref_for_key(schema_key: str, *, major: int) -> str:
 def schema_path_for_key(schema_root: Path, schema_key: str, *, major: int) -> Path:
     domain, contract = parse_schema_key(schema_key)
     contract_parts = contract.split("/")
-
     return (
         schema_root
         / domain
@@ -162,12 +135,7 @@ def schema_path_for_key(schema_root: Path, schema_key: str, *, major: int) -> Pa
     )
 
 
-def ensure_schema_files_exist(
-    schema_root: Path,
-    schema_keys: list[str],
-    *,
-    major: int,
-) -> None:
+def ensure_schema_files_exist(schema_root: Path, schema_keys: list[str], *, major: int) -> None:
     for schema_key in schema_keys:
         schema_path = schema_path_for_key(schema_root, schema_key, major=major)
         if not schema_path.exists():
@@ -178,11 +146,9 @@ def ensure_schema_files_exist(
 
 def group_schema_keys_by_domain(schema_keys: list[str]) -> dict[str, list[str]]:
     groups: dict[str, list[str]] = {}
-
     for schema_key in schema_keys:
         domain, _contract = parse_schema_key(schema_key)
         groups.setdefault(domain, []).append(schema_key)
-
     return groups
 
 
@@ -190,24 +156,14 @@ def ordered_domains(schema_groups: dict[str, list[str]]) -> list[str]:
     domains = list(schema_groups)
     shared_domains = [domain for domain in SHARED_SCHEMA_DOMAINS if domain in schema_groups]
     non_shared_domains = [domain for domain in domains if domain not in SHARED_SCHEMA_DOMAINS]
-
     return [*shared_domains, *non_shared_domains]
 
 
-def write_bundle_schema(
-    path: Path,
-    schema_keys: list[str],
-    *,
-    domain: str,
-    major: int,
-) -> None:
-    defs: dict[str, Any] = {}
-
-    for schema_key in schema_keys:
-        defs[def_name_for_key(schema_key)] = {
-            "$ref": schema_ref_for_key(schema_key, major=major)
-        }
-
+def write_bundle_schema(path: Path, schema_keys: list[str], *, domain: str, major: int) -> None:
+    defs = {
+        def_name_for_key(schema_key): {"$ref": schema_ref_for_key(schema_key, major=major)}
+        for schema_key in schema_keys
+    }
     domain_name = python_name(domain)
     bundle = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -221,18 +177,14 @@ def write_bundle_schema(
         },
         "additionalProperties": False,
     }
-
-    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(bundle, indent=4) + "\n", encoding="utf-8")
 
 
 def write_package_init(output_root: Path, domains: list[str]) -> None:
     init_path = output_root / "__init__.py"
     init_path.parent.mkdir(parents=True, exist_ok=True)
-
     domain_modules = [python_name(domain) for domain in domains]
     all_entries = "".join(f'    "{module}",\n' for module in domain_modules)
-
     content = (
         HEADER
         + "\nfrom __future__ import annotations\n\n"
@@ -248,18 +200,15 @@ def write_package_init(output_root: Path, domains: list[str]) -> None:
         + "    globals()[name] = module\n"
         + "    return module\n"
     )
-
     init_path.write_text(content, encoding="utf-8")
 
 
 def clean_output_root(output_root: Path, *, dry_run: bool) -> None:
     if not output_root.exists():
         return
-
     if dry_run:
         print(f"would remove {output_root}")
         return
-
     shutil.rmtree(output_root)
 
 
@@ -294,15 +243,11 @@ def run_datamodel_codegen(
         HEADER,
         *extra_args,
     ]
-
     print(f"generate schema models -> {output_root}")
-
     if dry_run:
         print("  " + " ".join(command))
         return
-
     output_root.mkdir(parents=True, exist_ok=True)
-
     try:
         subprocess.run(command, check=True, cwd=schema_root.parents[0])
     except FileNotFoundError as exc:
@@ -350,27 +295,23 @@ def parse_args() -> argparse.Namespace:
         "--extra-arg",
         action="append",
         default=[],
-        help=("Extra argument passed through to datamodel-codegen. May be repeated."),
+        help="Extra argument passed through to datamodel-codegen. May be repeated.",
     )
-
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-
     schema_root = args.schema_root.resolve()
     output_root = args.output_root.resolve()
 
     try:
         manifest = load_manifest(schema_root)
         major = manifest["compatibility_major"]
-
         schema_keys = selected_schema_keys(
             manifest,
             only_entrypoints=args.only_entrypoints,
         )
-
         ensure_schema_files_exist(schema_root, schema_keys, major=major)
 
         if not args.no_clean:
@@ -378,14 +319,15 @@ def main() -> int:
 
         schema_groups = group_schema_keys_by_domain(schema_keys)
         domains = ordered_domains(schema_groups)
-        bundle_root = schema_root / ".python-models-bundles"
+        bundle_paths: list[Path] = []
 
         try:
             for domain in domains:
                 domain_schema_keys = schema_groups[domain]
                 domain_name = python_name(domain)
-                bundle_path = bundle_root / f"{domain_name}.schema.json"
+                bundle_path = schema_root / f".python-models-{domain_name}.schema.json"
                 domain_output_root = output_root / domain_name
+                bundle_paths.append(bundle_path)
 
                 if args.dry_run:
                     print(f"would write temporary bundle schema: {bundle_path}")
@@ -406,7 +348,8 @@ def main() -> int:
                 )
         finally:
             if not args.dry_run:
-                shutil.rmtree(bundle_root, ignore_errors=True)
+                for bundle_path in bundle_paths:
+                    bundle_path.unlink(missing_ok=True)
 
         if not args.dry_run:
             write_package_init(output_root, domains)
