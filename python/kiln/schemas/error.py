@@ -216,7 +216,57 @@ class SchemaModel(BaseModel):
     ] = None
 
 
+class CategoryModel1(StrEnum):
+    compatibility = "compatibility"
+    validation = "validation"
+    lifecycle = "lifecycle"
+    shutdown = "shutdown"
+    internal = "internal"
+
+
+class KilnError(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    code: Annotated[
+        str, Field(description="The error code.", min_length=1, pattern="^runtime\\.")
+    ]
+    category: Annotated[CategoryModel1, Field(description="The error category.")]
+    message: Annotated[
+        str,
+        Field(
+            description="A human-readable message describing the error.", min_length=1
+        ),
+    ]
+    retryable: Annotated[bool, Field(description="Whether the error is retryable.")]
+    details: Annotated[
+        dict[str, Any] | None, Field(description="Additional details about the error.")
+    ] = None
+    correlation_id: Annotated[
+        str | None,
+        Field(
+            description="A correlation ID for the error, if available.", min_length=1
+        ),
+    ] = None
+    runtime_id: Annotated[
+        str | None,
+        Field(
+            description="The unique identifier of the runtime that generated the error.",
+            min_length=1,
+        ),
+    ] = None
+
+
 class SchemaModel1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kiln_error: Annotated[
+        KilnError, Field(description="Information about the error that occurred.")
+    ]
+
+
+class SchemaModel2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )

@@ -42,7 +42,7 @@ class Schema(BaseModel):
         Field(description="Normalized model invocation failure category."),
     ]
     error: Annotated[
-        error_1.SchemaModel1,
+        error_1.SchemaModel2,
         Field(description="Run-level error describing the failed model invocation."),
     ]
     partial_response_artifact_reference: Annotated[

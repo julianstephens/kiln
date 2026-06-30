@@ -38,7 +38,7 @@ class Schema(BaseModel):
         error_category.Schema, Field(description="Normalized category of turn failure.")
     ]
     error: Annotated[
-        error_1.SchemaModel1,
+        error_1.SchemaModel2,
         Field(description="Run-level error describing the turn failure."),
     ]
     partial_output_reference: Annotated[

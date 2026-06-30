@@ -44,7 +44,7 @@ class Schema(BaseModel):
         ),
     ]
     failure_detail: Annotated[
-        error.SchemaModel1 | None,
+        error.SchemaModel2 | None,
         Field(
             description="Additional details about the failure that caused this run to stop"
         ),

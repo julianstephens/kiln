@@ -40,6 +40,8 @@ from . import (
     generate_payload,
     generate_result,
     identifier,
+    initialize_request_payload,
+    initialize_result,
     item,
     model_events,
     model_invocation_started,
@@ -547,12 +549,24 @@ class RepositorySourceRequestPayload(RootModel[source_request_payload.Schema]):
     root: source_request_payload.Schema
 
 
-class RunError(RootModel[error_1.SchemaModel1]):
-    root: error_1.SchemaModel1
+class RunError(RootModel[error_1.SchemaModel2]):
+    root: error_1.SchemaModel2
 
 
 class RunTaskSpecification(RootModel[task_specification_1.Schema]):
     root: task_specification_1.Schema
+
+
+class RuntimeError(RootModel[error_1.SchemaModel1]):
+    root: error_1.SchemaModel1
+
+
+class RuntimeInitializeRequestPayload(RootModel[initialize_request_payload.Schema]):
+    root: initialize_request_payload.Schema
+
+
+class RuntimeInitializeResult(RootModel[initialize_result.Schema]):
+    root: initialize_result.Schema
 
 
 class ValidationApprovalRequirement(RootModel[approval_requirement.Schema]):
@@ -799,6 +813,9 @@ class KilnGeneratedPythonModelsBundle(BaseModel):
     run_task_specification: RunTaskSpecification | None = None
     run_task_state: RunTaskState | None = None
     run_terminal_result_reference: RunTerminalResultReference | None = None
+    runtime_error: RuntimeError | None = None
+    runtime_initialize_request_payload: RuntimeInitializeRequestPayload | None = None
+    runtime_initialize_result: RuntimeInitializeResult | None = None
     validation_approval_requirement: ValidationApprovalRequirement | None = None
     validation_citation_requirement: ValidationCitationRequirement | None = None
     validation_policy_requirement: ValidationPolicyRequirement | None = None
@@ -1602,7 +1619,7 @@ class Schema_11(BaseModel):
     terminal_status: TerminalStatus
     stop_reason: stop_reason_1.Schema
     output_mode: output_mode_1.Schema
-    error: error_1.SchemaModel1 | None = None
+    error: error_1.SchemaModel2 | None = None
     answer: Answer | None = None
     answer_artifact: answer_reference.Schema | None = None
     report_artifact: report_reference_1.Schema | None = None
