@@ -2,10 +2,8 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ValidationError
 
-from kiln.schemas import (
-    ModelError,
-    ModelGeneratePayload,
-    ModelGenerateResult,
+from kiln.schemas.model import ModelError, ModelGeneratePayload, ModelGenerateResult
+from kiln.schemas.repository import (
     RepositoryError,
     RepositoryOpenSessionRequestPayload,
     RepositorySearchRequestPayload,

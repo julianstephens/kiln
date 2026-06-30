@@ -7,7 +7,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from kiln.schemas import EventEnvelope, RepositorySearchRequestPayload
+from kiln.schemas.event import EventEnvelope
+from kiln.schemas.repository import RepositorySearchRequestPayload
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_ROOT = REPO_ROOT / "contract-fixtures" / "v1"
