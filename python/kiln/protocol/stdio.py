@@ -7,10 +7,13 @@ from anyio.streams.buffered import (
 
 from .errors import (
     JsonRpcFrameExceedsSizeLimitError,
+    JsonRpcResponseIdMismatchError,
     RuntimeStreamClosedError,
+    UnexpectedJsonRpcMessageError,
 )
 from .framing import DEFAULT_MAX_MESSAGE_BYTES, decode_frame, encode_frame
 from .jsonrpc import JsonRpcMessage, JsonRpcRequest, parse_jsonrpc_message
+from .pending import PendingRequests
 
 
 class Peer:
@@ -19,6 +22,8 @@ class Peer:
     _max_message_bytes: int
     _stdin: ByteSendStream
     _stdout: BufferedByteReceiveStream
+
+    _pending_requests: PendingRequests
 
     def __init__(
         self,
@@ -29,6 +34,7 @@ class Peer:
         self._stdin = stdin
         self._stdout = stdout
         self._max_message_bytes = max_message_bytes
+        self._pending_requests = PendingRequests()
 
     async def receive(self) -> JsonRpcMessage:
         """Receive a JSON-RPC message from the peer.
@@ -97,6 +103,25 @@ class Peer:
                 JSON-RPC specification.
             InvalidJsonRpcFrameError: If the received message is invalid or does not
                 conform to the JSON-RPC specification.
+            UnexpectedJsonRpcMessageError: If the received message is unexpected.
+            JsonRpcResponseIdMismatchError: If the received response ID does not match
+                the expected request ID.
         """
+        self._pending_requests.add(message.id, message.method)
         await self.send(message)
-        return await self.receive()
+        res = await self.receive()
+
+        if (
+            isinstance(res, JsonRpcRequest)
+            or not res.id
+            or res.id not in self._pending_requests
+        ):
+            raise UnexpectedJsonRpcMessageError(message=res.model_dump_json(indent=2))
+
+        if res.id != message.id:
+            raise JsonRpcResponseIdMismatchError(
+                expected_id=message.id, received_id=res.id
+            )
+
+        self._pending_requests.pop(res.id)
+        return res

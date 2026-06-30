@@ -43,6 +43,25 @@ class PendingRequests:
         """
         return self._by_id.pop(request_id)
 
+    def __contains__(self, request_id: str | int) -> bool:
+        """Check if a pending request with the given ID exists in the collection.
+
+        Args:
+            request_id: The ID of the pending request to check.
+
+        Returns:
+            True if the pending request exists, False otherwise.
+        """
+        return request_id in self._by_id
+
+    def __len__(self) -> int:
+        """Return the number of pending requests in the collection.
+
+        Returns:
+            The number of pending requests.
+        """
+        return len(self._by_id)
+
 
 def validate_response_against_pending_method(
     *,
