@@ -9,6 +9,7 @@ from kiln.protocol.jsonrpc import (
 )
 from kiln.protocol.stdio import BufferedByteReceiveStream, Peer
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
+from kiln.schemas.runtime import RuntimeError as KilnRuntimeError
 from kiln.schemas.runtime import (
     RuntimeHealthResult,
     RuntimeInitializeRequestPayload,
@@ -20,7 +21,7 @@ from kiln.schemas.runtime.initialize_request_payload import (
 
 from . import PACKAGE_NAME, __version__
 from ._runtime_os.win32 import ServerProcess
-from .errors import RuntimeProcessError
+from .errors import RuntimeMethodError, RuntimeProcessError
 
 
 class RuntimeStdioConnection:
@@ -70,11 +71,11 @@ class RuntimeStdioConnection:
                 )
             )
         if isinstance(res, JsonRpcErrorResponse):
-            raise RuntimeProcessError(
-                message=(
-                    f"runtime process returned an error: {res.error.code} - "
-                    f"{res.error.message}"
-                )
+            raise RuntimeMethodError(
+                method="runtime.initialize",
+                jsonrpc_code=str(res.error.code),
+                message=res.error.message,
+                kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
             )
         if isinstance(res, JsonRpcSuccessResponse):
             return RuntimeInitializeResult.model_validate(res.result)
@@ -99,11 +100,11 @@ class RuntimeStdioConnection:
                 )
             )
         if isinstance(res, JsonRpcErrorResponse):
-            raise RuntimeProcessError(
-                message=(
-                    f"runtime process returned an error: {res.error.code} - "
-                    f"{res.error.message}"
-                )
+            raise RuntimeMethodError(
+                method="runtime.health",
+                jsonrpc_code=str(res.error.code),
+                message=res.error.message,
+                kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
             )
         if isinstance(res, JsonRpcSuccessResponse):
             return RuntimeHealthResult.model_validate(res.result)
