@@ -41,7 +41,8 @@ class RuntimeProcess:
 
         if sys.platform == "win32":
             process = await create_windows_process(
-                command=[str(binary)],
+                command=str(binary),
+                args=[],
                 errlog=sys.stderr,
                 env=_runtime_environment(),
             )
