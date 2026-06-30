@@ -1,6 +1,6 @@
 from typing import Any, Literal, get_args
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from .errors import InvalidJsonRpcFrameError
 
@@ -16,6 +16,18 @@ class JsonRpcRequest(BaseModel):
     id: str | int
     method: str
     params: dict[str, Any] | None = None
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def generate_request_id(cls, value) -> str:  # noqa: ARG003
+        """Generate a unique request ID for the JSON-RPC request.
+
+        Returns:
+            A unique request ID as a string.
+        """
+        import uuid
+
+        return str(uuid.uuid4())
 
 
 class JsonRpcSuccessResponse(BaseModel):

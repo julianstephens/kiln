@@ -34,6 +34,7 @@ extend-select = ["B", "LOG", "Q", "RET", "SIM", "ARG", "I", "N", "E", "W", "F", 
 
 [tool.pytest.ini_options]
 addopts = "-n auto --ignore=schemas --cov --cov-report=term-missing --cov-config=kiln/pyproject.toml"
+anyio = "auto"
 
 [tool.coverage.report]
 omit = [
