@@ -1,61 +1,50 @@
 package protocol
 
 import (
-	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 )
 
 const DefaultMaxMessageBytes = 1 << 20
 
-type Decoder struct {
-	scanner *bufio.Scanner
-}
+type JSONObject map[string]any
 
-func NewDecoder(r io.Reader, maxBytes int) *Decoder {
-	if maxBytes <= 0 {
-		maxBytes = DefaultMaxMessageBytes
+// DecodeFrame decodes a JSON frame into a JSONObject. It returns an error if the frame is too large, contains a newline character, or is not valid JSON.
+// The maxBytes parameter specifies the maximum allowed size of the frame in bytes.
+func DecodeFrame(frame []byte, maxBytes int) (JSONObject, error) {
+	if len(frame) > maxBytes {
+		return nil, NewFrameTooLargeError(len(frame), maxBytes)
 	}
 
-	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 64*1024), maxBytes)
-
-	return &Decoder{scanner: scanner}
-}
-
-func (d *Decoder) Decode(target any) error {
-	if !d.scanner.Scan() {
-		if err := d.scanner.Err(); err != nil {
-			return err
-		}
-		return io.EOF
+	if bytes.Contains(frame, []byte("\n")) {
+		return nil, ErrEmbeddedNewline
 	}
 
-	if err := json.Unmarshal(d.scanner.Bytes(), target); err != nil {
-		return fmt.Errorf("decode protocol message: %w", err)
+	var value any
+	if err := json.Unmarshal(frame, &value); err != nil {
+		return nil, NewFramingError(err)
 	}
 
-	return nil
+	obj, ok := value.(map[string]any)
+	if !ok {
+		return nil, NewFramingError(fmt.Errorf("expected JSON object, got %T", value))
+	}
+
+	return obj, nil
 }
 
-type Encoder struct {
-	writer *bufio.Writer
-}
-
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{writer: bufio.NewWriter(w)}
-}
-
-func (e *Encoder) Encode(value any) error {
-	data, err := json.Marshal(value)
+// EncodeFrame encodes a JSON object into a frame, appending a newline character at the end.
+// It returns an error if the object cannot be marshaled into JSON or if the resulting frame contains a newline character.
+func EncodeFrame(obj JSONObject) ([]byte, error) {
+	data, err := json.Marshal(obj)
 	if err != nil {
-		return fmt.Errorf("encode protocol message: %w", err)
+		return nil, NewFramingError(err)
 	}
 
-	if _, err := e.writer.Write(append(data, '\n')); err != nil {
-		return err
+	if bytes.Contains(data, []byte("\n")) {
+		return nil, ErrEmbeddedNewline
 	}
 
-	return e.writer.Flush()
+	return append(data, '\n'), nil
 }

@@ -1,8 +1,10 @@
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict
 
 from .errors import InvalidJsonRpcFrameError
+
+DEFAULT_JSONRPC_VERSION = Literal["2.0"]
 
 
 class JsonRpcRequest(BaseModel):
@@ -10,7 +12,7 @@ class JsonRpcRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    jsonrpc: Literal["2.0"]
+    jsonrpc: DEFAULT_JSONRPC_VERSION
     id: str | int
     method: str
     params: dict[str, Any] | None = None
@@ -21,7 +23,7 @@ class JsonRpcSuccessResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    jsonrpc: Literal["2.0"]
+    jsonrpc: DEFAULT_JSONRPC_VERSION
     id: str | int
     result: dict[str, Any]
 
@@ -41,7 +43,7 @@ class JsonRpcErrorResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    jsonrpc: Literal["2.0"]
+    jsonrpc: DEFAULT_JSONRPC_VERSION
     id: str | int | None
     error: JsonRpcErrorObject
 
@@ -62,7 +64,7 @@ def parse_jsonrpc_message(raw: dict[str, Any]) -> JsonRpcMessage:
         InvalidJsonRpcFrameError: If the raw message is invalid or does not conform to
             the JSON-RPC specification.
     """
-    if raw.get("jsonrpc") != "2.0":
+    if raw.get("jsonrpc") != get_args(DEFAULT_JSONRPC_VERSION)[0]:
         raise InvalidJsonRpcFrameError(message="missing or unsupported 'jsonrpc' field")
 
     has_method = "method" in raw

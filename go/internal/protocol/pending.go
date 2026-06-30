@@ -1,0 +1,61 @@
+package protocol
+
+type PendingRequest struct {
+	ID     string
+	Method string
+}
+
+type PendingRequests struct {
+	byID map[string]PendingRequest
+}
+
+// IDKey returns the string representation of the ID, or an error if the ID is not a string.
+func IDKey(id ID) (string, error) {
+	if id.String != nil {
+		return *id.String, nil
+	}
+	return "", NewInvalidIDError("ID must be a string", false, nil)
+}
+
+func NewPendingRequests() *PendingRequests {
+	return &PendingRequests{
+		byID: make(map[string]PendingRequest),
+	}
+}
+
+func (p *PendingRequests) Add(id string, method string) {
+	p.byID[id] = PendingRequest{
+		ID:     id,
+		Method: method,
+	}
+}
+
+func (p *PendingRequests) Pop(id string) (PendingRequest, bool) {
+	req, ok := p.byID[id]
+	if ok {
+		delete(p.byID, id)
+	}
+	return req, ok
+}
+
+// ValidateResponseAgainstPendingRequest validates a JSON-RPC response against a pending request.
+// It checks that the response corresponds to the pending request's method and validates the result or error data against the expected schema.
+// If the response is invalid or does not match the pending request, it returns an error.
+func ValidateResponseAgainstPendingRequest(req PendingRequest, response Message) error {
+	method := req.Method
+	switch resp := response.(type) {
+	case SuccessResponse:
+		_, err := KilnMethods[method].ValidateResult(resp.Result)
+		if err != nil {
+			return NewInvalidJSONRPCRequestError("invalid result: "+err.Error(), false, nil)
+		}
+	case ErrorResponse:
+		_, err := KilnMethods[method].ValidateErrorData(resp.Error.Data)
+		if err != nil {
+			return NewInvalidJSONRPCRequestError("invalid error data: "+err.Error(), false, nil)
+		}
+	default:
+		return NewInvalidJSONRPCRequestError("unexpected response type", false, nil)
+	}
+	return nil
+}
