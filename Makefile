@@ -112,7 +112,7 @@ validate-schemas:
 generate: generate-python generate-go
 
 generate-python:
-	uv run generatemodels
+	uv run generatepymodels
 
 generate-go:
 	uv run generategomodels
