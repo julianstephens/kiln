@@ -35,10 +35,10 @@ jobs:
 
       - name: Check generated Python schema synchronization
         run: |
-          uv sync --package kiln-devtools && uv run generatemodels
+          uv sync --package kiln-devtools && make generate-python
           git diff --exit-code python/kiln/schemas
 
       - name: Check generated Go schema synchronization
         run: |
-          uv sync --package kiln-devtools && uv run generategomodels
+          uv sync --package kiln-devtools && make generate-go
           git diff --exit-code go/schema
