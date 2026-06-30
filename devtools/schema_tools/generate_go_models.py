@@ -137,6 +137,12 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
     if not isinstance(manifest, dict):
         raise GenerateGoModelsError(f"{manifest_path}: expected JSON object")
 
+    schema_set_version = manifest.get("schema_set_version")
+    if not isinstance(schema_set_version, str) or not schema_set_version:
+        raise GenerateGoModelsError(
+            f"{manifest_path}: schema_set_version must be a non-empty string"
+        )
+
     compatibility_major = manifest.get("compatibility_major")
     if (
         not isinstance(compatibility_major, int)
@@ -697,6 +703,18 @@ def render_package_doc(definition: SchemaDefinition) -> str:
     )
 
 
+def render_version_file(*, compatibility_major: int, schema_set_version: str) -> str:
+    return (
+        f"{HEADER}\n"
+        "// Package schema exposes generated Kiln schema metadata.\n"
+        "package schema\n\n"
+        "const (\n"
+        f"\tCompatibilityMajor = {compatibility_major}\n"
+        f"\tSchemaSetVersion = {schema_set_version!r}\n"
+        ")\n"
+    )
+
+
 def write_model_files(
     output_root: Path,
     definitions: list[SchemaDefinition],
@@ -737,6 +755,29 @@ def write_shared_package(output_root: Path, *, dry_run: bool) -> None:
 
     shared_dir.mkdir(parents=True, exist_ok=True)
     validate_path.write_text(SHARED_VALIDATION_FILE, encoding="utf-8")
+
+
+def write_version_file(
+    output_root: Path,
+    *,
+    compatibility_major: int,
+    schema_set_version: str,
+    dry_run: bool,
+) -> None:
+    version_path = output_root / "version.go"
+
+    if dry_run:
+        print(f"would write {version_path}")
+        return
+
+    output_root.mkdir(parents=True, exist_ok=True)
+    version_path.write_text(
+        render_version_file(
+            compatibility_major=compatibility_major,
+            schema_set_version=schema_set_version,
+        ),
+        encoding="utf-8",
+    )
 
 
 def clean_output_root(output_root: Path, *, dry_run: bool) -> None:
@@ -818,6 +859,7 @@ def main() -> int:
     try:
         manifest = load_manifest(schema_root)
         major = manifest["compatibility_major"]
+        schema_set_version = manifest["schema_set_version"]
 
         schema_keys = selected_schema_keys(
             manifest,
@@ -833,6 +875,12 @@ def main() -> int:
         if not args.no_clean:
             clean_output_root(output_root, dry_run=args.dry_run)
 
+        write_version_file(
+            output_root,
+            compatibility_major=major,
+            schema_set_version=schema_set_version,
+            dry_run=args.dry_run,
+        )
         write_shared_package(output_root, dry_run=args.dry_run)
 
         write_model_files(
