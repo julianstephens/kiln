@@ -29,6 +29,7 @@ func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 // It returns an error if the message cannot be read, decoded, or parsed.
 func (p *Peer) Receive(ctx context.Context) (Message, error) {
 	line, err := p.in.ReadBytes('\n')
+	line = bytes.TrimSuffix(line, []byte("\n"))
 	if err != nil {
 		if errors.Is(err, bufio.ErrBufferFull) {
 			return nil, NewFrameTooLargeError(len(line), p.maxBytes)

@@ -24,11 +24,18 @@ func TestPeerReceive_TableDriven(t *testing.T) {
 		wantErrContains string
 	}{
 		{
-			name:            "receive rejects newline-delimited frame",
-			input:           "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"repository.search\",\"params\":{\"query\":\"x\"}}\n",
-			maxBytes:        1024,
-			wantErrCode:     protocol.CodeInvalidFrame,
-			wantErrContains: "newline character",
+			name:     "receive decodes one line into typed JSON-RPC message",
+			input:    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"repository.search\",\"params\":{\"query\":\"x\"}}\n",
+			maxBytes: 1024,
+			want: protocol.Request{
+				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				ID: func() protocol.ID {
+					v := int64(1)
+					return protocol.ID{Number: &v}
+				}(),
+				Method: "repository.search",
+				Params: map[string]any{"query": "x"},
+			},
 		},
 		{
 			name:            "EOF maps to RuntimeStreamClosedError",
