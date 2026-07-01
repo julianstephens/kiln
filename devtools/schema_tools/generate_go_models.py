@@ -64,6 +64,14 @@ class Field:
     go_type: str
     required: bool
     validate_tags: list[str]
+    description: str | None
+
+
+@dataclass(frozen=True)
+class NestedType:
+    name: str
+    description: str | None
+    fields: list[Field]
 
 
 def go_ident(value: str, *, exported: bool = True) -> str:
@@ -341,6 +349,25 @@ def enum_type_name(parent_type_name: str, field_name: str) -> str:
     return f"{parent_type_name}{go_ident(field_name)}"
 
 
+def nested_type_name(parent_type_name: str, field_name: str) -> str:
+    return f"{parent_type_name}{go_ident(field_name)}"
+
+
+def description_for_schema(schema: dict[str, Any]) -> str | None:
+    description = schema.get("description")
+    if isinstance(description, str) and description:
+        return description
+    return None
+
+
+def inline_object_has_named_shape(schema: dict[str, Any]) -> bool:
+    if non_null_schema_type(schema) != "object":
+        return False
+
+    properties = schema.get("properties")
+    return isinstance(properties, dict) and bool(properties)
+
+
 def go_type_for_schema(
     schema: dict[str, Any],
     *,
@@ -349,6 +376,7 @@ def go_type_for_schema(
     imports: dict[str, str],
     parent_type_name: str,
     field_name: str,
+    nested_types: dict[str, NestedType],
 ) -> str:
     ref = schema.get("$ref")
     if isinstance(ref, str):
@@ -392,12 +420,30 @@ def go_type_for_schema(
                 imports=imports,
                 parent_type_name=parent_type_name,
                 field_name=f"{field_name}_item",
+                nested_types=nested_types,
             )
         else:
             item_type = "any"
         return f"[]{item_type}"
 
     if schema_type == "object":
+        if inline_object_has_named_shape(schema):
+            type_name = nested_type_name(parent_type_name, field_name)
+            if type_name not in nested_types:
+                nested_types[type_name] = NestedType(
+                    name=type_name,
+                    description=description_for_schema(schema),
+                    fields=collect_fields_for_schema(
+                        schema,
+                        major=major,
+                        module_root=module_root,
+                        imports=imports,
+                        parent_type_name=type_name,
+                        nested_types=nested_types,
+                    ),
+                )
+            return type_name
+
         additional_properties = schema.get("additionalProperties")
         if isinstance(additional_properties, dict):
             value_type = go_type_for_schema(
@@ -407,12 +453,9 @@ def go_type_for_schema(
                 imports=imports,
                 parent_type_name=parent_type_name,
                 field_name=f"{field_name}_value",
+                nested_types=nested_types,
             )
             return f"map[string]{value_type}"
-
-        properties = schema.get("properties")
-        if isinstance(properties, dict) and properties:
-            return "map[string]any"
 
         return "map[string]any"
 
@@ -488,21 +531,20 @@ def validate_tags_for_schema(schema: dict[str, Any], *, required: bool) -> list[
     return tags
 
 
-def collect_fields(
-    definition: SchemaDefinition,
+def collect_fields_for_schema(
+    schema: dict[str, Any],
     *,
     major: int,
     module_root: str,
     imports: dict[str, str],
     parent_type_name: str,
+    nested_types: dict[str, NestedType],
 ) -> list[Field]:
-    document = definition.document
-
-    properties = document.get("properties")
+    properties = schema.get("properties")
     if not isinstance(properties, dict):
         properties = {}
 
-    required_value = document.get("required")
+    required_value = schema.get("required")
     required = set(required_value) if isinstance(required_value, list) else set()
 
     fields: list[Field] = []
@@ -519,6 +561,7 @@ def collect_fields(
             imports=imports,
             parent_type_name=parent_type_name,
             field_name=json_name,
+            nested_types=nested_types,
         )
 
         if (
@@ -547,22 +590,38 @@ def collect_fields(
                     property_schema,
                     required=is_required,
                 ),
+                description=description_for_schema(property_schema),
             )
         )
 
     return fields
 
 
+def collect_fields(
+    definition: SchemaDefinition,
+    *,
+    major: int,
+    module_root: str,
+    imports: dict[str, str],
+    parent_type_name: str,
+    nested_types: dict[str, NestedType],
+) -> list[Field]:
+    return collect_fields_for_schema(
+        definition.document,
+        major=major,
+        module_root=module_root,
+        imports=imports,
+        parent_type_name=parent_type_name,
+        nested_types=nested_types,
+    )
+
+
 def collect_enums(
     fields: list[Field],
-    definition: SchemaDefinition,
+    properties: dict[str, Any],
     *,
     parent_type_name: str,
 ) -> list[str]:
-    properties = definition.document.get("properties")
-    if not isinstance(properties, dict):
-        return []
-
     chunks: list[str] = []
     emitted: set[str] = set()
 
@@ -638,39 +697,23 @@ def package_name_from_import_path(import_path: str) -> str:
     return import_path.rstrip("/").split("/")[-1]
 
 
-def render_model_file(
-    definition: SchemaDefinition,
-    *,
-    major: int,
-    module_root: str,
-) -> str:
-    package_name = package_name_for_key(definition.key)
-    type_name = type_name_for_key(definition.key)
-    imports: dict[str, str] = {}
-    imports["shared"] = f"{module_root.rstrip('/')}/shared"
+def go_comment(name: str, description: str | None) -> str:
+    if not description:
+        return f"// {name} is generated from a nested JSON Schema object.\n"
 
-    fields = collect_fields(
-        definition,
-        major=major,
-        module_root=module_root,
-        imports=imports,
-        parent_type_name=type_name,
-    )
+    normalized = " ".join(description.strip().split())
+    if not normalized.endswith("."):
+        normalized += "."
+    return f"// {name} {normalized[:1].lower() + normalized[1:]}\n"
 
-    enum_chunks = collect_enums(fields, definition, parent_type_name=type_name)
 
-    chunks: list[str] = [
-        HEADER,
-        "\n",
-        f"package {package_name}\n\n",
-        render_imports(imports),
-    ]
-
-    chunks.extend(chunk + "\n" for chunk in enum_chunks)
-
-    chunks.append(f"type {type_name} struct {{\n")
+def render_fields(fields: list[Field]) -> str:
+    chunks: list[str] = []
 
     for field in fields:
+        if field.description:
+            chunks.append(go_comment(field.name, field.description))
+
         json_tag = field.json_name
         if not field.required:
             json_tag += ",omitempty"
@@ -683,7 +726,83 @@ def render_model_file(
 
         chunks.append(f"\t{field.name} {field.go_type} `{' '.join(tags)}`\n")
 
-    chunks.append("}\n\n")
+    return "".join(chunks)
+
+
+def render_struct_type(type_name: str, fields: list[Field], description: str | None) -> str:
+    chunks = [go_comment(type_name, description), f"type {type_name} struct {{\n"]
+    chunks.append(render_fields(fields))
+    chunks.append("}\n")
+    return "".join(chunks)
+
+
+def render_model_file(
+    definition: SchemaDefinition,
+    *,
+    major: int,
+    module_root: str,
+) -> str:
+    package_name = package_name_for_key(definition.key)
+    type_name = type_name_for_key(definition.key)
+    imports: dict[str, str] = {}
+    imports["shared"] = f"{module_root.rstrip('/')}/shared"
+    nested_types: dict[str, NestedType] = {}
+
+    fields = collect_fields(
+        definition,
+        major=major,
+        module_root=module_root,
+        imports=imports,
+        parent_type_name=type_name,
+        nested_types=nested_types,
+    )
+
+    root_properties = definition.document.get("properties")
+    if not isinstance(root_properties, dict):
+        root_properties = {}
+
+    chunks: list[str] = [
+        HEADER,
+        "\n",
+        f"package {package_name}\n\n",
+        render_imports(imports),
+    ]
+
+    chunks.extend(
+        chunk + "\n"
+        for chunk in collect_enums(
+            fields,
+            root_properties,
+            parent_type_name=type_name,
+        )
+    )
+
+    chunks.append(
+        render_struct_type(
+            type_name,
+            fields,
+            description_for_schema(definition.document),
+        )
+    )
+    chunks.append("\n")
+
+    for nested_type in nested_types.values():
+        chunks.extend(
+            chunk + "\n"
+            for chunk in collect_enums(
+                nested_type.fields,
+                {},
+                parent_type_name=nested_type.name,
+            )
+        )
+        chunks.append(
+            render_struct_type(
+                nested_type.name,
+                nested_type.fields,
+                nested_type.description,
+            )
+        )
+        chunks.append("\n")
 
     chunks.append(f"func (value {type_name}) Validate() error {{\n")
     chunks.append("\treturn shared.Validate(value)\n")
