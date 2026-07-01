@@ -114,7 +114,7 @@ class Peer:
 
             if (
                 isinstance(res, JsonRpcRequest)
-                or not res.id
+                or res.id is None
                 or res.id not in self._pending_requests
             ):
                 raise UnexpectedJsonRpcMessageError(
