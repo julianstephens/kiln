@@ -72,6 +72,7 @@ class NestedType:
     name: str
     description: str | None
     fields: list[Field]
+    properties: dict[str, Any]
 
 
 def go_ident(value: str, *, exported: bool = True) -> str:
@@ -430,6 +431,9 @@ def go_type_for_schema(
         if inline_object_has_named_shape(schema):
             type_name = nested_type_name(parent_type_name, field_name)
             if type_name not in nested_types:
+                properties = schema.get("properties")
+                if not isinstance(properties, dict):
+                    properties = {}
                 nested_types[type_name] = NestedType(
                     name=type_name,
                     description=description_for_schema(schema),
@@ -441,6 +445,7 @@ def go_type_for_schema(
                         parent_type_name=type_name,
                         nested_types=nested_types,
                     ),
+                    properties=properties,
                 )
             return type_name
 
@@ -791,7 +796,7 @@ def render_model_file(
             chunk + "\n"
             for chunk in collect_enums(
                 nested_type.fields,
-                {},
+                nested_type.properties,
                 parent_type_name=nested_type.name,
             )
         )
