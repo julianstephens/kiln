@@ -8,32 +8,22 @@ Do not edit this package by hand. Regenerate with:
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, RootModel
+from ._internal import (
+    Category,
+    KilnError,
+    KilnRuntimeGeneratedPythonModelsBundle,
+    RuntimeError,
+    RuntimeHealthResult,
+    RuntimeInitializeRequestPayload,
+    RuntimeInitializeResult,
+)
 
-from . import error, health_result, initialize_request_payload, initialize_result
-
-
-class RuntimeError(RootModel[error.Schema]):
-    root: error.Schema
-
-
-class RuntimeHealthResult(RootModel[health_result.Schema]):
-    root: health_result.Schema
-
-
-class RuntimeInitializeRequestPayload(RootModel[initialize_request_payload.Schema]):
-    root: initialize_request_payload.Schema
-
-
-class RuntimeInitializeResult(RootModel[initialize_result.Schema]):
-    root: initialize_result.Schema
-
-
-class KilnRuntimeGeneratedPythonModelsBundle(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    runtime_error: RuntimeError | None = None
-    runtime_health_result: RuntimeHealthResult | None = None
-    runtime_initialize_request_payload: RuntimeInitializeRequestPayload | None = None
-    runtime_initialize_result: RuntimeInitializeResult | None = None
+__all__ = [
+    "Category",
+    "KilnError",
+    "KilnRuntimeGeneratedPythonModelsBundle",
+    "RuntimeError",
+    "RuntimeHealthResult",
+    "RuntimeInitializeRequestPayload",
+    "RuntimeInitializeResult",
+]

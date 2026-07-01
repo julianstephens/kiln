@@ -7,11 +7,11 @@ import (
 )
 
 type HealthResult struct {
-	Draining              bool    `json:"draining" validate:"required"`
-	Initialized           bool    `json:"initialized" validate:"required"`
-	LastFatalStartupError *string `json:"last_fatal_startup_error,omitempty" validate:"omitempty,min=1"`
-	Ready                 bool    `json:"ready" validate:"required"`
-	Shutdown              bool    `json:"shutdown" validate:"required"`
+	Draining              bool `json:"draining" validate:"required"`
+	Initialized           bool `json:"initialized" validate:"required"`
+	LastFatalStartupError any  `json:"last_fatal_startup_error,omitempty" validate:"omitempty"`
+	Ready                 bool `json:"ready" validate:"required"`
+	Shutdown              bool `json:"shutdown" validate:"required"`
 }
 
 func (value HealthResult) Validate() error {

@@ -29,9 +29,8 @@
             "description": "Whether the runtime is in the process of shutting down."
         },
         "last_fatal_startup_error": {
-            "type": "string",
-            "description": "The last fatal startup error that occurred, if any.",
-            "minLength": 1
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/error.schema.json#/properties/kiln_error",
+            "description": "The last fatal startup error that occurred, if any."
         }
     }
 }
