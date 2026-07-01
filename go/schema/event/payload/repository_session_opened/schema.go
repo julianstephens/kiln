@@ -22,12 +22,19 @@ const (
 	RepositorySessionOpenedSupportedOperationsItemRepositoryDiagnostics RepositorySessionOpenedSupportedOperationsItem = "repository.diagnostics"
 )
 
+// RepositorySessionOpened payload for repository.session_opened events.
 type RepositorySessionOpened struct {
-	OpenedAt            time.Time                                        `json:"opened_at" validate:"required"`
-	PreparationStatus   repository_preparation_status.PreparationStatus  `json:"preparation_status" validate:"required"`
-	Repository          repository_identifier.Identifier                 `json:"repository" validate:"required"`
-	RepositorySessionID string                                           `json:"repository_session_id" validate:"required,min=1"`
-	RepositoryVersion   repository_version.Version                       `json:"repository_version" validate:"required"`
+	// OpenedAt when the repository session was opened.
+	OpenedAt time.Time `json:"opened_at" validate:"required"`
+	// PreparationStatus preparation status available for the opened session.
+	PreparationStatus repository_preparation_status.PreparationStatus `json:"preparation_status" validate:"required"`
+	// Repository repository associated with the opened session.
+	Repository repository_identifier.Identifier `json:"repository" validate:"required"`
+	// RepositorySessionID repository session that was opened.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+	// RepositoryVersion repository version observed when the session was opened.
+	RepositoryVersion repository_version.Version `json:"repository_version" validate:"required"`
+	// SupportedOperations repository operations available for this session.
 	SupportedOperations []RepositorySessionOpenedSupportedOperationsItem `json:"supported_operations,omitempty" validate:"omitempty,min=1"`
 }
 

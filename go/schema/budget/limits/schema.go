@@ -16,6 +16,7 @@ const (
 	LimitsModeCustom LimitsMode = "custom"
 )
 
+// Limits is generated from a nested JSON Schema object.
 type Limits struct {
 	ArtifactSizeBytes      *int       `json:"artifact_size_bytes,omitempty" validate:"omitempty,gte=0"`
 	CommandOutputSizeBytes *int       `json:"command_output_size_bytes,omitempty" validate:"omitempty,gte=0"`

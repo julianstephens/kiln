@@ -8,11 +8,16 @@ import (
 	workspace_version "github.com/julianstephens/kiln/go/schema/workspace/version"
 )
 
+// RunExecutionStarted is generated from a nested JSON Schema object.
 type RunExecutionStarted struct {
-	InitialTurnID       string                     `json:"initial_turn_id" validate:"required,min=1"`
-	RepositorySessionID string                     `json:"repository_session_id" validate:"required,min=1"`
-	RepositoryVersion   repository_version.Version `json:"repository_version" validate:"required"`
-	WorkspaceVersion    workspace_version.Version  `json:"workspace_version" validate:"required"`
+	// InitialTurnID the turn that is being used to execute this run.
+	InitialTurnID string `json:"initial_turn_id" validate:"required,min=1"`
+	// RepositorySessionID the repository session that is being used to execute this run.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+	// RepositoryVersion the version of the repository that is being used to execute this run.
+	RepositoryVersion repository_version.Version `json:"repository_version" validate:"required"`
+	// WorkspaceVersion the version of the workspace that is being used to execute this run.
+	WorkspaceVersion workspace_version.Version `json:"workspace_version" validate:"required"`
 }
 
 func (value RunExecutionStarted) Validate() error {

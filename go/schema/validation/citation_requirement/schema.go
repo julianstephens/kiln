@@ -14,6 +14,7 @@ const (
 	CitationRequirementMinimumSupportLevelIndirect CitationRequirementMinimumSupportLevel = "indirect"
 )
 
+// CitationRequirement is generated from a nested JSON Schema object.
 type CitationRequirement struct {
 	AllowedSourceKinds  []string                               `json:"allowed_source_kinds" validate:"required,min=1"`
 	CitationModel       string                                 `json:"citation_model" validate:"required,min=1"`

@@ -39,6 +39,7 @@ const (
 	ReferenceScopeTenant ReferenceScope = "tenant"
 )
 
+// Reference stable reference to a stored artifact, including kind, scope, content identity, size, retention, and creation metadata.
 type Reference struct {
 	ArtifactID         string                `json:"artifact_id" validate:"required,min=1"`
 	ArtifactKind       ReferenceArtifactKind `json:"artifact_kind" validate:"required"`

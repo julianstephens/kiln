@@ -16,6 +16,7 @@ const (
 	PolicyRequirementPolicyKindCompliance PolicyRequirementPolicyKind = "compliance"
 )
 
+// PolicyRequirement is generated from a nested JSON Schema object.
 type PolicyRequirement struct {
 	FailureCode string                      `json:"failure_code" validate:"required,min=1"`
 	Inputs      []string                    `json:"inputs" validate:"required,min=1"`

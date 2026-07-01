@@ -38,6 +38,7 @@ const (
 	DiagnosticSeverityInfo DiagnosticSeverity = "info"
 )
 
+// Diagnostic repository diagnostic emitted during parsing, indexing, search, graph, or representation operations.
 type Diagnostic struct {
 	ContentID        string                           `json:"content_id" validate:"required,min=1"`
 	DiagnosticCode   DiagnosticDiagnosticCode         `json:"diagnostic_code" validate:"required"`

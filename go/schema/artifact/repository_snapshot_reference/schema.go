@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// RepositorySnapshotReference is generated from a nested JSON Schema object.
 type RepositorySnapshotReference struct {
 	ArtifactKind any `json:"artifact_kind,omitempty" validate:"omitempty"`
 }

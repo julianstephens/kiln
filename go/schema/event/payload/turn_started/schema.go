@@ -24,16 +24,26 @@ const (
 	TurnStartedTurnKindOutputProduction TurnStartedTurnKind = "output_production"
 )
 
+// TurnStarted payload for turn.started events.
 type TurnStarted struct {
-	BudgetID             *string                       `json:"budget_id,omitempty" validate:"omitempty,min=1"`
-	ContextID            string                        `json:"context_id" validate:"required,min=1"`
-	ContextStateRevision *int                          `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
-	InputReference       *artifact_reference.Reference `json:"input_reference,omitempty" validate:"omitempty"`
-	ParentTurnID         *string                       `json:"parent_turn_id,omitempty" validate:"omitempty,min=1"`
-	StartedAt            time.Time                     `json:"started_at" validate:"required"`
-	TurnID               string                        `json:"turn_id" validate:"required,min=1"`
-	TurnIndex            int                           `json:"turn_index" validate:"required,gte=0"`
-	TurnKind             TurnStartedTurnKind           `json:"turn_kind" validate:"required"`
+	// BudgetID budget ledger used by this turn, when applicable.
+	BudgetID *string `json:"budget_id,omitempty" validate:"omitempty,min=1"`
+	// ContextID context ledger used by this turn.
+	ContextID string `json:"context_id" validate:"required,min=1"`
+	// ContextStateRevision context state revision observed at turn start.
+	ContextStateRevision *int `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
+	// InputReference optional artifact reference for the turn input.
+	InputReference *artifact_reference.Reference `json:"input_reference,omitempty" validate:"omitempty"`
+	// ParentTurnID parent turn that caused this turn, when applicable.
+	ParentTurnID *string `json:"parent_turn_id,omitempty" validate:"omitempty,min=1"`
+	// StartedAt when the turn started.
+	StartedAt time.Time `json:"started_at" validate:"required"`
+	// TurnID identity for the turn that started.
+	TurnID string `json:"turn_id" validate:"required,min=1"`
+	// TurnIndex zero-based index of this turn within the run.
+	TurnIndex int `json:"turn_index" validate:"required,gte=0"`
+	// TurnKind kind of turn being started.
+	TurnKind TurnStartedTurnKind `json:"turn_kind" validate:"required"`
 }
 
 func (value TurnStarted) Validate() error {

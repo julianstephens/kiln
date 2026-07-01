@@ -29,6 +29,7 @@ const (
 	UsageUsageScopeComponent UsageUsageScope = "component"
 )
 
+// Usage is generated from a nested JSON Schema object.
 type Usage struct {
 	ArtifactSizeBytes      *int              `json:"artifact_size_bytes,omitempty" validate:"omitempty,gte=0"`
 	CommandOutputSizeBytes *int              `json:"command_output_size_bytes,omitempty" validate:"omitempty,gte=0"`

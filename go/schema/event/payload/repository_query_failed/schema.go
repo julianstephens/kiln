@@ -25,15 +25,24 @@ const (
 	RepositoryQueryFailedQueryKindDiagnostics RepositoryQueryFailedQueryKind = "diagnostics"
 )
 
+// RepositoryQueryFailed payload for repository.query_failed events.
 type RepositoryQueryFailed struct {
-	BudgetUsage            *budget_usage.Usage            `json:"budget_usage,omitempty" validate:"omitempty"`
-	Error                  repository_error.Error         `json:"error" validate:"required"`
-	FailedAt               time.Time                      `json:"failed_at" validate:"required"`
-	PartialResultReference *artifact_reference.Reference  `json:"partial_result_reference,omitempty" validate:"omitempty"`
-	QueryKind              RepositoryQueryFailedQueryKind `json:"query_kind" validate:"required"`
-	QueryOperationID       string                         `json:"query_operation_id" validate:"required,min=1"`
-	RepositorySessionID    string                         `json:"repository_session_id" validate:"required,min=1"`
-	Usage                  *repository_usage.Usage        `json:"usage,omitempty" validate:"omitempty"`
+	// BudgetUsage budget usage committed before the query failed.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// Error repository error produced by the failed query.
+	Error repository_error.Error `json:"error" validate:"required"`
+	// FailedAt when the repository query failed.
+	FailedAt time.Time `json:"failed_at" validate:"required"`
+	// PartialResultReference optional artifact reference for partial query results, if any were produced before failure.
+	PartialResultReference *artifact_reference.Reference `json:"partial_result_reference,omitempty" validate:"omitempty"`
+	// QueryKind kind of repository query that failed.
+	QueryKind RepositoryQueryFailedQueryKind `json:"query_kind" validate:"required"`
+	// QueryOperationID operation identity for this repository query.
+	QueryOperationID string `json:"query_operation_id" validate:"required,min=1"`
+	// RepositorySessionID repository session used for the failed query.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+	// Usage repository-specific telemetry recorded before the query failed.
+	Usage *repository_usage.Usage `json:"usage,omitempty" validate:"omitempty"`
 }
 
 func (value RepositoryQueryFailed) Validate() error {

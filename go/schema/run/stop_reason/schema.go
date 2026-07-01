@@ -68,11 +68,16 @@ const (
 	StopReasonCodeValidationError StopReasonCode = "validation_error"
 )
 
+// StopReason describes why a run stopped executing.
 type StopReason struct {
+	// Category broad class of reason the run stopped.
 	Category StopReasonCategory `json:"category" validate:"required"`
-	Code     StopReasonCode     `json:"code" validate:"required"`
-	Details  map[string]any     `json:"details,omitempty" validate:"omitempty"`
-	Message  *string            `json:"message,omitempty" validate:"omitempty,min=1"`
+	// Code specific machine-readable stop reason.
+	Code StopReasonCode `json:"code" validate:"required"`
+	// Details optional structured diagnostic details for the stop reason.
+	Details map[string]any `json:"details,omitempty" validate:"omitempty"`
+	// Message optional human-readable explanation of the stop reason.
+	Message *string `json:"message,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value StopReason) Validate() error {

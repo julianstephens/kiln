@@ -8,21 +8,36 @@ import (
 	"time"
 )
 
+// Envelope is generated from a nested JSON Schema object.
 type Envelope struct {
-	ArtifactReferences  []artifact_reference.Reference `json:"artifact_references,omitempty" validate:"omitempty,min=1"`
-	CausationID         *string                        `json:"causation_id,omitempty" validate:"omitempty,min=1"`
-	CorrelationID       *string                        `json:"correlation_id,omitempty" validate:"omitempty,min=1"`
-	EventID             string                         `json:"event_id" validate:"required,min=1"`
-	EventSchemaVersion  string                         `json:"event_schema_version" validate:"required,min=1"`
-	EventType           string                         `json:"event_type" validate:"required"`
-	OccurredAt          time.Time                      `json:"occurred_at" validate:"required"`
-	OperationID         *string                        `json:"operation_id,omitempty" validate:"omitempty,min=1"`
-	Payload             map[string]any                 `json:"payload" validate:"required"`
-	Producer            string                         `json:"producer" validate:"required,min=1"`
-	RepositorySessionID *string                        `json:"repository_session_id,omitempty" validate:"omitempty,min=1"`
-	RunID               *string                        `json:"run_id,omitempty" validate:"omitempty,min=1"`
-	Sequence            int                            `json:"sequence" validate:"required,gte=1"`
-	TurnID              *string                        `json:"turn_id,omitempty" validate:"omitempty,min=1"`
+	// ArtifactReferences references to any artifacts that are associated with this event.
+	ArtifactReferences []artifact_reference.Reference `json:"artifact_references,omitempty" validate:"omitempty,min=1"`
+	// CausationID the event_id of the event that caused this event to be generated, if applicable.
+	CausationID *string `json:"causation_id,omitempty" validate:"omitempty,min=1"`
+	// CorrelationID an identifier that can be used to correlate this event with other events, if applicable.
+	CorrelationID *string `json:"correlation_id,omitempty" validate:"omitempty,min=1"`
+	// EventID a globally unique identifier with the installation or tenant scope for this event.
+	EventID string `json:"event_id" validate:"required,min=1"`
+	// EventSchemaVersion the version of the event schema for this event_type.
+	EventSchemaVersion string `json:"event_schema_version" validate:"required,min=1"`
+	// EventType the type of event being reported.
+	EventType string `json:"event_type" validate:"required"`
+	// OccurredAt the timestamp of when this event was generated.
+	OccurredAt time.Time `json:"occurred_at" validate:"required"`
+	// OperationID an identifier that can be used to associate this event with a specific operation, if applicable.
+	OperationID *string `json:"operation_id,omitempty" validate:"omitempty,min=1"`
+	// Payload the payload of the event, which varies based on the event type.
+	Payload map[string]any `json:"payload" validate:"required"`
+	// Producer the identifier of the logical component that generated this event.
+	Producer string `json:"producer" validate:"required,min=1"`
+	// RepositorySessionID an identifier that can be used to associate this event with a specific repository session, if applicable.
+	RepositorySessionID *string `json:"repository_session_id,omitempty" validate:"omitempty,min=1"`
+	// RunID the run that this event is associated with.
+	RunID *string `json:"run_id,omitempty" validate:"omitempty,min=1"`
+	// Sequence the monotonically increasing sequence number of this event within the run.
+	Sequence int `json:"sequence" validate:"required,gte=1"`
+	// TurnID an identifier that can be used to associate this event with a specific turn, if applicable.
+	TurnID *string `json:"turn_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Envelope) Validate() error {

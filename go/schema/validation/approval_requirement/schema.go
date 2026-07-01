@@ -14,6 +14,7 @@ const (
 	ApprovalRequirementApprovalKindAutomated ApprovalRequirementApprovalKind = "automated"
 )
 
+// ApprovalRequirement is generated from a nested JSON Schema object.
 type ApprovalRequirement struct {
 	ApprovalKind ApprovalRequirementApprovalKind `json:"approval_kind" validate:"required"`
 	ApproverRole string                          `json:"approver_role" validate:"required,min=1"`

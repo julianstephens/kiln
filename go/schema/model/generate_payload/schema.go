@@ -8,15 +8,86 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// GeneratePayload provider-neutral payload for model generation, including model identity, rendered context, user question, generation parameters, and response constraints.
 type GeneratePayload struct {
-	GenerationParameters     map[string]any                `json:"generation_parameters" validate:"required"`
-	LocalAdapterID           *string                       `json:"local_adapter_id,omitempty" validate:"omitempty,min=1"`
-	ModelID                  string                        `json:"model_id" validate:"required,min=1"`
-	ProviderID               *string                       `json:"provider_id,omitempty" validate:"omitempty,min=1"`
-	RenderedContext          context_rendered.Rendered     `json:"rendered_context" validate:"required"`
+	// GenerationParameters provider-neutral generation parameters.
+	GenerationParameters GeneratePayloadGenerationParameters `json:"generation_parameters" validate:"required"`
+	// LocalAdapterID local adapter identifier, when generation is routed through a local model adapter.
+	LocalAdapterID *string `json:"local_adapter_id,omitempty" validate:"omitempty,min=1"`
+	// ModelID provider-neutral or adapter-local model identifier requested for generation.
+	ModelID string `json:"model_id" validate:"required,min=1"`
+	// ProviderID provider identifier, when generation is routed through an external provider.
+	ProviderID *string `json:"provider_id,omitempty" validate:"omitempty,min=1"`
+	// RenderedContext rendered context consumed by this generation request.
+	RenderedContext context_rendered.Rendered `json:"rendered_context" validate:"required"`
+	// RequestArtifactReference artifact reference for the fully rendered provider request, when materialized.
 	RequestArtifactReference *artifact_reference.Reference `json:"request_artifact_reference,omitempty" validate:"omitempty"`
-	ResponseConstraints      map[string]any                `json:"response_constraints" validate:"required"`
-	UserQuestion             *string                       `json:"user_question,omitempty" validate:"omitempty,min=1"`
+	// ResponseConstraints constraints on the response the model should produce.
+	ResponseConstraints GeneratePayloadResponseConstraints `json:"response_constraints" validate:"required"`
+	// UserQuestion user question or instruction for generation, when not already fully represented by rendered context.
+	UserQuestion *string `json:"user_question,omitempty" validate:"omitempty,min=1"`
+}
+
+type GeneratePayloadGenerationParametersReasoningEffort string
+
+const (
+	GeneratePayloadGenerationParametersReasoningEffortMinimal GeneratePayloadGenerationParametersReasoningEffort = "minimal"
+
+	GeneratePayloadGenerationParametersReasoningEffortLow GeneratePayloadGenerationParametersReasoningEffort = "low"
+
+	GeneratePayloadGenerationParametersReasoningEffortMedium GeneratePayloadGenerationParametersReasoningEffort = "medium"
+
+	GeneratePayloadGenerationParametersReasoningEffortHigh GeneratePayloadGenerationParametersReasoningEffort = "high"
+)
+
+// GeneratePayloadGenerationParameters provider-neutral generation parameters.
+type GeneratePayloadGenerationParameters struct {
+	// MaxOutputTokens maximum output tokens allowed for this generation request.
+	MaxOutputTokens int `json:"max_output_tokens" validate:"required,gte=1"`
+	// ReasoningEffort provider-neutral reasoning effort hint.
+	ReasoningEffort *GeneratePayloadGenerationParametersReasoningEffort `json:"reasoning_effort,omitempty" validate:"omitempty"`
+	// Seed determinism seed, when supported by the model adapter.
+	Seed *int `json:"seed,omitempty" validate:"omitempty"`
+	// StopSequences stop sequences that should terminate generation.
+	StopSequences []string `json:"stop_sequences,omitempty" validate:"omitempty,min=1"`
+	// Temperature sampling temperature.
+	Temperature *float64 `json:"temperature,omitempty" validate:"omitempty,gte=0"`
+	// TopP nucleus sampling probability mass.
+	TopP *float64 `json:"top_p,omitempty" validate:"omitempty,gte=0,lte=1"`
+}
+
+type GeneratePayloadResponseConstraintsResponseMode string
+
+const (
+	GeneratePayloadResponseConstraintsResponseModeAnswer GeneratePayloadResponseConstraintsResponseMode = "answer"
+
+	GeneratePayloadResponseConstraintsResponseModePatch GeneratePayloadResponseConstraintsResponseMode = "patch"
+
+	GeneratePayloadResponseConstraintsResponseModeAnswerWithPatch GeneratePayloadResponseConstraintsResponseMode = "answer_with_patch"
+
+	GeneratePayloadResponseConstraintsResponseModeReport GeneratePayloadResponseConstraintsResponseMode = "report"
+
+	GeneratePayloadResponseConstraintsResponseModeToolCall GeneratePayloadResponseConstraintsResponseMode = "tool_call"
+
+	GeneratePayloadResponseConstraintsResponseModeStructuredJSON GeneratePayloadResponseConstraintsResponseMode = "structured_json"
+)
+
+// GeneratePayloadResponseConstraints constraints on the response the model should produce.
+type GeneratePayloadResponseConstraints struct {
+	// AllowToolCalls whether the response may request tool calls.
+	AllowToolCalls *bool `json:"allow_tool_calls,omitempty" validate:"omitempty"`
+	// AllowedToolNames tool names the model is allowed to request.
+	AllowedToolNames []string `json:"allowed_tool_names,omitempty" validate:"omitempty,min=1"`
+	// CitationRequired whether citations are required in the generated result.
+	CitationRequired *bool `json:"citation_required,omitempty" validate:"omitempty"`
+	// JSONSchemaReference artifact or schema reference for structured JSON output constraints.
+	JSONSchemaReference *artifact_reference.Reference `json:"json_schema_reference,omitempty" validate:"omitempty"`
+	// MaxAnswerChars maximum answer length in characters.
+	MaxAnswerChars *int `json:"max_answer_chars,omitempty" validate:"omitempty,gte=1"`
+	// RequiredContentType required response content type, when applicable.
+	RequiredContentType *string `json:"required_content_type,omitempty" validate:"omitempty,min=1"`
+	// ResponseMode expected response shape.
+	ResponseMode GeneratePayloadResponseConstraintsResponseMode `json:"response_mode" validate:"required"`
 }
 
 func (value GeneratePayload) Validate() error {

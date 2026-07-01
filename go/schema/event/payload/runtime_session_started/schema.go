@@ -21,16 +21,60 @@ const (
 	RuntimeSessionStartedStartupModeTest RuntimeSessionStartedStartupMode = "test"
 )
 
+// RuntimeSessionStarted payload for runtime.session_started events.
 type RuntimeSessionStarted struct {
-	DatabaseID            string                            `json:"database_id" validate:"required,min=1"`
-	DatabaseSchemaVersion *string                           `json:"database_schema_version,omitempty" validate:"omitempty,min=1"`
-	ParentProcess         map[string]any                    `json:"parent_process" validate:"required"`
-	ProtocolVersion       string                            `json:"protocol_version" validate:"required,min=1"`
-	RuntimeSessionID      string                            `json:"runtime_session_id" validate:"required,min=1"`
-	RuntimeVersion        string                            `json:"runtime_version" validate:"required,min=1"`
-	StartupMode           *RuntimeSessionStartedStartupMode `json:"startup_mode,omitempty" validate:"omitempty"`
-	StartupReason         *string                           `json:"startup_reason,omitempty" validate:"omitempty,min=1"`
-	StartupTimestamp      time.Time                         `json:"startup_timestamp" validate:"required"`
+	// DatabaseID opaque identity for the database or persistence store used by the runtime session.
+	DatabaseID string `json:"database_id" validate:"required,min=1"`
+	// DatabaseSchemaVersion database schema version observed at session startup, when available.
+	DatabaseSchemaVersion *string `json:"database_schema_version,omitempty" validate:"omitempty,min=1"`
+	// ParentProcess identity metadata for the parent process that launched or supervised this runtime session.
+	ParentProcess RuntimeSessionStartedParentProcess `json:"parent_process" validate:"required"`
+	// ProtocolVersion protocol version spoken by this runtime session.
+	ProtocolVersion string `json:"protocol_version" validate:"required,min=1"`
+	// RuntimeSessionID the runtime session that was started.
+	RuntimeSessionID string `json:"runtime_session_id" validate:"required,min=1"`
+	// RuntimeVersion runtime implementation version.
+	RuntimeVersion string `json:"runtime_version" validate:"required,min=1"`
+	// StartupMode how the runtime session was started.
+	StartupMode *RuntimeSessionStartedStartupMode `json:"startup_mode,omitempty" validate:"omitempty"`
+	// StartupReason human-readable or system-provided reason for starting the runtime session.
+	StartupReason *string `json:"startup_reason,omitempty" validate:"omitempty,min=1"`
+	// StartupTimestamp when runtime session startup began or was recorded.
+	StartupTimestamp time.Time `json:"startup_timestamp" validate:"required"`
+}
+
+type RuntimeSessionStartedParentProcessProcessKind string
+
+const (
+	RuntimeSessionStartedParentProcessProcessKindPythonSdk RuntimeSessionStartedParentProcessProcessKind = "python_sdk"
+
+	RuntimeSessionStartedParentProcessProcessKindCli RuntimeSessionStartedParentProcessProcessKind = "cli"
+
+	RuntimeSessionStartedParentProcessProcessKindHostedWorker RuntimeSessionStartedParentProcessProcessKind = "hosted_worker"
+
+	RuntimeSessionStartedParentProcessProcessKindTestHarness RuntimeSessionStartedParentProcessProcessKind = "test_harness"
+
+	RuntimeSessionStartedParentProcessProcessKindUnknown RuntimeSessionStartedParentProcessProcessKind = "unknown"
+)
+
+// RuntimeSessionStartedParentProcess identity metadata for the parent process that launched or supervised this runtime session.
+type RuntimeSessionStartedParentProcess struct {
+	// CommandInvocationID opaque identity for the CLI or command invocation that launched the runtime session, when applicable.
+	CommandInvocationID *string `json:"command_invocation_id,omitempty" validate:"omitempty,min=1"`
+	// ExecutableName the executable or logical entrypoint name of the parent process.
+	ExecutableName *string `json:"executable_name,omitempty" validate:"omitempty,min=1"`
+	// HostID opaque host or container identity, when safe to record.
+	HostID *string `json:"host_id,omitempty" validate:"omitempty,min=1"`
+	// ProcessID the operating-system process ID of the parent process, when safe and available.
+	ProcessID *int `json:"process_id,omitempty" validate:"omitempty,gte=1"`
+	// ProcessKind the kind of parent process that launched the runtime session.
+	ProcessKind RuntimeSessionStartedParentProcessProcessKind `json:"process_kind" validate:"required"`
+	// ProcessStartTime when the parent process started, when safe and available.
+	ProcessStartTime *time.Time `json:"process_start_time,omitempty" validate:"omitempty"`
+	// SdkVersion version of the SDK or client package that launched the runtime session, when applicable.
+	SdkVersion *string `json:"sdk_version,omitempty" validate:"omitempty,min=1"`
+	// SupervisorID stable identity for the supervising component, worker, or SDK instance, when available.
+	SupervisorID *string `json:"supervisor_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RuntimeSessionStarted) Validate() error {

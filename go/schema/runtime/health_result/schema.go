@@ -3,15 +3,22 @@
 package health_result
 
 import (
+	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// HealthResult is generated from a nested JSON Schema object.
 type HealthResult struct {
-	Draining              bool `json:"draining" validate:"required"`
-	Initialized           bool `json:"initialized" validate:"required"`
-	LastFatalStartupError any  `json:"last_fatal_startup_error,omitempty" validate:"omitempty"`
-	Ready                 bool `json:"ready" validate:"required"`
-	Shutdown              bool `json:"shutdown" validate:"required"`
+	// Draining whether the runtime is in the process of draining.
+	Draining bool `json:"draining" validate:"required"`
+	// Initialized whether the runtime has been initialized.
+	Initialized bool `json:"initialized" validate:"required"`
+	// LastFatalStartupError the last fatal startup error that occurred, if any.
+	LastFatalStartupError *runtime_error.ErrorKilnError `json:"last_fatal_startup_error,omitempty" validate:"omitempty"`
+	// Ready whether the runtime is ready to accept requests.
+	Ready bool `json:"ready" validate:"required"`
+	// Shutdown whether the runtime is in the process of shutting down.
+	Shutdown bool `json:"shutdown" validate:"required"`
 }
 
 func (value HealthResult) Validate() error {

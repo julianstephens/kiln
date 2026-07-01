@@ -24,15 +24,36 @@ const (
 	RepositoryQueryCompletedQueryKindDiagnostics RepositoryQueryCompletedQueryKind = "diagnostics"
 )
 
+// RepositoryQueryCompleted payload for repository.query_completed events.
 type RepositoryQueryCompleted struct {
-	BudgetUsage         *budget_usage.Usage               `json:"budget_usage,omitempty" validate:"omitempty"`
-	CompletedAt         time.Time                         `json:"completed_at" validate:"required"`
-	QueryKind           RepositoryQueryCompletedQueryKind `json:"query_kind" validate:"required"`
-	QueryOperationID    string                            `json:"query_operation_id" validate:"required,min=1"`
-	RepositorySessionID string                            `json:"repository_session_id" validate:"required,min=1"`
-	ResultReference     *artifact_reference.Reference     `json:"result_reference,omitempty" validate:"omitempty"`
-	ResultSummary       map[string]any                    `json:"result_summary" validate:"required"`
-	Usage               repository_usage.Usage            `json:"usage" validate:"required"`
+	// BudgetUsage budget usage committed for this repository query.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// CompletedAt when the repository query completed.
+	CompletedAt time.Time `json:"completed_at" validate:"required"`
+	// QueryKind kind of repository query that completed.
+	QueryKind RepositoryQueryCompletedQueryKind `json:"query_kind" validate:"required"`
+	// QueryOperationID operation identity for this repository query.
+	QueryOperationID string `json:"query_operation_id" validate:"required,min=1"`
+	// RepositorySessionID repository session used for the query.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+	// ResultReference optional artifact reference for the durable query result.
+	ResultReference *artifact_reference.Reference `json:"result_reference,omitempty" validate:"omitempty"`
+	// ResultSummary summary of repository query results.
+	ResultSummary RepositoryQueryCompletedResultSummary `json:"result_summary" validate:"required"`
+	// Usage repository-specific telemetry for the completed query.
+	Usage repository_usage.Usage `json:"usage" validate:"required"`
+}
+
+// RepositoryQueryCompletedResultSummary summary of repository query results.
+type RepositoryQueryCompletedResultSummary struct {
+	// BytesReturned approximate number of bytes returned by the query.
+	BytesReturned *int `json:"bytes_returned,omitempty" validate:"omitempty,gte=0"`
+	// EstimatedTokensReturned estimated number of tokens represented by returned content.
+	EstimatedTokensReturned *int `json:"estimated_tokens_returned,omitempty" validate:"omitempty,gte=0"`
+	// ResultCount number of results returned by the query.
+	ResultCount int `json:"result_count" validate:"required,gte=0"`
+	// Truncated whether the result was truncated.
+	Truncated *bool `json:"truncated,omitempty" validate:"omitempty"`
 }
 
 func (value RepositoryQueryCompleted) Validate() error {

@@ -38,23 +38,66 @@ const (
 	RenderedTruncationReasonManual RenderedTruncationReason = "manual"
 )
 
+// Rendered a rendered context instance produced from active context items for a model, tool, validation, output, diagnostic, or preview consumer.
 type Rendered struct {
-	ContentHash             *string                       `json:"content_hash,omitempty" validate:"omitempty,min=1"`
-	ContextID               string                        `json:"context_id" validate:"required,min=1"`
-	ContextPlanID           *string                       `json:"context_plan_id,omitempty" validate:"omitempty,min=1"`
-	ContextStateRevision    int                           `json:"context_state_revision" validate:"required,gte=0"`
-	ModelContextLimit       *int                          `json:"model_context_limit,omitempty" validate:"omitempty,gte=1"`
+	// ContentHash content hash for the rendered context payload, when not stored as an artifact.
+	ContentHash *string `json:"content_hash,omitempty" validate:"omitempty,min=1"`
+	// ContextID context ledger rendered from.
+	ContextID string `json:"context_id" validate:"required,min=1"`
+	// ContextPlanID context plan used to produce this render, when applicable.
+	ContextPlanID *string `json:"context_plan_id,omitempty" validate:"omitempty,min=1"`
+	// ContextStateRevision context state revision rendered from.
+	ContextStateRevision int `json:"context_state_revision" validate:"required,gte=0"`
+	// ModelContextLimit model context limit used when rendering, when applicable.
+	ModelContextLimit *int `json:"model_context_limit,omitempty" validate:"omitempty,gte=1"`
+	// RenderArtifactReference artifact reference for rendered context content, when stored durably.
 	RenderArtifactReference *artifact_reference.Reference `json:"render_artifact_reference,omitempty" validate:"omitempty"`
-	RenderID                string                        `json:"render_id" validate:"required,min=1"`
-	RenderTarget            RenderedRenderTarget          `json:"render_target" validate:"required"`
-	RenderedAt              time.Time                     `json:"rendered_at" validate:"required"`
-	RenderedItemCount       int                           `json:"rendered_item_count" validate:"required,gte=0"`
-	RenderedItemIds         []string                      `json:"rendered_item_ids" validate:"required"`
-	RenderedItems           []map[string]any              `json:"rendered_items,omitempty" validate:"omitempty"`
-	RenderedTokenEstimate   int                           `json:"rendered_token_estimate" validate:"required,gte=0"`
-	TargetOperationID       *string                       `json:"target_operation_id,omitempty" validate:"omitempty,min=1"`
-	Truncated               *bool                         `json:"truncated,omitempty" validate:"omitempty"`
-	TruncationReason        *RenderedTruncationReason     `json:"truncation_reason,omitempty" validate:"omitempty"`
+	// RenderID stable identity for this rendered context instance.
+	RenderID string `json:"render_id" validate:"required,min=1"`
+	// RenderTarget consumer or phase this context render was produced for.
+	RenderTarget RenderedRenderTarget `json:"render_target" validate:"required"`
+	// RenderedAt when this context render was produced.
+	RenderedAt time.Time `json:"rendered_at" validate:"required"`
+	// RenderedItemCount number of context items included in this render.
+	RenderedItemCount int `json:"rendered_item_count" validate:"required,gte=0"`
+	// RenderedItemIds context items included in this render.
+	RenderedItemIds []string `json:"rendered_item_ids" validate:"required"`
+	// RenderedItems context items included in this render with render order and token estimates.
+	RenderedItems []RenderedRenderedItemsItem `json:"rendered_items,omitempty" validate:"omitempty"`
+	// RenderedTokenEstimate estimated token count for the rendered context.
+	RenderedTokenEstimate int `json:"rendered_token_estimate" validate:"required,gte=0"`
+	// TargetOperationID operation that consumed or requested this rendered context.
+	TargetOperationID *string `json:"target_operation_id,omitempty" validate:"omitempty,min=1"`
+	// Truncated whether rendered context was truncated.
+	Truncated *bool `json:"truncated,omitempty" validate:"omitempty"`
+	// TruncationReason reason rendered context was truncated.
+	TruncationReason *RenderedTruncationReason `json:"truncation_reason,omitempty" validate:"omitempty"`
+}
+
+type RenderedRenderedItemsItemRenderRole string
+
+const (
+	RenderedRenderedItemsItemRenderRoleSystem RenderedRenderedItemsItemRenderRole = "system"
+
+	RenderedRenderedItemsItemRenderRoleDeveloper RenderedRenderedItemsItemRenderRole = "developer"
+
+	RenderedRenderedItemsItemRenderRoleUser RenderedRenderedItemsItemRenderRole = "user"
+
+	RenderedRenderedItemsItemRenderRoleAssistant RenderedRenderedItemsItemRenderRole = "assistant"
+
+	RenderedRenderedItemsItemRenderRoleTool RenderedRenderedItemsItemRenderRole = "tool"
+
+	RenderedRenderedItemsItemRenderRoleContext RenderedRenderedItemsItemRenderRole = "context"
+
+	RenderedRenderedItemsItemRenderRoleMetadata RenderedRenderedItemsItemRenderRole = "metadata"
+)
+
+// RenderedRenderedItemsItem is generated from a nested JSON Schema object.
+type RenderedRenderedItemsItem struct {
+	EstimatedTokens *int                                 `json:"estimated_tokens,omitempty" validate:"omitempty,gte=0"`
+	ItemID          string                               `json:"item_id" validate:"required,min=1"`
+	Order           int                                  `json:"order" validate:"required,gte=0"`
+	RenderRole      *RenderedRenderedItemsItemRenderRole `json:"render_role,omitempty" validate:"omitempty"`
 }
 
 func (value Rendered) Validate() error {

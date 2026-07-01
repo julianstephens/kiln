@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Usage repository-engine usage telemetry recorded for repository protocol operations.
 type Usage struct {
 	BytesReturned            int     `json:"bytes_returned" validate:"required,gte=0"`
 	CandidatesReturned       int     `json:"candidates_returned" validate:"required,gte=0"`

@@ -26,14 +26,36 @@ const (
 	ModelResponseInterpretedInterpretationKindUnstructured ModelResponseInterpretedInterpretationKind = "unstructured"
 )
 
+// ModelResponseInterpreted payload for model.response_interpreted events.
 type ModelResponseInterpreted struct {
-	InterpretationKind         ModelResponseInterpretedInterpretationKind `json:"interpretation_kind" validate:"required"`
-	InterpretationWarnings     []map[string]any                           `json:"interpretation_warnings,omitempty" validate:"omitempty,min=1"`
-	InterpretedAt              time.Time                                  `json:"interpreted_at" validate:"required"`
-	InterpretedOutputReference *artifact_reference.Reference              `json:"interpreted_output_reference,omitempty" validate:"omitempty"`
-	ModelInvocationID          string                                     `json:"model_invocation_id" validate:"required,min=1"`
-	ResponseArtifactReference  artifact_reference.Reference               `json:"response_artifact_reference" validate:"required"`
-	ToolCallRequests           []map[string]any                           `json:"tool_call_requests,omitempty" validate:"omitempty,min=1"`
+	// InterpretationKind primary interpretation produced from the model response.
+	InterpretationKind ModelResponseInterpretedInterpretationKind `json:"interpretation_kind" validate:"required"`
+	// InterpretationWarnings non-fatal warnings produced while interpreting the model response.
+	InterpretationWarnings []ModelResponseInterpretedInterpretationWarningsItem `json:"interpretation_warnings,omitempty" validate:"omitempty,min=1"`
+	// InterpretedAt when the model response was interpreted.
+	InterpretedAt time.Time `json:"interpreted_at" validate:"required"`
+	// InterpretedOutputReference optional artifact reference for the normalized interpreted output.
+	InterpretedOutputReference *artifact_reference.Reference `json:"interpreted_output_reference,omitempty" validate:"omitempty"`
+	// ModelInvocationID model invocation whose response was interpreted.
+	ModelInvocationID string `json:"model_invocation_id" validate:"required,min=1"`
+	// ResponseArtifactReference artifact reference for the raw model response.
+	ResponseArtifactReference artifact_reference.Reference `json:"response_artifact_reference" validate:"required"`
+	// ToolCallRequests tool calls requested by the interpreted response.
+	ToolCallRequests []ModelResponseInterpretedToolCallRequestsItem `json:"tool_call_requests,omitempty" validate:"omitempty,min=1"`
+}
+
+// ModelResponseInterpretedInterpretationWarningsItem is generated from a nested JSON Schema object.
+type ModelResponseInterpretedInterpretationWarningsItem struct {
+	Code    string `json:"code" validate:"required,min=1"`
+	Message string `json:"message" validate:"required,min=1"`
+}
+
+// ModelResponseInterpretedToolCallRequestsItem is generated from a nested JSON Schema object.
+type ModelResponseInterpretedToolCallRequestsItem struct {
+	// ArgumentsArtifactReference optional artifact reference for tool-call arguments.
+	ArgumentsArtifactReference *artifact_reference.Reference `json:"arguments_artifact_reference,omitempty" validate:"omitempty"`
+	ToolCallID                 string                        `json:"tool_call_id" validate:"required,min=1"`
+	ToolName                   string                        `json:"tool_name" validate:"required,min=1"`
 }
 
 func (value ModelResponseInterpreted) Validate() error {

@@ -40,6 +40,7 @@ const (
 	ErrorCategoryInternal ErrorCategory = "internal"
 )
 
+// Error repository-protocol error details including category, diagnostics, operation context, and related artifacts.
 type Error struct {
 	ArtifactReferences  []artifact_diagnostic_log_reference.DiagnosticLogReference `json:"artifact_references" validate:"required"`
 	Category            ErrorCategory                                              `json:"category" validate:"required"`

@@ -23,16 +23,62 @@ const (
 	ContextPlanProducedPlanningStrategyManual ContextPlanProducedPlanningStrategy = "manual"
 )
 
+// ContextPlanProduced payload for context.plan_produced events.
 type ContextPlanProduced struct {
-	ContextID             string                               `json:"context_id" validate:"required,min=1"`
-	ContextPlanID         string                               `json:"context_plan_id" validate:"required,min=1"`
-	ContextPlanRequestID  string                               `json:"context_plan_request_id" validate:"required,min=1"`
-	EstimatedTokenCount   int                                  `json:"estimated_token_count" validate:"required,gte=0"`
-	ModelContextLimit     *int                                 `json:"model_context_limit,omitempty" validate:"omitempty,gte=0"`
-	PlanArtifactReference *artifact_reference.Reference        `json:"plan_artifact_reference,omitempty" validate:"omitempty"`
-	PlannedActiveItems    []map[string]any                     `json:"planned_active_items" validate:"required,min=1"`
-	PlannedEvictions      []map[string]any                     `json:"planned_evictions,omitempty" validate:"omitempty"`
-	PlanningStrategy      *ContextPlanProducedPlanningStrategy `json:"planning_strategy,omitempty" validate:"omitempty"`
+	ContextID             string                        `json:"context_id" validate:"required,min=1"`
+	ContextPlanID         string                        `json:"context_plan_id" validate:"required,min=1"`
+	ContextPlanRequestID  string                        `json:"context_plan_request_id" validate:"required,min=1"`
+	EstimatedTokenCount   int                           `json:"estimated_token_count" validate:"required,gte=0"`
+	ModelContextLimit     *int                          `json:"model_context_limit,omitempty" validate:"omitempty,gte=0"`
+	PlanArtifactReference *artifact_reference.Reference `json:"plan_artifact_reference,omitempty" validate:"omitempty"`
+	// PlannedActiveItems items selected by the produced context plan, in intended render order.
+	PlannedActiveItems []ContextPlanProducedPlannedActiveItemsItem `json:"planned_active_items" validate:"required,min=1"`
+	PlannedEvictions   []ContextPlanProducedPlannedEvictionsItem   `json:"planned_evictions,omitempty" validate:"omitempty"`
+	PlanningStrategy   *ContextPlanProducedPlanningStrategy        `json:"planning_strategy,omitempty" validate:"omitempty"`
+}
+
+type ContextPlanProducedPlannedActiveItemsItemAdmissionReason string
+
+const (
+	ContextPlanProducedPlannedActiveItemsItemAdmissionReasonPinned ContextPlanProducedPlannedActiveItemsItemAdmissionReason = "pinned"
+
+	ContextPlanProducedPlannedActiveItemsItemAdmissionReasonRecent ContextPlanProducedPlannedActiveItemsItemAdmissionReason = "recent"
+
+	ContextPlanProducedPlannedActiveItemsItemAdmissionReasonRelevant ContextPlanProducedPlannedActiveItemsItemAdmissionReason = "relevant"
+
+	ContextPlanProducedPlannedActiveItemsItemAdmissionReasonRequired ContextPlanProducedPlannedActiveItemsItemAdmissionReason = "required"
+
+	ContextPlanProducedPlannedActiveItemsItemAdmissionReasonDependency ContextPlanProducedPlannedActiveItemsItemAdmissionReason = "dependency"
+
+	ContextPlanProducedPlannedActiveItemsItemAdmissionReasonManual ContextPlanProducedPlannedActiveItemsItemAdmissionReason = "manual"
+)
+
+// ContextPlanProducedPlannedActiveItemsItem is generated from a nested JSON Schema object.
+type ContextPlanProducedPlannedActiveItemsItem struct {
+	AdmissionReason ContextPlanProducedPlannedActiveItemsItemAdmissionReason `json:"admission_reason" validate:"required"`
+	EstimatedTokens *int                                                     `json:"estimated_tokens,omitempty" validate:"omitempty,gte=0"`
+	ItemID          string                                                   `json:"item_id" validate:"required,min=1"`
+	Order           int                                                      `json:"order" validate:"required,gte=0"`
+}
+
+type ContextPlanProducedPlannedEvictionsItemEvictionReason string
+
+const (
+	ContextPlanProducedPlannedEvictionsItemEvictionReasonTokenBudget ContextPlanProducedPlannedEvictionsItemEvictionReason = "token_budget"
+
+	ContextPlanProducedPlannedEvictionsItemEvictionReasonStale ContextPlanProducedPlannedEvictionsItemEvictionReason = "stale"
+
+	ContextPlanProducedPlannedEvictionsItemEvictionReasonSuperseded ContextPlanProducedPlannedEvictionsItemEvictionReason = "superseded"
+
+	ContextPlanProducedPlannedEvictionsItemEvictionReasonLowRelevance ContextPlanProducedPlannedEvictionsItemEvictionReason = "low_relevance"
+
+	ContextPlanProducedPlannedEvictionsItemEvictionReasonManual ContextPlanProducedPlannedEvictionsItemEvictionReason = "manual"
+)
+
+// ContextPlanProducedPlannedEvictionsItem is generated from a nested JSON Schema object.
+type ContextPlanProducedPlannedEvictionsItem struct {
+	EvictionReason ContextPlanProducedPlannedEvictionsItemEvictionReason `json:"eviction_reason" validate:"required"`
+	ItemID         string                                                `json:"item_id" validate:"required,min=1"`
 }
 
 func (value ContextPlanProduced) Validate() error {

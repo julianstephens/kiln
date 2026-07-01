@@ -21,16 +21,22 @@ const (
 	BudgetInitializedBudgetScopeComponent BudgetInitializedBudgetScope = "component"
 )
 
+// BudgetInitialized payload for budget.initialized events.
 type BudgetInitialized struct {
-	BudgetID      string                       `json:"budget_id" validate:"required,min=1"`
-	BudgetScope   BudgetInitializedBudgetScope `json:"budget_scope" validate:"required"`
-	Component     *string                      `json:"component,omitempty" validate:"omitempty,min=1"`
-	InitialState  budget_state.State           `json:"initial_state" validate:"required"`
-	InitializedAt time.Time                    `json:"initialized_at" validate:"required"`
-	Limits        budget_limits.Limits         `json:"limits" validate:"required"`
-	OperationID   *string                      `json:"operation_id,omitempty" validate:"omitempty,min=1"`
-	RunID         *string                      `json:"run_id,omitempty" validate:"omitempty,min=1"`
-	TurnID        *string                      `json:"turn_id,omitempty" validate:"omitempty,min=1"`
+	// BudgetID stable identity for this budget ledger or accounting scope.
+	BudgetID string `json:"budget_id" validate:"required,min=1"`
+	// BudgetScope scope controlled by this budget.
+	BudgetScope BudgetInitializedBudgetScope `json:"budget_scope" validate:"required"`
+	Component   *string                      `json:"component,omitempty" validate:"omitempty,min=1"`
+	// InitialState initial budget accounting state.
+	InitialState budget_state.State `json:"initial_state" validate:"required"`
+	// InitializedAt when this budget scope was initialized.
+	InitializedAt time.Time `json:"initialized_at" validate:"required"`
+	// Limits budget limits configured for this scope.
+	Limits      budget_limits.Limits `json:"limits" validate:"required"`
+	OperationID *string              `json:"operation_id,omitempty" validate:"omitempty,min=1"`
+	RunID       *string              `json:"run_id,omitempty" validate:"omitempty,min=1"`
+	TurnID      *string              `json:"turn_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value BudgetInitialized) Validate() error {

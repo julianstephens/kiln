@@ -7,6 +7,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// SourceRequestPayload is generated from a nested JSON Schema object.
 type SourceRequestPayload struct {
 	MaxResultSize            int                              `json:"max_result_size" validate:"required,gte=1"`
 	QualifiedName            *string                          `json:"qualified_name,omitempty" validate:"omitempty,min=1"`

@@ -61,16 +61,19 @@ const (
 	ContextItemAvailablePriorityRequired ContextItemAvailablePriority = "required"
 )
 
+// ContextItemAvailable payload for context.item_available events.
 type ContextItemAvailable struct {
 	AvailabilityReason ContextItemAvailableAvailabilityReason `json:"availability_reason" validate:"required"`
 	ContextID          string                                 `json:"context_id" validate:"required,min=1"`
 	EstimatedTokens    int                                    `json:"estimated_tokens" validate:"required,gte=0"`
 	ItemID             string                                 `json:"item_id" validate:"required,min=1"`
 	ItemKind           ContextItemAvailableItemKind           `json:"item_kind" validate:"required"`
-	Metadata           map[string]any                         `json:"metadata,omitempty" validate:"omitempty"`
-	Pinned             *bool                                  `json:"pinned,omitempty" validate:"omitempty"`
-	Priority           *ContextItemAvailablePriority          `json:"priority,omitempty" validate:"omitempty"`
-	SourceReference    *artifact_reference.Reference          `json:"source_reference,omitempty" validate:"omitempty"`
+	// Metadata small non-sensitive item metadata.
+	Metadata map[string]any                `json:"metadata,omitempty" validate:"omitempty"`
+	Pinned   *bool                         `json:"pinned,omitempty" validate:"omitempty"`
+	Priority *ContextItemAvailablePriority `json:"priority,omitempty" validate:"omitempty"`
+	// SourceReference artifact, repository, or external reference for the item source.
+	SourceReference *artifact_reference.Reference `json:"source_reference,omitempty" validate:"omitempty"`
 }
 
 func (value ContextItemAvailable) Validate() error {

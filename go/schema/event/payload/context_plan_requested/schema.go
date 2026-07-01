@@ -22,16 +22,29 @@ const (
 	ContextPlanRequestedPlanningGoalRecovery ContextPlanRequestedPlanningGoal = "recovery"
 )
 
+// ContextPlanRequested payload for context.plan_requested events.
 type ContextPlanRequested struct {
-	ActiveItemCount      *int                             `json:"active_item_count,omitempty" validate:"omitempty,gte=0"`
-	AvailableItemCount   *int                             `json:"available_item_count,omitempty" validate:"omitempty,gte=0"`
-	Constraints          map[string]any                   `json:"constraints,omitempty" validate:"omitempty"`
-	ContextID            string                           `json:"context_id" validate:"required,min=1"`
-	ContextPlanRequestID string                           `json:"context_plan_request_id" validate:"required,min=1"`
-	CurrentTokenEstimate int                              `json:"current_token_estimate" validate:"required,gte=0"`
-	ModelContextLimit    int                              `json:"model_context_limit" validate:"required,gte=0"`
-	PinnedItemIds        []string                         `json:"pinned_item_ids,omitempty" validate:"omitempty"`
-	PlanningGoal         ContextPlanRequestedPlanningGoal `json:"planning_goal" validate:"required"`
+	ActiveItemCount    *int `json:"active_item_count,omitempty" validate:"omitempty,gte=0"`
+	AvailableItemCount *int `json:"available_item_count,omitempty" validate:"omitempty,gte=0"`
+	// Constraints planning constraints supplied to the context planner.
+	Constraints *ContextPlanRequestedConstraints `json:"constraints,omitempty" validate:"omitempty"`
+	ContextID   string                           `json:"context_id" validate:"required,min=1"`
+	// ContextPlanRequestID operation-local identity for this context planning request.
+	ContextPlanRequestID string   `json:"context_plan_request_id" validate:"required,min=1"`
+	CurrentTokenEstimate int      `json:"current_token_estimate" validate:"required,gte=0"`
+	ModelContextLimit    int      `json:"model_context_limit" validate:"required,gte=0"`
+	PinnedItemIds        []string `json:"pinned_item_ids,omitempty" validate:"omitempty"`
+	// PlanningGoal reason a context plan was requested.
+	PlanningGoal ContextPlanRequestedPlanningGoal `json:"planning_goal" validate:"required"`
+}
+
+// ContextPlanRequestedConstraints planning constraints supplied to the context planner.
+type ContextPlanRequestedConstraints struct {
+	AllowCompression   *bool    `json:"allow_compression,omitempty" validate:"omitempty"`
+	AllowEviction      *bool    `json:"allow_eviction,omitempty" validate:"omitempty"`
+	MustExcludeItemIds []string `json:"must_exclude_item_ids,omitempty" validate:"omitempty"`
+	MustIncludeItemIds []string `json:"must_include_item_ids,omitempty" validate:"omitempty"`
+	TargetTokenBudget  *int     `json:"target_token_budget,omitempty" validate:"omitempty,gte=0"`
 }
 
 func (value ContextPlanRequested) Validate() error {

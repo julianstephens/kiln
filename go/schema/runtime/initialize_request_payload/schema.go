@@ -6,11 +6,24 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// InitializeRequestPayload is generated from a nested JSON Schema object.
 type InitializeRequestPayload struct {
-	Client             map[string]any `json:"client" validate:"required"`
-	CompatibilityMajor int            `json:"compatibility_major" validate:"required,gte=0"`
-	ProtocolVersion    string         `json:"protocol_version" validate:"required,min=1"`
-	SchemaSetVersion   string         `json:"schema_set_version" validate:"required,min=1"`
+	// Client information about the client that is initializing the runtime.
+	Client InitializeRequestPayloadClient `json:"client" validate:"required"`
+	// CompatibilityMajor the major version of the Kiln runtime protocol that the client supports.
+	CompatibilityMajor int `json:"compatibility_major" validate:"required,gte=0"`
+	// ProtocolVersion the version of the Kiln runtime protocol that the client supports.
+	ProtocolVersion string `json:"protocol_version" validate:"required,min=1"`
+	// SchemaSetVersion the version of the Kiln runtime schema set that the client supports.
+	SchemaSetVersion string `json:"schema_set_version" validate:"required,min=1"`
+}
+
+// InitializeRequestPayloadClient information about the client that is initializing the runtime.
+type InitializeRequestPayloadClient struct {
+	// Name the name of the client.
+	Name string `json:"name" validate:"required,min=1"`
+	// Version the version of the client.
+	Version string `json:"version" validate:"required,min=1"`
 }
 
 func (value InitializeRequestPayload) Validate() error {

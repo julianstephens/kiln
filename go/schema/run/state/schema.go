@@ -10,20 +10,56 @@ import (
 	run_task_state "github.com/julianstephens/kiln/go/schema/run/task_state"
 	run_terminal_result_reference "github.com/julianstephens/kiln/go/schema/run/terminal_result_reference"
 	"github.com/julianstephens/kiln/go/schema/shared"
+	"time"
 )
 
+// State is generated from a nested JSON Schema object.
 type State struct {
-	ActiveCapabilityGrantReferences []string                                               `json:"active_capability_grant_references" validate:"required,min=1"`
-	ActiveRepository                *repository_identifier.Identifier                      `json:"active_repository,omitempty" validate:"omitempty"`
-	BudgetSummary                   budget_state.State                                     `json:"budget_summary" validate:"required"`
-	CurrentContextLedgerSummary     context_state.State                                    `json:"current_context_ledger_summary" validate:"required"`
-	CurrentTaskState                run_task_state.TaskState                               `json:"current_task_state" validate:"required"`
-	CurrentTurn                     int                                                    `json:"current_turn" validate:"required,gte=0"`
-	LastCommittedEventSequence      *int                                                   `json:"last_committed_event_sequence,omitempty" validate:"omitempty,gte=0"`
-	LifecycleState                  run_lifecycle_state.LifecycleState                     `json:"lifecycle_state" validate:"required"`
-	PendingOperationReference       map[string]any                                         `json:"pending_operation_reference,omitempty" validate:"omitempty"`
-	RecoveryMetadata                map[string]any                                         `json:"recovery_metadata,omitempty" validate:"omitempty"`
-	TerminalResultReference         *run_terminal_result_reference.TerminalResultReference `json:"terminal_result_reference,omitempty" validate:"omitempty"`
+	ActiveCapabilityGrantReferences []string                           `json:"active_capability_grant_references" validate:"required,min=1"`
+	ActiveRepository                *repository_identifier.Identifier  `json:"active_repository,omitempty" validate:"omitempty"`
+	BudgetSummary                   budget_state.State                 `json:"budget_summary" validate:"required"`
+	CurrentContextLedgerSummary     context_state.State                `json:"current_context_ledger_summary" validate:"required"`
+	CurrentTaskState                run_task_state.TaskState           `json:"current_task_state" validate:"required"`
+	CurrentTurn                     int                                `json:"current_turn" validate:"required,gte=0"`
+	LastCommittedEventSequence      *int                               `json:"last_committed_event_sequence,omitempty" validate:"omitempty,gte=0"`
+	LifecycleState                  run_lifecycle_state.LifecycleState `json:"lifecycle_state" validate:"required"`
+	// PendingOperationReference reference to the asynchronous operation the run is currently waiting on.
+	PendingOperationReference *StatePendingOperationReference                        `json:"pending_operation_reference,omitempty" validate:"omitempty"`
+	RecoveryMetadata          *StateRecoveryMetadata                                 `json:"recovery_metadata,omitempty" validate:"omitempty"`
+	TerminalResultReference   *run_terminal_result_reference.TerminalResultReference `json:"terminal_result_reference,omitempty" validate:"omitempty"`
+}
+
+type StatePendingOperationReferenceKind string
+
+const (
+	StatePendingOperationReferenceKindToolCall StatePendingOperationReferenceKind = "tool_call"
+
+	StatePendingOperationReferenceKindApproval StatePendingOperationReferenceKind = "approval"
+
+	StatePendingOperationReferenceKindExternalJob StatePendingOperationReferenceKind = "external_job"
+
+	StatePendingOperationReferenceKindTimer StatePendingOperationReferenceKind = "timer"
+
+	StatePendingOperationReferenceKindCallback StatePendingOperationReferenceKind = "callback"
+)
+
+// StatePendingOperationReference reference to the asynchronous operation the run is currently waiting on.
+type StatePendingOperationReference struct {
+	// CorrelationID optional correlation identifier used to match callbacks or provider responses.
+	CorrelationID *string `json:"correlation_id,omitempty" validate:"omitempty,min=1"`
+	// ExpiresAt optional deadline after which the operation should be treated as expired.
+	ExpiresAt *time.Time `json:"expires_at,omitempty" validate:"omitempty"`
+	// ID stable identifier for the pending operation.
+	ID string `json:"id" validate:"required,min=1"`
+	// Kind the kind of operation being awaited.
+	Kind StatePendingOperationReferenceKind `json:"kind" validate:"required"`
+}
+
+// StateRecoveryMetadata is generated from a nested JSON Schema object.
+type StateRecoveryMetadata struct {
+	Attempt        *int       `json:"attempt,omitempty" validate:"omitempty,gte=0"`
+	LastErrorID    *string    `json:"last_error_id,omitempty" validate:"omitempty,min=1"`
+	LastRecoveryAt *time.Time `json:"last_recovery_at,omitempty" validate:"omitempty"`
 }
 
 func (value State) Validate() error {

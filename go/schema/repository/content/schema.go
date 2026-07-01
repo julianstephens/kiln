@@ -17,6 +17,7 @@ const (
 	ContentContentTypeStructuredRepresentation ContentContentType = "structured_representation"
 )
 
+// Content repository content payload represented inline, by artifact reference, or as a structured representation.
 type Content struct {
 	ArtifactReference        *artifact_repository_snapshot_reference.RepositorySnapshotReference `json:"artifact_reference,omitempty" validate:"omitempty"`
 	ContentType              ContentContentType                                                  `json:"content_type" validate:"required"`

@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// TaskProvenance is generated from a nested JSON Schema object.
 type TaskProvenance struct {
 	CreatedAt  time.Time `json:"created_at" validate:"required"`
 	SourceID   string    `json:"source_id" validate:"required,min=1"`

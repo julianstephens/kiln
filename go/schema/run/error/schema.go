@@ -97,21 +97,72 @@ const (
 	ErrorSeverityFatal ErrorSeverity = "fatal"
 )
 
+// Error structured error record associated with a failed run or failed run operation.
 type Error struct {
-	ArtifactReferences []artifact_reference.Reference   `json:"artifact_references,omitempty" validate:"omitempty"`
-	Category           run_error_category.ErrorCategory `json:"category" validate:"required"`
-	Cause              map[string]any                   `json:"cause,omitempty" validate:"omitempty"`
-	Code               ErrorCode                        `json:"code" validate:"required"`
-	Details            map[string]any                   `json:"details,omitempty" validate:"omitempty"`
-	ErrorID            string                           `json:"error_id" validate:"required,min=1"`
-	LifecycleState     *ErrorLifecycleState             `json:"lifecycle_state,omitempty" validate:"omitempty"`
-	Message            string                           `json:"message" validate:"required,min=1"`
-	OccurredAt         time.Time                        `json:"occurred_at" validate:"required"`
-	OperationReference map[string]any                   `json:"operation_reference,omitempty" validate:"omitempty"`
-	Retryable          *bool                            `json:"retryable,omitempty" validate:"omitempty"`
-	RunID              string                           `json:"run_id" validate:"required,min=1"`
-	Severity           *ErrorSeverity                   `json:"severity,omitempty" validate:"omitempty"`
-	Source             *string                          `json:"source,omitempty" validate:"omitempty,min=1"`
+	// ArtifactReferences artifacts containing supporting diagnostics, logs, reports, or partial outputs.
+	ArtifactReferences []artifact_reference.Reference `json:"artifact_references,omitempty" validate:"omitempty"`
+	// Category broad class of run error.
+	Category run_error_category.ErrorCategory `json:"category" validate:"required"`
+	// Cause optional nested causal error reference or summary.
+	Cause *ErrorCause `json:"cause,omitempty" validate:"omitempty"`
+	// Code specific machine-readable run error code.
+	Code ErrorCode `json:"code" validate:"required"`
+	// Details optional structured diagnostic details. Intended for machine-readable context, not arbitrary logs.
+	Details map[string]any `json:"details,omitempty" validate:"omitempty"`
+	// ErrorID stable identifier for this error record.
+	ErrorID string `json:"error_id" validate:"required,min=1"`
+	// LifecycleState run lifecycle state in which the error occurred.
+	LifecycleState *ErrorLifecycleState `json:"lifecycle_state,omitempty" validate:"omitempty"`
+	// Message human-readable explanation of the error.
+	Message string `json:"message" validate:"required,min=1"`
+	// OccurredAt when the error occurred.
+	OccurredAt time.Time `json:"occurred_at" validate:"required"`
+	// OperationReference optional reference to the operation that produced the error.
+	OperationReference *ErrorOperationReference `json:"operation_reference,omitempty" validate:"omitempty"`
+	// Retryable whether retry may be attempted by policy.
+	Retryable *bool `json:"retryable,omitempty" validate:"omitempty"`
+	// RunID identifier of the run associated with this error.
+	RunID string `json:"run_id" validate:"required,min=1"`
+	// Severity severity of the error.
+	Severity *ErrorSeverity `json:"severity,omitempty" validate:"omitempty"`
+	// Source component or subsystem that reported the error.
+	Source *string `json:"source,omitempty" validate:"omitempty,min=1"`
+}
+
+// ErrorCause optional nested causal error reference or summary.
+type ErrorCause struct {
+	Code    *string `json:"code,omitempty" validate:"omitempty,min=1"`
+	ErrorID *string `json:"error_id,omitempty" validate:"omitempty,min=1"`
+	Message *string `json:"message,omitempty" validate:"omitempty,min=1"`
+}
+
+type ErrorOperationReferenceKind string
+
+const (
+	ErrorOperationReferenceKindRepositoryPreparation ErrorOperationReferenceKind = "repository_preparation"
+
+	ErrorOperationReferenceKindRepositoryQuery ErrorOperationReferenceKind = "repository_query"
+
+	ErrorOperationReferenceKindContextPlan ErrorOperationReferenceKind = "context_plan"
+
+	ErrorOperationReferenceKindModelInvocation ErrorOperationReferenceKind = "model_invocation"
+
+	ErrorOperationReferenceKindToolCall ErrorOperationReferenceKind = "tool_call"
+
+	ErrorOperationReferenceKindExternalJob ErrorOperationReferenceKind = "external_job"
+
+	ErrorOperationReferenceKindOutputProduction ErrorOperationReferenceKind = "output_production"
+
+	ErrorOperationReferenceKindValidation ErrorOperationReferenceKind = "validation"
+
+	ErrorOperationReferenceKindRecovery ErrorOperationReferenceKind = "recovery"
+)
+
+// ErrorOperationReference optional reference to the operation that produced the error.
+type ErrorOperationReference struct {
+	CorrelationID *string                     `json:"correlation_id,omitempty" validate:"omitempty,min=1"`
+	ID            string                      `json:"id" validate:"required,min=1"`
+	Kind          ErrorOperationReferenceKind `json:"kind" validate:"required"`
 }
 
 func (value Error) Validate() error {

@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Cost estimated retrieval and representation cost metadata for repository content candidates.
 type Cost struct {
 	EstimatedBytes      int     `json:"estimated_bytes" validate:"required,gte=0"`
 	EstimatedConfidence *int    `json:"estimated_confidence,omitempty" validate:"omitempty,gte=0"`

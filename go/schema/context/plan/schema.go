@@ -57,24 +57,49 @@ const (
 	PlanPlanningStrategyManual PlanPlanningStrategy = "manual"
 )
 
+// Plan a planned set of context actions that selects, orders, evicts, compresses, or otherwise prepares context items for rendering.
 type Plan struct {
-	AppliedAt                  *time.Time                    `json:"applied_at,omitempty" validate:"omitempty"`
-	ClosedAt                   *time.Time                    `json:"closed_at,omitempty" validate:"omitempty"`
-	ContextID                  string                        `json:"context_id" validate:"required,min=1"`
-	ContextPlanID              string                        `json:"context_plan_id" validate:"required,min=1"`
-	ContextPlanRequestID       *string                       `json:"context_plan_request_id,omitempty" validate:"omitempty,min=1"`
-	CreatedAt                  time.Time                     `json:"created_at" validate:"required"`
-	EstimatedTokenCount        int                           `json:"estimated_token_count" validate:"required,gte=0"`
-	ModelContextLimit          int                           `json:"model_context_limit" validate:"required,gte=1"`
-	PlanArtifactReference      *artifact_reference.Reference `json:"plan_artifact_reference,omitempty" validate:"omitempty"`
-	PlannedActions             []context_action.Action       `json:"planned_actions" validate:"required,min=1"`
-	PlannedActiveItems         []map[string]any              `json:"planned_active_items,omitempty" validate:"omitempty"`
-	PlanningGoal               PlanPlanningGoal              `json:"planning_goal" validate:"required"`
-	PlanningStatus             PlanPlanningStatus            `json:"planning_status" validate:"required"`
-	PlanningStrategy           *PlanPlanningStrategy         `json:"planning_strategy,omitempty" validate:"omitempty"`
-	ResultContextStateRevision *int                          `json:"result_context_state_revision,omitempty" validate:"omitempty,gte=0"`
-	SourceContextStateRevision *int                          `json:"source_context_state_revision,omitempty" validate:"omitempty,gte=0"`
-	TargetTokenBudget          *int                          `json:"target_token_budget,omitempty" validate:"omitempty,gte=0"`
+	// AppliedAt when the context plan was applied.
+	AppliedAt *time.Time `json:"applied_at,omitempty" validate:"omitempty"`
+	// ClosedAt when the context plan reached a terminal non-applied status.
+	ClosedAt *time.Time `json:"closed_at,omitempty" validate:"omitempty"`
+	// ContextID context ledger this plan applies to.
+	ContextID string `json:"context_id" validate:"required,min=1"`
+	// ContextPlanID stable identity for this context plan.
+	ContextPlanID string `json:"context_plan_id" validate:"required,min=1"`
+	// ContextPlanRequestID request identity that caused this plan to be produced.
+	ContextPlanRequestID *string `json:"context_plan_request_id,omitempty" validate:"omitempty,min=1"`
+	// CreatedAt when the context plan was created.
+	CreatedAt time.Time `json:"created_at" validate:"required"`
+	// EstimatedTokenCount estimated active-context token count after applying the plan.
+	EstimatedTokenCount int `json:"estimated_token_count" validate:"required,gte=0"`
+	// ModelContextLimit model context limit used during planning.
+	ModelContextLimit int `json:"model_context_limit" validate:"required,gte=1"`
+	// PlanArtifactReference artifact reference for this context plan, when stored durably outside the event stream.
+	PlanArtifactReference *artifact_reference.Reference `json:"plan_artifact_reference,omitempty" validate:"omitempty"`
+	// PlannedActions context mutations proposed by this plan.
+	PlannedActions []context_action.Action `json:"planned_actions" validate:"required,min=1"`
+	// PlannedActiveItems planned active context items in render order after applying the plan.
+	PlannedActiveItems []PlanPlannedActiveItemsItem `json:"planned_active_items,omitempty" validate:"omitempty"`
+	// PlanningGoal reason this context plan was produced.
+	PlanningGoal PlanPlanningGoal `json:"planning_goal" validate:"required"`
+	// PlanningStatus current status of the context plan.
+	PlanningStatus PlanPlanningStatus `json:"planning_status" validate:"required"`
+	// PlanningStrategy strategy used to produce this context plan.
+	PlanningStrategy *PlanPlanningStrategy `json:"planning_strategy,omitempty" validate:"omitempty"`
+	// ResultContextStateRevision context state revision after the plan was applied, when applicable.
+	ResultContextStateRevision *int `json:"result_context_state_revision,omitempty" validate:"omitempty,gte=0"`
+	// SourceContextStateRevision context state revision used as input to this plan.
+	SourceContextStateRevision *int `json:"source_context_state_revision,omitempty" validate:"omitempty,gte=0"`
+	// TargetTokenBudget planner target budget, when lower than the full model context limit.
+	TargetTokenBudget *int `json:"target_token_budget,omitempty" validate:"omitempty,gte=0"`
+}
+
+// PlanPlannedActiveItemsItem is generated from a nested JSON Schema object.
+type PlanPlannedActiveItemsItem struct {
+	EstimatedTokens *int   `json:"estimated_tokens,omitempty" validate:"omitempty,gte=0"`
+	ItemID          string `json:"item_id" validate:"required,min=1"`
+	Order           int    `json:"order" validate:"required,gte=0"`
 }
 
 func (value Plan) Validate() error {

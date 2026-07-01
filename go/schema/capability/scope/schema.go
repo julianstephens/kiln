@@ -7,19 +7,140 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Scope is generated from a nested JSON Schema object.
 type Scope struct {
-	Artifacts            map[string]any                    `json:"artifacts,omitempty" validate:"omitempty"`
+	Artifacts            *ScopeArtifacts                   `json:"artifacts,omitempty" validate:"omitempty"`
 	ExternalIntegrations []any                             `json:"external_integrations,omitempty" validate:"omitempty,min=1"`
-	Filesystem           map[string]any                    `json:"filesystem,omitempty" validate:"omitempty"`
+	Filesystem           *ScopeFilesystem                  `json:"filesystem,omitempty" validate:"omitempty"`
 	InstallationID       *string                           `json:"installation_id,omitempty" validate:"omitempty,min=1"`
 	ModelIds             []string                          `json:"model_ids,omitempty" validate:"omitempty,min=1"`
-	NetworkDestinations  map[string]any                    `json:"network_destinations,omitempty" validate:"omitempty"`
+	NetworkDestinations  *ScopeNetworkDestinations         `json:"network_destinations,omitempty" validate:"omitempty"`
 	OperationKinds       []string                          `json:"operation_kinds,omitempty" validate:"omitempty,min=1"`
 	Repository           *repository_identifier.Identifier `json:"repository,omitempty" validate:"omitempty"`
 	RepositorySessionID  *string                           `json:"repository_session_id,omitempty" validate:"omitempty,min=1"`
 	RunID                *string                           `json:"run_id,omitempty" validate:"omitempty,min=1"`
 	TenantID             *string                           `json:"tenant_id,omitempty" validate:"omitempty,min=1"`
-	Validation           map[string]any                    `json:"validation,omitempty" validate:"omitempty"`
+	Validation           *ScopeValidation                  `json:"validation,omitempty" validate:"omitempty"`
+}
+
+type ScopeArtifactsOwnership string
+
+const (
+	ScopeArtifactsOwnershipCurrentRun ScopeArtifactsOwnership = "current_run"
+
+	ScopeArtifactsOwnershipCurrentRepositorySession ScopeArtifactsOwnership = "current_repository_session"
+
+	ScopeArtifactsOwnershipCurrentWorkspace ScopeArtifactsOwnership = "current_workspace"
+
+	ScopeArtifactsOwnershipInstallation ScopeArtifactsOwnership = "installation"
+)
+
+type ScopeArtifactsRetentionClassesItem string
+
+const (
+	ScopeArtifactsRetentionClassesItemTemporary ScopeArtifactsRetentionClassesItem = "temporary"
+
+	ScopeArtifactsRetentionClassesItemStandard ScopeArtifactsRetentionClassesItem = "standard"
+
+	ScopeArtifactsRetentionClassesItemAudit ScopeArtifactsRetentionClassesItem = "audit"
+
+	ScopeArtifactsRetentionClassesItemDebug ScopeArtifactsRetentionClassesItem = "debug"
+)
+
+// ScopeArtifacts is generated from a nested JSON Schema object.
+type ScopeArtifacts struct {
+	Ids              []string                             `json:"ids,omitempty" validate:"omitempty,min=1"`
+	Kinds            []string                             `json:"kinds,omitempty" validate:"omitempty,min=1"`
+	Ownership        *ScopeArtifactsOwnership             `json:"ownership,omitempty" validate:"omitempty"`
+	RetentionClasses []ScopeArtifactsRetentionClassesItem `json:"retention_classes,omitempty" validate:"omitempty,min=1"`
+}
+
+type ScopeFilesystemAccessItem string
+
+const (
+	ScopeFilesystemAccessItemRead ScopeFilesystemAccessItem = "read"
+
+	ScopeFilesystemAccessItemWrite ScopeFilesystemAccessItem = "write"
+
+	ScopeFilesystemAccessItemExecute ScopeFilesystemAccessItem = "execute"
+)
+
+// ScopeFilesystem is generated from a nested JSON Schema object.
+type ScopeFilesystem struct {
+	Access   []ScopeFilesystemAccessItem `json:"access" validate:"required,min=1"`
+	Paths    []string                    `json:"paths,omitempty" validate:"omitempty,min=1"`
+	Patterns []string                    `json:"patterns,omitempty" validate:"omitempty,min=1"`
+}
+
+type ScopeNetworkDestinationsDefault string
+
+const (
+	ScopeNetworkDestinationsDefaultDeny ScopeNetworkDestinationsDefault = "deny"
+
+	ScopeNetworkDestinationsDefaultAllow ScopeNetworkDestinationsDefault = "allow"
+)
+
+// ScopeNetworkDestinations is generated from a nested JSON Schema object.
+type ScopeNetworkDestinations struct {
+	Allow   []any                           `json:"allow,omitempty" validate:"omitempty,min=1"`
+	Default ScopeNetworkDestinationsDefault `json:"default" validate:"required"`
+	Deny    []any                           `json:"deny,omitempty" validate:"omitempty,min=1"`
+}
+
+type ScopeValidationAllowedOperationsItem string
+
+const (
+	ScopeValidationAllowedOperationsItemStart ScopeValidationAllowedOperationsItem = "start"
+
+	ScopeValidationAllowedOperationsItemCancel ScopeValidationAllowedOperationsItem = "cancel"
+
+	ScopeValidationAllowedOperationsItemReadStatus ScopeValidationAllowedOperationsItem = "read_status"
+
+	ScopeValidationAllowedOperationsItemReadReport ScopeValidationAllowedOperationsItem = "read_report"
+
+	ScopeValidationAllowedOperationsItemWriteReport ScopeValidationAllowedOperationsItem = "write_report"
+
+	ScopeValidationAllowedOperationsItemReadLogs ScopeValidationAllowedOperationsItem = "read_logs"
+
+	ScopeValidationAllowedOperationsItemWriteLogs ScopeValidationAllowedOperationsItem = "write_logs"
+)
+
+type ScopeValidationArtifactKindsItem string
+
+const (
+	ScopeValidationArtifactKindsItemPatch ScopeValidationArtifactKindsItem = "patch"
+
+	ScopeValidationArtifactKindsItemChangedFileManifest ScopeValidationArtifactKindsItem = "changed-file-manifest"
+
+	ScopeValidationArtifactKindsItemValidationReport ScopeValidationArtifactKindsItem = "validation-report"
+
+	ScopeValidationArtifactKindsItemDiagnosticLog ScopeValidationArtifactKindsItem = "diagnostic-log"
+)
+
+type ScopeValidationValidatorKindsItem string
+
+const (
+	ScopeValidationValidatorKindsItemUnitTests ScopeValidationValidatorKindsItem = "unit_tests"
+
+	ScopeValidationValidatorKindsItemIntegrationTests ScopeValidationValidatorKindsItem = "integration_tests"
+
+	ScopeValidationValidatorKindsItemTypecheck ScopeValidationValidatorKindsItem = "typecheck"
+
+	ScopeValidationValidatorKindsItemLint ScopeValidationValidatorKindsItem = "lint"
+
+	ScopeValidationValidatorKindsItemFormatCheck ScopeValidationValidatorKindsItem = "format_check"
+
+	ScopeValidationValidatorKindsItemSecurityScan ScopeValidationValidatorKindsItem = "security_scan"
+
+	ScopeValidationValidatorKindsItemCustom ScopeValidationValidatorKindsItem = "custom"
+)
+
+// ScopeValidation is generated from a nested JSON Schema object.
+type ScopeValidation struct {
+	AllowedOperations []ScopeValidationAllowedOperationsItem `json:"allowed_operations,omitempty" validate:"omitempty,min=1"`
+	ArtifactKinds     []ScopeValidationArtifactKindsItem     `json:"artifact_kinds,omitempty" validate:"omitempty,min=1"`
+	ExecutionIds      []string                               `json:"execution_ids,omitempty" validate:"omitempty,min=1"`
+	ValidatorKinds    []ScopeValidationValidatorKindsItem    `json:"validator_kinds,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Scope) Validate() error {

@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// ContextEvents is generated from a nested JSON Schema object.
 type ContextEvents struct {
 }
 

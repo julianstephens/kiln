@@ -6,9 +6,22 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// SourceRange line and column source range within a repository file or generated source representation.
 type SourceRange struct {
-	End   map[string]any `json:"end" validate:"required"`
-	Start map[string]any `json:"start" validate:"required"`
+	End   SourceRangeEnd   `json:"end" validate:"required"`
+	Start SourceRangeStart `json:"start" validate:"required"`
+}
+
+// SourceRangeEnd is generated from a nested JSON Schema object.
+type SourceRangeEnd struct {
+	Column int `json:"column" validate:"required,gte=1"`
+	Line   int `json:"line" validate:"required,gte=1"`
+}
+
+// SourceRangeStart is generated from a nested JSON Schema object.
+type SourceRangeStart struct {
+	Column int `json:"column" validate:"required,gte=1"`
+	Line   int `json:"line" validate:"required,gte=1"`
 }
 
 func (value SourceRange) Validate() error {

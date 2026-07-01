@@ -9,6 +9,7 @@ import (
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
 	run_task_specification "github.com/julianstephens/kiln/go/schema/run/task_specification"
 	"github.com/julianstephens/kiln/go/schema/shared"
+	validation_requirement "github.com/julianstephens/kiln/go/schema/validation/requirement"
 )
 
 type SpecificationOutputMode string
@@ -23,8 +24,10 @@ const (
 	SpecificationOutputModeReport SpecificationOutputMode = "report"
 )
 
+// Specification is generated from a nested JSON Schema object.
 type Specification struct {
-	BudgetLimits       budget_limits.Limits                        `json:"budget_limits" validate:"required"`
+	BudgetLimits budget_limits.Limits `json:"budget_limits" validate:"required"`
+	// CallerMetadata caller-supplied opaque metadata. Kiln does not interpret this object.
 	CallerMetadata     map[string]any                              `json:"caller_metadata" validate:"required"`
 	IdempotencyKey     *string                                     `json:"idempotency_key,omitempty" validate:"omitempty,min=1"`
 	ModelConfiguration model_configuration.Configuration           `json:"model_configuration" validate:"required"`
@@ -32,7 +35,13 @@ type Specification struct {
 	Repository         repository_identifier.Identifier            `json:"repository" validate:"required"`
 	SecurityProfile    capability_security_profile.SecurityProfile `json:"security_profile" validate:"required"`
 	TaskSpecification  run_task_specification.TaskSpecification    `json:"task_specification" validate:"required"`
-	Validation         map[string]any                              `json:"validation,omitempty" validate:"omitempty"`
+	Validation         *SpecificationValidation                    `json:"validation,omitempty" validate:"omitempty"`
+}
+
+// SpecificationValidation is generated from a nested JSON Schema object.
+type SpecificationValidation struct {
+	ProfileID    *string                              `json:"profile_id,omitempty" validate:"omitempty,min=1"`
+	Requirements []validation_requirement.Requirement `json:"requirements,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Specification) Validate() error {

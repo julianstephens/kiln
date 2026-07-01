@@ -19,10 +19,14 @@ const (
 	TerminalResultReferenceKindExhaustion TerminalResultReferenceKind = "exhaustion"
 )
 
+// TerminalResultReference reference to the persisted terminal result associated with a run that has reached a terminal lifecycle state.
 type TerminalResultReference struct {
-	CreatedAt *time.Time                  `json:"created_at,omitempty" validate:"omitempty"`
-	ID        string                      `json:"id" validate:"required,min=1"`
-	Kind      TerminalResultReferenceKind `json:"kind" validate:"required"`
+	// CreatedAt when the terminal result was recorded.
+	CreatedAt *time.Time `json:"created_at,omitempty" validate:"omitempty"`
+	// ID stable identifier for the persisted terminal result.
+	ID string `json:"id" validate:"required,min=1"`
+	// Kind the kind of terminal result being referenced.
+	Kind TerminalResultReferenceKind `json:"kind" validate:"required"`
 }
 
 func (value TerminalResultReference) Validate() error {
