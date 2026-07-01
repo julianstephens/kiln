@@ -38,8 +38,8 @@ class KilnError(BaseModel):
     ]
     retryable: Annotated[bool, Field(description="Whether the error is retryable.")]
     details: Annotated[
-        dict[str, Any] | None, Field(description="Additional details about the error.")
-    ] = None
+        dict[str, Any], Field(description="Additional details about the error.")
+    ]
     correlation_id: Annotated[
         str | None,
         Field(

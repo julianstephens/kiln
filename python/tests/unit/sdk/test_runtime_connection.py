@@ -121,6 +121,7 @@ async def test_initialize_raises_on_jsonrpc_error_response(mocker) -> None:
                         "category": "internal",
                         "message": "boom",
                         "retryable": False,
+                        "details": {},
                     }
                 },
             ),
@@ -219,6 +220,7 @@ async def test_initialize_raises_on_incompatible_protocol_version(mocker) -> Non
             "category": "compatibility",
             "message": "incompatible protocol version",
             "retryable": False,
+            "details": {},
         }
     }
     fake_peer = _FakePeer(
@@ -251,6 +253,7 @@ async def test_initialize_raises_on_incompatible_schema_set(mocker) -> None:
             "category": "compatibility",
             "message": "incompatible schema-set version",
             "retryable": False,
+            "details": {},
         }
     }
     fake_peer = _FakePeer(

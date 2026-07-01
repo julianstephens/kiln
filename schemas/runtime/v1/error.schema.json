@@ -17,7 +17,8 @@
                 "code",
                 "category",
                 "message",
-                "retryable"
+                "retryable",
+                "details"
             ],
             "properties": {
                 "code": {
