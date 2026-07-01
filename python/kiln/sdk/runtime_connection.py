@@ -28,6 +28,9 @@ class RuntimeStdioConnection:
     """Represents a connection to a runtime process over standard input and
     output streams."""
 
+    peer: Peer
+    process: ServerProcess
+
     def __init__(self, process: ServerProcess):
         self.process = process
         if not process.stdin:
@@ -73,7 +76,7 @@ class RuntimeStdioConnection:
         if isinstance(res, JsonRpcErrorResponse):
             raise RuntimeMethodError(
                 method="runtime.initialize",
-                jsonrpc_code=str(res.error.code),
+                jsonrpc_code=res.error.code,
                 message=res.error.message,
                 kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
             )
@@ -90,7 +93,9 @@ class RuntimeStdioConnection:
         Returns:
             A `RuntimeHealthResult` instance representing the health check result.
         """
-        res = await self.peer.request(JsonRpcRequest(id="", method="runtime.health"))
+        res = await self.peer.request(
+            JsonRpcRequest(id=new_request_id(), method="runtime.health")
+        )
 
         if isinstance(res, JsonRpcRequest):
             raise RuntimeProcessError(
@@ -102,7 +107,7 @@ class RuntimeStdioConnection:
         if isinstance(res, JsonRpcErrorResponse):
             raise RuntimeMethodError(
                 method="runtime.health",
-                jsonrpc_code=str(res.error.code),
+                jsonrpc_code=res.error.code,
                 message=res.error.message,
                 kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
             )

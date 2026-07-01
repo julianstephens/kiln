@@ -32,11 +32,15 @@ class RuntimeMethodError(RuntimeProcessError):
     """Raised when a runtime method call fails."""
 
     def __init__(
-        self, method: str, jsonrpc_code: str, message: str, kiln_error: KilnRuntimeError
+        self, method: str, jsonrpc_code: int, message: str, kiln_error: KilnRuntimeError
     ) -> None:
+        self.method = method
+        self.jsonrpc_code = jsonrpc_code
+        self.message = message
+        self.kiln_error = kiln_error
         super().__init__(
-            f"runtime method error: method={method}, jsonrpc_code={jsonrpc_code}, "
-            f"message={message}, kiln_error={kiln_error.model_dump_json(indent=2)}"
+            f"runtime method error: method={method}, "
+            f"jsonrpc_code={jsonrpc_code}, message={message}"
         )
 
 

@@ -3,12 +3,9 @@ from pathlib import Path
 
 from kiln.models.budget import Budget
 from kiln.models.run import RunResult
-from kiln.schemas.runtime import RuntimeInitializeResult
 
 from .client import RuntimeClient
-from .errors import RepositoryNotFoundError, RuntimeProcessError, TaskEmptyError
-from .runtime_connection import RuntimeStdioConnection
-from .runtime_process import RuntimeProcess
+from .errors import RepositoryNotFoundError, TaskEmptyError
 
 
 @dataclass(frozen=True)
@@ -19,21 +16,15 @@ class AgentConfig:
 
 class Agent:
     _config: AgentConfig
-    _process: RuntimeProcess
     _client: RuntimeClient
-    _runtime: RuntimeInitializeResult
 
     def __init__(
         self,
         config: AgentConfig,
-        process: RuntimeProcess,
         client: RuntimeClient,
-        runtime: RuntimeInitializeResult,
     ) -> None:
         self._config = config
-        self._process = process
         self._client = client
-        self._runtime = runtime
 
     @classmethod
     async def open(
@@ -47,22 +38,14 @@ class Agent:
         if not repository_path.is_dir():
             raise RepositoryNotFoundError(str(repository_path))
 
-        process = await RuntimeProcess.start()
-        connection = RuntimeStdioConnection(process=process.process)
-        initialize_result = await connection.initialize()
-        health = await connection.health()
-        if not health.root.ready:
-            raise RuntimeProcessError(message=("runtime process is not ready"))
-        client = RuntimeClient(process)
+        client = await RuntimeClient.start()
 
         return cls(
             config=AgentConfig(
                 repository=repository_path,
                 budget=budget,
             ),
-            process=process,
             client=client,
-            runtime=initialize_result,
         )
 
     def run(self, task: str) -> RunResult:
@@ -76,7 +59,7 @@ class Agent:
         )
 
     async def close(self) -> None:
-        await self._process.aclose()
+        await self._client.close()
 
     async def __aenter__(self) -> "Agent":
         return self

@@ -108,20 +108,26 @@ class Peer:
                 the expected request ID.
         """
         self._pending_requests.add(message.id, message.method)
-        await self.send(message)
-        res = await self.receive()
+        try:
+            await self.send(message)
+            res = await self.receive()
 
-        if (
-            isinstance(res, JsonRpcRequest)
-            or not res.id
-            or res.id not in self._pending_requests
-        ):
-            raise UnexpectedJsonRpcMessageError(message=res.model_dump_json(indent=2))
+            if (
+                isinstance(res, JsonRpcRequest)
+                or not res.id
+                or res.id not in self._pending_requests
+            ):
+                raise UnexpectedJsonRpcMessageError(
+                    message=res.model_dump_json(indent=2)
+                )
 
-        if res.id != message.id:
-            raise JsonRpcResponseIdMismatchError(
-                expected_id=message.id, received_id=res.id
-            )
+            if res.id != message.id:
+                raise JsonRpcResponseIdMismatchError(
+                    expected_id=message.id, received_id=res.id
+                )
 
-        self._pending_requests.pop(res.id)
-        return res
+            self._pending_requests.pop(res.id)
+            return res
+        finally:
+            if message.id in self._pending_requests:
+                self._pending_requests.pop(message.id)

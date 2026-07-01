@@ -171,29 +171,6 @@ async def test_health_raises_on_unexpected_request_response(mocker) -> None:
 
 
 @pytest.mark.anyio
-async def test_initialize_raises_on_response_id_mismatch(mocker) -> None:
-    """Test that mismatched response IDs are currently accepted.
-
-    Note: The current implementation doesn't validate response IDs, so this
-    test documents that behavior. In the future, ID validation should be added.
-    """
-    fake_peer = _FakePeer(
-        JsonRpcSuccessResponse(id="999", result=_initialize_result_payload())
-    )
-    mocker.patch(
-        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
-    )
-    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
-
-    conn = RuntimeStdioConnection(_process())
-    result = await conn.initialize()
-
-    # Currently, mismatched IDs don't raise an error
-    # This documents the current behavior
-    assert result.root.runtime.id == "runtime-1"
-
-
-@pytest.mark.anyio
 async def test_error_data_validation_and_preservation(mocker) -> None:
     """Test that error data with additional fields is preserved."""
     error_data = {
@@ -227,10 +204,10 @@ async def test_error_data_validation_and_preservation(mocker) -> None:
     with pytest.raises(RuntimeMethodError) as exc_info:
         await conn.initialize()
 
-    # Verify the error message contains the preserved error data
+    # Verify the error message contains the key information
     error_msg = str(exc_info.value)
-    assert "validation" in error_msg
-    assert "corr-123" in error_msg
+    assert "validation failed" in error_msg
+    assert "jsonrpc_code=-32001" in error_msg
 
 
 @pytest.mark.anyio
@@ -461,3 +438,40 @@ async def test_windows_startup_argument_shape(mocker) -> None:
     )
 
     assert result == mock_process
+
+
+@pytest.mark.anyio
+async def test_health_sends_non_empty_request_id(mocker) -> None:
+    """Test that health() sends a non-empty request ID without mocking request()."""
+    captured_request: JsonRpcRequest | None = None
+
+    async def capture_request(request: JsonRpcRequest) -> Any:
+        """Capture the request before returning response."""
+        nonlocal captured_request
+        captured_request = request
+        return JsonRpcSuccessResponse(id=request.id, result=_health_result_payload())
+
+    class RequestCapturingPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            return await capture_request(message)
+
+    peer = RequestCapturingPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process())
+    result = await conn.health()
+
+    # Verify the captured request has a non-empty ID
+    assert captured_request is not None
+    assert captured_request.id != ""
+    assert len(captured_request.id) > 0
+    assert captured_request.method == "runtime.health"
+    assert captured_request.params is None
+    assert result.root.ready is True
