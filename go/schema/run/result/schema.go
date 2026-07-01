@@ -9,6 +9,8 @@ import (
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
 	artifact_report_reference "github.com/julianstephens/kiln/go/schema/artifact/report_reference"
 	artifact_validation_report_reference "github.com/julianstephens/kiln/go/schema/artifact/validation_report_reference"
+	budget_state "github.com/julianstephens/kiln/go/schema/budget/state"
+	budget_usage "github.com/julianstephens/kiln/go/schema/budget/usage"
 	run_error "github.com/julianstephens/kiln/go/schema/run/error"
 	run_output_mode "github.com/julianstephens/kiln/go/schema/run/output_mode"
 	run_stop_reason "github.com/julianstephens/kiln/go/schema/run/stop_reason"
@@ -27,15 +29,16 @@ const (
 	ResultTerminalStatusExhausted ResultTerminalStatus = "exhausted"
 )
 
+// Result is generated from a nested JSON Schema object.
 type Result struct {
 	AdditionalArtifactReferences []artifact_reference.Reference                                         `json:"additional_artifact_references,omitempty" validate:"omitempty"`
-	Answer                       map[string]any                                                         `json:"answer,omitempty" validate:"omitempty"`
+	Answer                       *ResultAnswer                                                          `json:"answer,omitempty" validate:"omitempty"`
 	AnswerArtifact               *artifact_answer_reference.AnswerReference                             `json:"answer_artifact,omitempty" validate:"omitempty"`
-	Budget                       map[string]any                                                         `json:"budget" validate:"required"`
+	Budget                       ResultBudget                                                           `json:"budget" validate:"required"`
 	ChangedFileManifestArtifact  *artifact_changed_file_manifest_reference.ChangedFileManifestReference `json:"changed_file_manifest_artifact,omitempty" validate:"omitempty"`
 	ContextLedgerReference       string                                                                 `json:"context_ledger_reference" validate:"required,min=1"`
 	Error                        *run_error.Error                                                       `json:"error,omitempty" validate:"omitempty"`
-	EventStreamRange             map[string]any                                                         `json:"event_stream_range,omitempty" validate:"omitempty"`
+	EventStreamRange             *ResultEventStreamRange                                                `json:"event_stream_range,omitempty" validate:"omitempty"`
 	EventStreamReference         *string                                                                `json:"event_stream_reference,omitempty" validate:"omitempty,min=1"`
 	OutputMode                   run_output_mode.OutputMode                                             `json:"output_mode" validate:"required"`
 	PatchArtifact                *artifact_patch_reference.PatchReference                               `json:"patch_artifact,omitempty" validate:"omitempty"`
@@ -44,6 +47,34 @@ type Result struct {
 	StopReason                   run_stop_reason.StopReason                                             `json:"stop_reason" validate:"required"`
 	TerminalStatus               ResultTerminalStatus                                                   `json:"terminal_status" validate:"required"`
 	ValidationReportArtifact     *artifact_validation_report_reference.ValidationReportReference        `json:"validation_report_artifact,omitempty" validate:"omitempty"`
+}
+
+type ResultAnswerContentType string
+
+const (
+	ResultAnswerContentTypeTextPlain ResultAnswerContentType = "text/plain"
+
+	ResultAnswerContentTypeTextMarkdown ResultAnswerContentType = "text/markdown"
+
+	ResultAnswerContentTypeApplicationJSON ResultAnswerContentType = "application/json"
+)
+
+// ResultAnswer is generated from a nested JSON Schema object.
+type ResultAnswer struct {
+	Content     string                  `json:"content" validate:"required,min=1"`
+	ContentType ResultAnswerContentType `json:"content_type" validate:"required"`
+}
+
+// ResultBudget is generated from a nested JSON Schema object.
+type ResultBudget struct {
+	State *budget_state.State `json:"state,omitempty" validate:"omitempty"`
+	Usage budget_usage.Usage  `json:"usage" validate:"required"`
+}
+
+// ResultEventStreamRange is generated from a nested JSON Schema object.
+type ResultEventStreamRange struct {
+	FirstSequence int `json:"first_sequence" validate:"required,gte=0"`
+	LastSequence  int `json:"last_sequence" validate:"required,gte=0"`
 }
 
 func (value Result) Validate() error {

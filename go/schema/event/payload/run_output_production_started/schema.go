@@ -21,10 +21,14 @@ const (
 	RunOutputProductionStartedExpectedArtifactKindsItemValidationReport RunOutputProductionStartedExpectedArtifactKindsItem = "validation_report"
 )
 
+// RunOutputProductionStarted is generated from a nested JSON Schema object.
 type RunOutputProductionStarted struct {
-	CompletionProposalID  string                                                `json:"completion_proposal_id" validate:"required,min=1"`
+	// CompletionProposalID the proposal that is being used to produce the output for this run.
+	CompletionProposalID string `json:"completion_proposal_id" validate:"required,min=1"`
+	// ExpectedArtifactKinds the artifact kinds that are expected to be produced by this run.
 	ExpectedArtifactKinds []RunOutputProductionStartedExpectedArtifactKindsItem `json:"expected_artifact_kinds" validate:"required,min=1"`
-	OutputMode            run_output_mode.OutputMode                            `json:"output_mode" validate:"required"`
+	// OutputMode the output mode that is being used to produce the output for this run.
+	OutputMode run_output_mode.OutputMode `json:"output_mode" validate:"required"`
 }
 
 func (value RunOutputProductionStarted) Validate() error {

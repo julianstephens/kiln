@@ -7,6 +7,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// TaskSpecification is generated from a nested JSON Schema object.
 type TaskSpecification struct {
 	Constraints        []string                           `json:"constraints" validate:"required"`
 	Deliverables       []string                           `json:"deliverables" validate:"required"`

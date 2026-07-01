@@ -8,6 +8,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Source source-location metadata for repository content, including repository path and source or byte ranges.
 type Source struct {
 	ByteRanges     []common_byte_range.ByteRange     `json:"byte_ranges" validate:"required"`
 	Language       *string                           `json:"language,omitempty" validate:"omitempty,min=1"`

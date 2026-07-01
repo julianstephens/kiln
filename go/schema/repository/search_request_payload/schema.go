@@ -22,6 +22,7 @@ const (
 	SearchRequestPayloadModeHybrid SearchRequestPayloadMode = "hybrid"
 )
 
+// SearchRequestPayload is generated from a nested JSON Schema object.
 type SearchRequestPayload struct {
 	Filters                  []map[string]any         `json:"filters,omitempty" validate:"omitempty"`
 	Limit                    int                      `json:"limit" validate:"required,gte=1"`

@@ -7,6 +7,7 @@ dependencies = [
     "anyio[trio]>=4.14.1",
     "pydantic>=2.13.4",
     "structlog>=26.1.0",
+    "ulid-py>=1.1.0",
 ]
 
 [project.urls]
@@ -25,15 +26,16 @@ dev = [
 
 [tool.ruff]
 line-length = 88
+exclude = [
+    "kiln/schemas/**/*.py",
+]
 
 [tool.ruff.lint]
 extend-select = ["B", "LOG", "Q", "RET", "SIM", "ARG", "I", "N", "E", "W", "F", "RUF", "TRY"]
 
-[tool.ruff.lint.per-file-ignores]
-"kiln/schemas/**/*.py" = ["ALL"]
-
 [tool.pytest.ini_options]
 addopts = "-n auto --ignore=schemas --cov --cov-report=term-missing --cov-config=kiln/pyproject.toml"
+anyio = "auto"
 
 [tool.coverage.report]
 omit = [

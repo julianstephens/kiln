@@ -12,6 +12,12 @@ from kiln.schemas.repository import (
     RepositorySourceRequestPayload,
     RepositorySourceResult,
 )
+from kiln.schemas.runtime import (
+    RuntimeError,
+    RuntimeHealthResult,
+    RuntimeInitializeRequestPayload,
+    RuntimeInitializeResult,
+)
 
 from .errors import KilnPayloadValidationError, UnsupportedMethodError
 from .jsonrpc import JsonRpcErrorResponse, JsonRpcRequest, JsonRpcSuccessResponse
@@ -30,6 +36,18 @@ class KilnMethodSpec:
 
 # Kiln method specifications for supported JSON-RPC methods.
 KILN_METHODS = {
+    "runtime.initialize": KilnMethodSpec(
+        method="runtime.initialize",
+        params_model=RuntimeInitializeRequestPayload,
+        result_model=RuntimeInitializeResult,
+        error_data_model=RuntimeError,
+    ),
+    "runtime.health": KilnMethodSpec(
+        method="runtime.health",
+        params_model=None,
+        result_model=RuntimeHealthResult,
+        error_data_model=RuntimeError,
+    ),
     "repository.open_session": KilnMethodSpec(
         method="repository.open_session",
         params_model=RepositoryOpenSessionRequestPayload,

@@ -1,0 +1,52 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/initialize-request-payload.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln runtime initialize request payload",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "protocol_version",
+        "schema_set_version",
+        "compatibility_major",
+        "client"
+    ],
+    "properties": {
+        "protocol_version": {
+            "type": "string",
+            "description": "The version of the Kiln runtime protocol that the client supports.",
+            "minLength": 1
+        },
+        "schema_set_version": {
+            "type": "string",
+            "description": "The version of the Kiln runtime schema set that the client supports.",
+            "minLength": 1
+        },
+        "compatibility_major": {
+            "type": "integer",
+            "description": "The major version of the Kiln runtime protocol that the client supports.",
+            "minimum": 0
+        },
+        "client": {
+            "type": "object",
+            "description": "Information about the client that is initializing the runtime.",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "version"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the client.",
+                    "minLength": 1
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the client.",
+                    "minLength": 1
+                }
+            }
+        }
+    }
+}

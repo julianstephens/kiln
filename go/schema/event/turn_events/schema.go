@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// TurnEvents is generated from a nested JSON Schema object.
 type TurnEvents struct {
 }
 

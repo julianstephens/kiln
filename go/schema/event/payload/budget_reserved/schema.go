@@ -39,19 +39,27 @@ const (
 	BudgetReservedReservationScopeComponent BudgetReservedReservationScope = "component"
 )
 
+// BudgetReserved payload for budget.reserved events.
 type BudgetReserved struct {
-	BudgetID          string                           `json:"budget_id" validate:"required,min=1"`
-	Component         *string                          `json:"component,omitempty" validate:"omitempty,min=1"`
-	ExpiresAt         *time.Time                       `json:"expires_at,omitempty" validate:"omitempty"`
-	OperationID       *string                          `json:"operation_id,omitempty" validate:"omitempty,min=1"`
-	ReservationID     string                           `json:"reservation_id" validate:"required,min=1"`
+	BudgetID  string  `json:"budget_id" validate:"required,min=1"`
+	Component *string `json:"component,omitempty" validate:"omitempty,min=1"`
+	// ExpiresAt when this reservation expires if not committed or released.
+	ExpiresAt   *time.Time `json:"expires_at,omitempty" validate:"omitempty"`
+	OperationID *string    `json:"operation_id,omitempty" validate:"omitempty,min=1"`
+	// ReservationID identity for this budget reservation.
+	ReservationID string `json:"reservation_id" validate:"required,min=1"`
+	// ReservationReason reason budget was reserved.
 	ReservationReason *BudgetReservedReservationReason `json:"reservation_reason,omitempty" validate:"omitempty"`
-	ReservationScope  BudgetReservedReservationScope   `json:"reservation_scope" validate:"required"`
-	ReservedAmounts   budget_limits.Limits             `json:"reserved_amounts" validate:"required"`
-	ReservedAt        time.Time                        `json:"reserved_at" validate:"required"`
-	RunID             *string                          `json:"run_id,omitempty" validate:"omitempty,min=1"`
-	StateAfter        budget_state.State               `json:"state_after" validate:"required"`
-	TurnID            *string                          `json:"turn_id,omitempty" validate:"omitempty,min=1"`
+	// ReservationScope scope for the reservation.
+	ReservationScope BudgetReservedReservationScope `json:"reservation_scope" validate:"required"`
+	// ReservedAmounts amounts reserved by dimension.
+	ReservedAmounts budget_limits.Limits `json:"reserved_amounts" validate:"required"`
+	// ReservedAt when budget was reserved.
+	ReservedAt time.Time `json:"reserved_at" validate:"required"`
+	RunID      *string   `json:"run_id,omitempty" validate:"omitempty,min=1"`
+	// StateAfter budget state after applying the reservation.
+	StateAfter budget_state.State `json:"state_after" validate:"required"`
+	TurnID     *string            `json:"turn_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value BudgetReserved) Validate() error {

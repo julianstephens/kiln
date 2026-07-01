@@ -1,0 +1,36 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/health-result.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln runtime health result",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "initialized",
+        "ready",
+        "draining",
+        "shutdown"
+    ],
+    "properties": {
+        "initialized": {
+            "type": "boolean",
+            "description": "Whether the runtime has been initialized."
+        },
+        "ready": {
+            "type": "boolean",
+            "description": "Whether the runtime is ready to accept requests."
+        },
+        "draining": {
+            "type": "boolean",
+            "description": "Whether the runtime is in the process of draining."
+        },
+        "shutdown": {
+            "type": "boolean",
+            "description": "Whether the runtime is in the process of shutting down."
+        },
+        "last_fatal_startup_error": {
+            "$ref": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/error.schema.json#/properties/kiln_error",
+            "description": "The last fatal startup error that occurred, if any."
+        }
+    }
+}

@@ -57,14 +57,22 @@ const (
 	RepositoryWorkerStartedWorkerKindUnknown RepositoryWorkerStartedWorkerKind = "unknown"
 )
 
+// RepositoryWorkerStarted payload for repository.worker_started events.
 type RepositoryWorkerStarted struct {
-	RepositoryWorkerID       string                                                `json:"repository_worker_id" validate:"required,min=1"`
-	RuntimeSessionID         string                                                `json:"runtime_session_id" validate:"required,min=1"`
-	StartedAt                time.Time                                             `json:"started_at" validate:"required"`
-	SupportedOperations      []RepositoryWorkerStartedSupportedOperationsItem      `json:"supported_operations" validate:"required,min=1"`
+	// RepositoryWorkerID runtime-local identity for the repository worker.
+	RepositoryWorkerID string `json:"repository_worker_id" validate:"required,min=1"`
+	// RuntimeSessionID runtime session that started this repository worker.
+	RuntimeSessionID string `json:"runtime_session_id" validate:"required,min=1"`
+	// StartedAt when the repository worker started.
+	StartedAt time.Time `json:"started_at" validate:"required"`
+	// SupportedOperations repository protocol operations supported by this repository worker.
+	SupportedOperations []RepositoryWorkerStartedSupportedOperationsItem `json:"supported_operations" validate:"required,min=1"`
+	// SupportedRepositoryKinds repository kinds this worker can handle.
 	SupportedRepositoryKinds []RepositoryWorkerStartedSupportedRepositoryKindsItem `json:"supported_repository_kinds,omitempty" validate:"omitempty,min=1"`
-	WorkerKind               RepositoryWorkerStartedWorkerKind                     `json:"worker_kind" validate:"required"`
-	WorkerVersion            *string                                               `json:"worker_version,omitempty" validate:"omitempty,min=1"`
+	// WorkerKind kind of repository worker.
+	WorkerKind RepositoryWorkerStartedWorkerKind `json:"worker_kind" validate:"required"`
+	// WorkerVersion repository worker implementation version.
+	WorkerVersion *string `json:"worker_version,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RepositoryWorkerStarted) Validate() error {

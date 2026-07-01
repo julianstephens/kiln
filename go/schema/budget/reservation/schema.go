@@ -57,21 +57,36 @@ const (
 	ReservationReservationStatusCanceled ReservationReservationStatus = "canceled"
 )
 
+// Reservation a reservation of budget capacity for a run, turn, operation, or component before usage is committed or released.
 type Reservation struct {
-	BudgetID          string                        `json:"budget_id" validate:"required,min=1"`
-	ClosedAt          *time.Time                    `json:"closed_at,omitempty" validate:"omitempty"`
-	CommittedUsage    *budget_usage.Usage           `json:"committed_usage,omitempty" validate:"omitempty"`
-	Component         *string                       `json:"component,omitempty" validate:"omitempty,min=1"`
-	CreatedAt         time.Time                     `json:"created_at" validate:"required"`
-	ExpiresAt         *time.Time                    `json:"expires_at,omitempty" validate:"omitempty"`
-	OperationID       *string                       `json:"operation_id,omitempty" validate:"omitempty,min=1"`
-	ReservationID     string                        `json:"reservation_id" validate:"required,min=1"`
+	// BudgetID budget ledger or accounting scope this reservation belongs to.
+	BudgetID string `json:"budget_id" validate:"required,min=1"`
+	// ClosedAt when the reservation reached a terminal status.
+	ClosedAt *time.Time `json:"closed_at,omitempty" validate:"omitempty"`
+	// CommittedUsage usage already committed against this reservation.
+	CommittedUsage *budget_usage.Usage `json:"committed_usage,omitempty" validate:"omitempty"`
+	// Component logical component associated with this reservation, when applicable.
+	Component *string `json:"component,omitempty" validate:"omitempty,min=1"`
+	// CreatedAt when the reservation was created.
+	CreatedAt time.Time `json:"created_at" validate:"required"`
+	// ExpiresAt when the reservation expires if not committed or released.
+	ExpiresAt *time.Time `json:"expires_at,omitempty" validate:"omitempty"`
+	// OperationID operation associated with this reservation, when applicable.
+	OperationID *string `json:"operation_id,omitempty" validate:"omitempty,min=1"`
+	// ReservationID stable identity for this budget reservation.
+	ReservationID string `json:"reservation_id" validate:"required,min=1"`
+	// ReservationReason reason the reservation was created.
 	ReservationReason *ReservationReservationReason `json:"reservation_reason,omitempty" validate:"omitempty"`
-	ReservationScope  ReservationReservationScope   `json:"reservation_scope" validate:"required"`
-	ReservationStatus ReservationReservationStatus  `json:"reservation_status" validate:"required"`
-	ReservedAmounts   budget_limits.Limits          `json:"reserved_amounts" validate:"required"`
-	RunID             *string                       `json:"run_id,omitempty" validate:"omitempty,min=1"`
-	TurnID            *string                       `json:"turn_id,omitempty" validate:"omitempty,min=1"`
+	// ReservationScope scope for which budget capacity was reserved.
+	ReservationScope ReservationReservationScope `json:"reservation_scope" validate:"required"`
+	// ReservationStatus current status of the reservation.
+	ReservationStatus ReservationReservationStatus `json:"reservation_status" validate:"required"`
+	// ReservedAmounts budget amounts reserved by dimension.
+	ReservedAmounts budget_limits.Limits `json:"reserved_amounts" validate:"required"`
+	// RunID run associated with this reservation, when applicable.
+	RunID *string `json:"run_id,omitempty" validate:"omitempty,min=1"`
+	// TurnID turn associated with this reservation, when applicable.
+	TurnID *string `json:"turn_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Reservation) Validate() error {

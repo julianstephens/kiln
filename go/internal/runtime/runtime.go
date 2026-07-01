@@ -2,15 +2,14 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 )
 
 func Run(ctx context.Context, cfg Config) error {
 	if cfg.Input == nil {
-		return fmt.Errorf("runtime input is required")
+		return ErrInputStreamMissing
 	}
 	if cfg.Output == nil {
-		return fmt.Errorf("runtime output is required")
+		return ErrOutputStreamMissing
 	}
 
 	// Later:

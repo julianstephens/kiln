@@ -48,3 +48,24 @@ class KilnPayloadValidationError(FramingError):
         super().__init__(
             f"invalid Kiln payload: method={method}, part={part}, details={details}"
         )
+
+
+class UnexpectedJsonRpcMessageError(RuntimeError):
+    """Raised when an unexpected JSON-RPC message is received."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(f"unexpected JSON-RPC message: {message}")
+
+
+class JsonRpcResponseIdMismatchError(RuntimeError):
+    """Raised when a JSON-RPC response ID does not match the expected request ID."""
+
+    def __init__(
+        self, expected_id: str | int | None, received_id: str | int | None
+    ) -> None:
+        super().__init__(
+            (
+                f"JSON-RPC response ID mismatch: expected {expected_id}, "
+                f"received {received_id}"
+            )
+        )

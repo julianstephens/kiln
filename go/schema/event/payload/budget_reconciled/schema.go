@@ -29,15 +29,57 @@ const (
 	BudgetReconciledReconciliationReasonUnknown BudgetReconciledReconciliationReason = "unknown"
 )
 
+// BudgetReconciled payload for budget.reconciled events.
 type BudgetReconciled struct {
-	Adjustments          []map[string]any                     `json:"adjustments,omitempty" validate:"omitempty,min=1"`
-	BudgetID             string                               `json:"budget_id" validate:"required,min=1"`
-	ReconciledAt         time.Time                            `json:"reconciled_at" validate:"required"`
-	ReconciledUsage      *budget_usage.Usage                  `json:"reconciled_usage,omitempty" validate:"omitempty"`
-	ReconciliationID     string                               `json:"reconciliation_id" validate:"required,min=1"`
+	// Adjustments usage adjustments applied during reconciliation.
+	Adjustments []BudgetReconciledAdjustmentsItem `json:"adjustments,omitempty" validate:"omitempty,min=1"`
+	BudgetID    string                            `json:"budget_id" validate:"required,min=1"`
+	// ReconciledAt when budget reconciliation completed.
+	ReconciledAt time.Time `json:"reconciled_at" validate:"required"`
+	// ReconciledUsage usage record produced by reconciliation, when applicable.
+	ReconciledUsage *budget_usage.Usage `json:"reconciled_usage,omitempty" validate:"omitempty"`
+	// ReconciliationID identity for this reconciliation operation.
+	ReconciliationID string `json:"reconciliation_id" validate:"required,min=1"`
+	// ReconciliationReason reason the budget ledger was reconciled.
 	ReconciliationReason BudgetReconciledReconciliationReason `json:"reconciliation_reason" validate:"required"`
-	StateAfter           budget_state.State                   `json:"state_after" validate:"required"`
-	StateBefore          budget_state.State                   `json:"state_before" validate:"required"`
+	// StateAfter budget state after reconciliation.
+	StateAfter budget_state.State `json:"state_after" validate:"required"`
+	// StateBefore budget state before reconciliation.
+	StateBefore budget_state.State `json:"state_before" validate:"required"`
+}
+
+type BudgetReconciledAdjustmentsItemDimension string
+
+const (
+	BudgetReconciledAdjustmentsItemDimensionModelInputTokens BudgetReconciledAdjustmentsItemDimension = "model_input_tokens"
+
+	BudgetReconciledAdjustmentsItemDimensionModelOutputTokens BudgetReconciledAdjustmentsItemDimension = "model_output_tokens"
+
+	BudgetReconciledAdjustmentsItemDimensionModelCalls BudgetReconciledAdjustmentsItemDimension = "model_calls"
+
+	BudgetReconciledAdjustmentsItemDimensionToolCalls BudgetReconciledAdjustmentsItemDimension = "tool_calls"
+
+	BudgetReconciledAdjustmentsItemDimensionRepositoryRequests BudgetReconciledAdjustmentsItemDimension = "repository_requests"
+
+	BudgetReconciledAdjustmentsItemDimensionElapsedWallTimeSeconds BudgetReconciledAdjustmentsItemDimension = "elapsed_wall_time_seconds"
+
+	BudgetReconciledAdjustmentsItemDimensionMonetaryCostUsd BudgetReconciledAdjustmentsItemDimension = "monetary_cost_usd"
+
+	BudgetReconciledAdjustmentsItemDimensionCommandTimeSeconds BudgetReconciledAdjustmentsItemDimension = "command_time_seconds"
+
+	BudgetReconciledAdjustmentsItemDimensionCommandOutputSizeBytes BudgetReconciledAdjustmentsItemDimension = "command_output_size_bytes"
+
+	BudgetReconciledAdjustmentsItemDimensionArtifactSizeBytes BudgetReconciledAdjustmentsItemDimension = "artifact_size_bytes"
+
+	BudgetReconciledAdjustmentsItemDimensionRepeatedTokenCostUsd BudgetReconciledAdjustmentsItemDimension = "repeated_token_cost_usd"
+)
+
+// BudgetReconciledAdjustmentsItem is generated from a nested JSON Schema object.
+type BudgetReconciledAdjustmentsItem struct {
+	// AdjustmentAmount signed adjustment amount. Positive increases committed usage; negative decreases it.
+	AdjustmentAmount float64                                  `json:"adjustment_amount" validate:"required"`
+	Dimension        BudgetReconciledAdjustmentsItemDimension `json:"dimension" validate:"required"`
+	Reason           *string                                  `json:"reason,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value BudgetReconciled) Validate() error {

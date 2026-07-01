@@ -9,12 +9,18 @@ import (
 	"time"
 )
 
+// RunInitializationCompleted is generated from a nested JSON Schema object.
 type RunInitializationCompleted struct {
-	Deadline                   *time.Time                                  `json:"deadline,omitempty" validate:"omitempty"`
-	EffectiveBudgets           budget_state.State                          `json:"effective_budgets" validate:"required"`
+	// Deadline the deadline for this run, if any.
+	Deadline *time.Time `json:"deadline,omitempty" validate:"omitempty"`
+	// EffectiveBudgets the budgets that were effective for this run.
+	EffectiveBudgets budget_state.State `json:"effective_budgets" validate:"required"`
+	// EffectiveCapabilityProfile the capability profile that was effective for this run.
 	EffectiveCapabilityProfile capability_security_profile.SecurityProfile `json:"effective_capability_profile" validate:"required"`
-	InitializationDuration     int                                         `json:"initialization_duration" validate:"required,gte=0"`
-	SelectedAdapterIds         []string                                    `json:"selected_adapter_ids,omitempty" validate:"omitempty,min=1"`
+	// InitializationDuration the duration of the initialization phase of this run.
+	InitializationDuration int `json:"initialization_duration" validate:"required,gte=0"`
+	// SelectedAdapterIds the adapters that were selected for this run.
+	SelectedAdapterIds []string `json:"selected_adapter_ids,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RunInitializationCompleted) Validate() error {

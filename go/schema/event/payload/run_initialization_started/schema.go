@@ -6,10 +6,14 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// RunInitializationStarted is generated from a nested JSON Schema object.
 type RunInitializationStarted struct {
-	InitializedOperationID string   `json:"initialized_operation_id" validate:"required,min=1"`
-	RequestedAdapters      []string `json:"requested_adapters,omitempty" validate:"omitempty,min=1"`
-	RuntimeSessionID       string   `json:"runtime_session_id" validate:"required,min=1"`
+	// InitializedOperationID the operation that is being performed to initialize this run.
+	InitializedOperationID string `json:"initialized_operation_id" validate:"required,min=1"`
+	// RequestedAdapters the adapters that were requested for this run.
+	RequestedAdapters []string `json:"requested_adapters,omitempty" validate:"omitempty,min=1"`
+	// RuntimeSessionID the runtime session that is being used to initialize this run.
+	RuntimeSessionID string `json:"runtime_session_id" validate:"required,min=1"`
 }
 
 func (value RunInitializationStarted) Validate() error {

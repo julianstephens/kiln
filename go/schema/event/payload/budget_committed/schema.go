@@ -45,15 +45,23 @@ const (
 	BudgetCommittedMeasurementReconciled BudgetCommittedMeasurement = "reconciled"
 )
 
+// BudgetCommitted payload for budget.committed events.
 type BudgetCommitted struct {
-	BudgetID         string                           `json:"budget_id" validate:"required,min=1"`
-	CommitmentID     string                           `json:"commitment_id" validate:"required,min=1"`
+	BudgetID string `json:"budget_id" validate:"required,min=1"`
+	// CommitmentID identity for this committed budget transaction.
+	CommitmentID string `json:"commitment_id" validate:"required,min=1"`
+	// CommitmentReason reason budget was committed.
 	CommitmentReason *BudgetCommittedCommitmentReason `json:"commitment_reason,omitempty" validate:"omitempty"`
-	CommittedAt      time.Time                        `json:"committed_at" validate:"required"`
-	Measurement      *BudgetCommittedMeasurement      `json:"measurement,omitempty" validate:"omitempty"`
-	ReservationID    *string                          `json:"reservation_id,omitempty" validate:"omitempty,min=1"`
-	StateAfter       budget_state.State               `json:"state_after" validate:"required"`
-	Usage            budget_usage.Usage               `json:"usage" validate:"required"`
+	// CommittedAt when budget usage was committed.
+	CommittedAt time.Time `json:"committed_at" validate:"required"`
+	// Measurement how the committed usage was measured.
+	Measurement *BudgetCommittedMeasurement `json:"measurement,omitempty" validate:"omitempty"`
+	// ReservationID reservation this commitment consumes, when applicable.
+	ReservationID *string `json:"reservation_id,omitempty" validate:"omitempty,min=1"`
+	// StateAfter budget state after committing usage.
+	StateAfter budget_state.State `json:"state_after" validate:"required"`
+	// Usage usage committed to the budget ledger.
+	Usage budget_usage.Usage `json:"usage" validate:"required"`
 }
 
 func (value BudgetCommitted) Validate() error {

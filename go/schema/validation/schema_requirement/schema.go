@@ -14,6 +14,7 @@ const (
 	SchemaRequirementModePermissive SchemaRequirementMode = "permissive"
 )
 
+// SchemaRequirement is generated from a nested JSON Schema object.
 type SchemaRequirement struct {
 	InstanceRef string                `json:"instance_ref" validate:"required,min=1"`
 	Mode        SchemaRequirementMode `json:"mode" validate:"required"`

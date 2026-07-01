@@ -24,6 +24,7 @@ const (
 	ContextItemEvictedEvictionReasonContextReset ContextItemEvictedEvictionReason = "context_reset"
 )
 
+// ContextItemEvicted payload for context.item_evicted events.
 type ContextItemEvicted struct {
 	ContextID            string                           `json:"context_id" validate:"required,min=1"`
 	ContextPlanID        *string                          `json:"context_plan_id,omitempty" validate:"omitempty,min=1"`

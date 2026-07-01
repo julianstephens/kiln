@@ -66,23 +66,40 @@ const (
 	ExhaustionExhaustionScopeComponent ExhaustionExhaustionScope = "component"
 )
 
+// Exhaustion a durable record that budget capacity was exhausted for one or more budget dimensions.
 type Exhaustion struct {
-	BudgetID                   string                              `json:"budget_id" validate:"required,min=1"`
-	CommittedUsage             *budget_usage.Usage                 `json:"committed_usage,omitempty" validate:"omitempty"`
-	Component                  *string                             `json:"component,omitempty" validate:"omitempty,min=1"`
-	ExhaustedAt                time.Time                           `json:"exhausted_at" validate:"required"`
-	ExhaustedDimensions        []ExhaustionExhaustedDimensionsItem `json:"exhausted_dimensions" validate:"required,min=1"`
-	ExhaustionID               string                              `json:"exhaustion_id" validate:"required,min=1"`
-	ExhaustionReason           ExhaustionExhaustionReason          `json:"exhaustion_reason" validate:"required"`
-	ExhaustionScope            ExhaustionExhaustionScope           `json:"exhaustion_scope" validate:"required"`
-	OperationID                *string                             `json:"operation_id,omitempty" validate:"omitempty,min=1"`
-	RequestedAmounts           *budget_limits.Limits               `json:"requested_amounts,omitempty" validate:"omitempty"`
-	RunID                      *string                             `json:"run_id,omitempty" validate:"omitempty,min=1"`
-	StateAtExhaustion          budget_state.State                  `json:"state_at_exhaustion" validate:"required"`
-	TriggeringCommitmentID     *string                             `json:"triggering_commitment_id,omitempty" validate:"omitempty,min=1"`
-	TriggeringReconciliationID *string                             `json:"triggering_reconciliation_id,omitempty" validate:"omitempty,min=1"`
-	TriggeringReservationID    *string                             `json:"triggering_reservation_id,omitempty" validate:"omitempty,min=1"`
-	TurnID                     *string                             `json:"turn_id,omitempty" validate:"omitempty,min=1"`
+	// BudgetID budget ledger or accounting scope that became exhausted.
+	BudgetID string `json:"budget_id" validate:"required,min=1"`
+	// CommittedUsage usage committed when exhaustion was detected, when applicable.
+	CommittedUsage *budget_usage.Usage `json:"committed_usage,omitempty" validate:"omitempty"`
+	// Component logical component associated with this exhaustion record, when applicable.
+	Component *string `json:"component,omitempty" validate:"omitempty,min=1"`
+	// ExhaustedAt when budget exhaustion was detected.
+	ExhaustedAt time.Time `json:"exhausted_at" validate:"required"`
+	// ExhaustedDimensions budget dimensions that were exhausted.
+	ExhaustedDimensions []ExhaustionExhaustedDimensionsItem `json:"exhausted_dimensions" validate:"required,min=1"`
+	// ExhaustionID stable identity for this budget exhaustion record.
+	ExhaustionID string `json:"exhaustion_id" validate:"required,min=1"`
+	// ExhaustionReason reason budget exhaustion was detected.
+	ExhaustionReason ExhaustionExhaustionReason `json:"exhaustion_reason" validate:"required"`
+	// ExhaustionScope scope in which budget exhaustion occurred.
+	ExhaustionScope ExhaustionExhaustionScope `json:"exhaustion_scope" validate:"required"`
+	// OperationID operation associated with this exhaustion record, when applicable.
+	OperationID *string `json:"operation_id,omitempty" validate:"omitempty,min=1"`
+	// RequestedAmounts budget amounts requested when exhaustion was detected, when applicable.
+	RequestedAmounts *budget_limits.Limits `json:"requested_amounts,omitempty" validate:"omitempty"`
+	// RunID run associated with this exhaustion record, when applicable.
+	RunID *string `json:"run_id,omitempty" validate:"omitempty,min=1"`
+	// StateAtExhaustion budget state when exhaustion was detected.
+	StateAtExhaustion budget_state.State `json:"state_at_exhaustion" validate:"required"`
+	// TriggeringCommitmentID committed usage transaction that caused or revealed exhaustion, when applicable.
+	TriggeringCommitmentID *string `json:"triggering_commitment_id,omitempty" validate:"omitempty,min=1"`
+	// TriggeringReconciliationID reconciliation operation that caused or revealed exhaustion, when applicable.
+	TriggeringReconciliationID *string `json:"triggering_reconciliation_id,omitempty" validate:"omitempty,min=1"`
+	// TriggeringReservationID reservation that caused or revealed exhaustion, when applicable.
+	TriggeringReservationID *string `json:"triggering_reservation_id,omitempty" validate:"omitempty,min=1"`
+	// TurnID turn associated with this exhaustion record, when applicable.
+	TurnID *string `json:"turn_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Exhaustion) Validate() error {

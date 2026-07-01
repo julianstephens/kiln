@@ -8,17 +8,28 @@ import (
 	"time"
 )
 
+// Version is generated from a nested JSON Schema object.
 type Version struct {
-	AffectedPaths            []string                      `json:"affected_paths,omitempty" validate:"omitempty,min=1"`
-	BaseRepositoryVersionID  *string                       `json:"base_repository_version_id,omitempty" validate:"omitempty,min=1"`
-	CreatedAt                *time.Time                    `json:"created_at,omitempty" validate:"omitempty"`
-	InvalidatedEvidenceSet   []string                      `json:"invalidated_evidence_set,omitempty" validate:"omitempty"`
-	InvalidationReference    *artifact_reference.Reference `json:"invalidation_reference,omitempty" validate:"omitempty"`
-	MutationSet              []map[string]any              `json:"mutation_set,omitempty" validate:"omitempty"`
-	ParentWorkspaceVersionID *string                       `json:"parent_workspace_version_id,omitempty" validate:"omitempty,min=1"`
-	RepositoryID             *string                       `json:"repository_id,omitempty" validate:"omitempty,min=1"`
-	Synchronized             *bool                         `json:"synchronized,omitempty" validate:"omitempty"`
-	VersionID                *string                       `json:"version_id,omitempty" validate:"omitempty,min=1"`
+	// AffectedPaths the set of paths that were affected by the mutations that were applied to create this version of the workspace.
+	AffectedPaths []string `json:"affected_paths,omitempty" validate:"omitempty,min=1"`
+	// BaseRepositoryVersionID the unique identifier for the base version of the repository that this version of the workspace is associated with.
+	BaseRepositoryVersionID *string `json:"base_repository_version_id,omitempty" validate:"omitempty,min=1"`
+	// CreatedAt the timestamp when this version of the workspace was created.
+	CreatedAt *time.Time `json:"created_at,omitempty" validate:"omitempty"`
+	// InvalidatedEvidenceSet the set of evidence that was invalidated by the mutations that were applied to create this version of the workspace.
+	InvalidatedEvidenceSet []string `json:"invalidated_evidence_set,omitempty" validate:"omitempty"`
+	// InvalidationReference the reference to the evidence that invalidated this version of the workspace.
+	InvalidationReference *artifact_reference.Reference `json:"invalidation_reference,omitempty" validate:"omitempty"`
+	// MutationSet the set of mutations that were applied to create this version of the workspace.
+	MutationSet []map[string]any `json:"mutation_set,omitempty" validate:"omitempty"`
+	// ParentWorkspaceVersionID the unique identifier for the parent version of the workspace that this version was created from.
+	ParentWorkspaceVersionID *string `json:"parent_workspace_version_id,omitempty" validate:"omitempty,min=1"`
+	// RepositoryID the unique identifier for the repository that this version of the workspace is associated with.
+	RepositoryID *string `json:"repository_id,omitempty" validate:"omitempty,min=1"`
+	// Synchronized whether this version of the workspace has been synchronized with the base repository version.
+	Synchronized *bool `json:"synchronized,omitempty" validate:"omitempty"`
+	// VersionID the unique identifier for this version of the workspace.
+	VersionID *string `json:"version_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Version) Validate() error {

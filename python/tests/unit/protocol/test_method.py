@@ -10,7 +10,7 @@ from kiln.protocol.jsonrpc import (
     JsonRpcRequest,
     JsonRpcSuccessResponse,
 )
-from kiln.protocol.method_validation import (
+from kiln.protocol.method import (
     validate_error_data,
     validate_request_params,
     validate_success_result,

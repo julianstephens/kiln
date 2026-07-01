@@ -22,13 +22,27 @@ const (
 	RepositoryQueryStartedQueryKindDiagnostics RepositoryQueryStartedQueryKind = "diagnostics"
 )
 
+// RepositoryQueryStarted payload for repository.query_started events.
 type RepositoryQueryStarted struct {
-	QueryKind             RepositoryQueryStartedQueryKind `json:"query_kind" validate:"required"`
-	QueryOperationID      string                          `json:"query_operation_id" validate:"required,min=1"`
-	QueryRequestReference *artifact_reference.Reference   `json:"query_request_reference,omitempty" validate:"omitempty"`
-	QueryStartedAt        time.Time                       `json:"query_started_at" validate:"required"`
-	QuerySummary          map[string]any                  `json:"query_summary,omitempty" validate:"omitempty"`
-	RepositorySessionID   string                          `json:"repository_session_id" validate:"required,min=1"`
+	// QueryKind kind of repository query being executed.
+	QueryKind RepositoryQueryStartedQueryKind `json:"query_kind" validate:"required"`
+	// QueryOperationID operation identity for this repository query.
+	QueryOperationID string `json:"query_operation_id" validate:"required,min=1"`
+	// QueryRequestReference optional artifact reference for the query request when the request is stored durably.
+	QueryRequestReference *artifact_reference.Reference `json:"query_request_reference,omitempty" validate:"omitempty"`
+	// QueryStartedAt when the repository query started.
+	QueryStartedAt time.Time `json:"query_started_at" validate:"required"`
+	// QuerySummary small non-sensitive summary of the query.
+	QuerySummary *RepositoryQueryStartedQuerySummary `json:"query_summary,omitempty" validate:"omitempty"`
+	// RepositorySessionID repository session used for the query.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+}
+
+// RepositoryQueryStartedQuerySummary small non-sensitive summary of the query.
+type RepositoryQueryStartedQuerySummary struct {
+	Limit  *int    `json:"limit,omitempty" validate:"omitempty,gte=1"`
+	Mode   *string `json:"mode,omitempty" validate:"omitempty,min=1"`
+	Target *string `json:"target,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RepositoryQueryStarted) Validate() error {

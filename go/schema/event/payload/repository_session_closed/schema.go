@@ -31,16 +31,26 @@ const (
 	RepositorySessionClosedCloseReasonUnknown RepositorySessionClosedCloseReason = "unknown"
 )
 
+// RepositorySessionClosed payload for repository.session_closed events.
 type RepositorySessionClosed struct {
-	BudgetUsage            *budget_usage.Usage                                       `json:"budget_usage,omitempty" validate:"omitempty"`
-	CloseReason            RepositorySessionClosedCloseReason                        `json:"close_reason" validate:"required"`
-	ClosedAt               time.Time                                                 `json:"closed_at" validate:"required"`
+	// BudgetUsage budget usage committed for the repository session, when available.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// CloseReason reason the repository session was closed.
+	CloseReason RepositorySessionClosedCloseReason `json:"close_reason" validate:"required"`
+	// ClosedAt when the repository session was closed.
+	ClosedAt time.Time `json:"closed_at" validate:"required"`
+	// DiagnosticLogReference optional diagnostic log artifact for the repository session.
 	DiagnosticLogReference *artifact_diagnostic_log_reference.DiagnosticLogReference `json:"diagnostic_log_reference,omitempty" validate:"omitempty"`
-	Error                  *repository_error.Error                                   `json:"error,omitempty" validate:"omitempty"`
-	FinalPreparationStatus *repository_preparation_status.PreparationStatus          `json:"final_preparation_status,omitempty" validate:"omitempty"`
-	FinalRepositoryVersion *repository_version.Version                               `json:"final_repository_version,omitempty" validate:"omitempty"`
-	RepositorySessionID    string                                                    `json:"repository_session_id" validate:"required,min=1"`
-	Usage                  *repository_usage.Usage                                   `json:"usage,omitempty" validate:"omitempty"`
+	// Error repository error associated with the closed session, when the session closed because of failure.
+	Error *repository_error.Error `json:"error,omitempty" validate:"omitempty"`
+	// FinalPreparationStatus final preparation status observed before closing the session.
+	FinalPreparationStatus *repository_preparation_status.PreparationStatus `json:"final_preparation_status,omitempty" validate:"omitempty"`
+	// FinalRepositoryVersion final repository version observed before closing the session.
+	FinalRepositoryVersion *repository_version.Version `json:"final_repository_version,omitempty" validate:"omitempty"`
+	// RepositorySessionID repository session that was closed.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+	// Usage repository-specific telemetry accumulated for the session, when available.
+	Usage *repository_usage.Usage `json:"usage,omitempty" validate:"omitempty"`
 }
 
 func (value RepositorySessionClosed) Validate() error {

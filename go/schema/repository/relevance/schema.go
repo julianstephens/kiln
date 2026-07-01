@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Relevance search and ranking metadata describing why a repository candidate is relevant to a query.
 type Relevance struct {
 	GraphDistance    int      `json:"graph_distance" validate:"required,gte=0"`
 	HybridScore      int      `json:"hybrid_score" validate:"required,gte=0"`

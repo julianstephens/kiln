@@ -53,15 +53,23 @@ const (
 	BudgetDeniedDeniedDimensionsItemRepeatedTokenCostUsd BudgetDeniedDeniedDimensionsItem = "repeated_token_cost_usd"
 )
 
+// BudgetDenied payload for budget.denied events.
 type BudgetDenied struct {
-	BudgetID         string                             `json:"budget_id" validate:"required,min=1"`
-	DenialID         string                             `json:"denial_id" validate:"required,min=1"`
-	DenialReason     BudgetDeniedDenialReason           `json:"denial_reason" validate:"required"`
-	DeniedAt         time.Time                          `json:"denied_at" validate:"required"`
+	BudgetID string `json:"budget_id" validate:"required,min=1"`
+	// DenialID identity for this budget denial decision.
+	DenialID string `json:"denial_id" validate:"required,min=1"`
+	// DenialReason reason the budget request was denied.
+	DenialReason BudgetDeniedDenialReason `json:"denial_reason" validate:"required"`
+	// DeniedAt when budget was denied.
+	DeniedAt time.Time `json:"denied_at" validate:"required"`
+	// DeniedDimensions budget dimensions that caused or contributed to denial.
 	DeniedDimensions []BudgetDeniedDeniedDimensionsItem `json:"denied_dimensions,omitempty" validate:"omitempty,min=1"`
-	RequestedAmounts budget_limits.Limits               `json:"requested_amounts" validate:"required"`
-	ReservationID    *string                            `json:"reservation_id,omitempty" validate:"omitempty,min=1"`
-	StateAtDenial    budget_state.State                 `json:"state_at_denial" validate:"required"`
+	// RequestedAmounts budget amounts requested but denied.
+	RequestedAmounts budget_limits.Limits `json:"requested_amounts" validate:"required"`
+	// ReservationID reservation identity that was denied, when the denial occurred during reservation.
+	ReservationID *string `json:"reservation_id,omitempty" validate:"omitempty,min=1"`
+	// StateAtDenial budget state when the request was denied.
+	StateAtDenial budget_state.State `json:"state_at_denial" validate:"required"`
 }
 
 func (value BudgetDenied) Validate() error {

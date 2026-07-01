@@ -1,0 +1,17 @@
+{
+    "runtime": {
+        "id": "runtime_01",
+        "name": "kiln-runtime",
+        "version": "0.1.0"
+    },
+    "protocol_version": "1.0",
+    "schema_set_version": "1.0.0",
+    "compatibility_major": 1,
+    "supported_method_namespaces": [
+        "runtime"
+    ],
+    "supported_methods": [
+        "runtime.initialize",
+        "runtime.health"
+    ]
+}

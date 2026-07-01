@@ -109,10 +109,14 @@ validate-schemas:
 # ---------------------------------------------------------------------------
 # Generate models from JSON Schemas
 # ---------------------------------------------------------------------------
+generate-check: generate
+	git diff --exit-code python/kiln/schemas
+	git diff --exit-code go/schema
+
 generate: generate-python generate-go
 
 generate-python:
-	uv run generatemodels
+	uv run generatepymodels
 
 generate-go:
 	uv run generategomodels
@@ -131,4 +135,4 @@ clean:
 		-prune \
 		-exec rm -rf {} +
 
-check: format-check lint test build	validate-schemas
+check: format-check lint test build	validate-schemas generate-check

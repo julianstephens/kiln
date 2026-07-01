@@ -7,6 +7,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Session open repository session state exposed by the repository protocol.
 type Session struct {
 	Capabilities []string                          `json:"capabilities" validate:"required,min=1"`
 	IndexStatus  string                            `json:"index_status" validate:"required,min=1"`

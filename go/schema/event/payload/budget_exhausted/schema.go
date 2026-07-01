@@ -48,14 +48,21 @@ const (
 	BudgetExhaustedExhaustionReasonUnknown BudgetExhaustedExhaustionReason = "unknown"
 )
 
+// BudgetExhausted payload for budget.exhausted events.
 type BudgetExhausted struct {
-	BudgetID                string                                   `json:"budget_id" validate:"required,min=1"`
-	ExhaustedAt             time.Time                                `json:"exhausted_at" validate:"required"`
-	ExhaustedDimensions     []BudgetExhaustedExhaustedDimensionsItem `json:"exhausted_dimensions" validate:"required,min=1"`
-	ExhaustionReason        *BudgetExhaustedExhaustionReason         `json:"exhaustion_reason,omitempty" validate:"omitempty"`
-	StateAtExhaustion       budget_state.State                       `json:"state_at_exhaustion" validate:"required"`
-	TriggeringCommitmentID  *string                                  `json:"triggering_commitment_id,omitempty" validate:"omitempty,min=1"`
-	TriggeringReservationID *string                                  `json:"triggering_reservation_id,omitempty" validate:"omitempty,min=1"`
+	BudgetID string `json:"budget_id" validate:"required,min=1"`
+	// ExhaustedAt when budget exhaustion was detected.
+	ExhaustedAt time.Time `json:"exhausted_at" validate:"required"`
+	// ExhaustedDimensions budget dimensions that are exhausted.
+	ExhaustedDimensions []BudgetExhaustedExhaustedDimensionsItem `json:"exhausted_dimensions" validate:"required,min=1"`
+	// ExhaustionReason reason exhaustion was detected.
+	ExhaustionReason *BudgetExhaustedExhaustionReason `json:"exhaustion_reason,omitempty" validate:"omitempty"`
+	// StateAtExhaustion budget state when exhaustion was detected.
+	StateAtExhaustion budget_state.State `json:"state_at_exhaustion" validate:"required"`
+	// TriggeringCommitmentID commitment that caused exhaustion, when applicable.
+	TriggeringCommitmentID *string `json:"triggering_commitment_id,omitempty" validate:"omitempty,min=1"`
+	// TriggeringReservationID reservation that caused exhaustion, when applicable.
+	TriggeringReservationID *string `json:"triggering_reservation_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value BudgetExhausted) Validate() error {

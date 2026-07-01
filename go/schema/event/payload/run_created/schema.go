@@ -11,16 +11,26 @@ import (
 	validation_requirement "github.com/julianstephens/kiln/go/schema/validation/requirement"
 )
 
+// RunCreated is generated from a nested JSON Schema object.
 type RunCreated struct {
-	Repository               repository_identifier.Identifier            `json:"repository" validate:"required"`
-	RequestedBudgets         budget_limits.Limits                        `json:"requested_budgets" validate:"required"`
-	RequestedModel           string                                      `json:"requested_model" validate:"required,min=1"`
+	// Repository the repository that this run is associated with.
+	Repository repository_identifier.Identifier `json:"repository" validate:"required"`
+	// RequestedBudgets the budgets that were requested for this run.
+	RequestedBudgets budget_limits.Limits `json:"requested_budgets" validate:"required"`
+	// RequestedModel the model that was requested for this run.
+	RequestedModel string `json:"requested_model" validate:"required,min=1"`
+	// RequestedSecurityProfile the security profile that was requested for this run.
 	RequestedSecurityProfile capability_security_profile.SecurityProfile `json:"requested_security_profile" validate:"required"`
-	RunSpecificationID       string                                      `json:"run_specification_id" validate:"required,min=1"`
-	TaskArtifactReferences   []artifact_reference.Reference              `json:"task_artifact_references,omitempty" validate:"omitempty,min=1"`
-	TaskHash                 *string                                     `json:"task_hash,omitempty" validate:"omitempty,min=1"`
-	TaskID                   *string                                     `json:"task_id,omitempty" validate:"omitempty,min=1"`
-	ValidationRequirements   []validation_requirement.Requirement        `json:"validation_requirements,omitempty" validate:"omitempty,min=1"`
+	// RunSpecificationID the run specification that was used to create this run.
+	RunSpecificationID string `json:"run_specification_id" validate:"required,min=1"`
+	// TaskArtifactReferences the artifact references that were used to create this run.
+	TaskArtifactReferences []artifact_reference.Reference `json:"task_artifact_references,omitempty" validate:"omitempty,min=1"`
+	// TaskHash the hash of the task that this run is associated with.
+	TaskHash *string `json:"task_hash,omitempty" validate:"omitempty,min=1"`
+	// TaskID the task that this run is associated with.
+	TaskID *string `json:"task_id,omitempty" validate:"omitempty,min=1"`
+	// ValidationRequirements the validation requirements that were requested for this run.
+	ValidationRequirements []validation_requirement.Requirement `json:"validation_requirements,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RunCreated) Validate() error {

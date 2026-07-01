@@ -25,14 +25,31 @@ const (
 	ModelInvocationCompletedFinishReasonUnknown ModelInvocationCompletedFinishReason = "unknown"
 )
 
+// ModelInvocationCompleted payload for model.invocation_completed events.
 type ModelInvocationCompleted struct {
-	BudgetUsage               *budget_usage.Usage                  `json:"budget_usage,omitempty" validate:"omitempty"`
-	CompletedAt               time.Time                            `json:"completed_at" validate:"required"`
-	FinishReason              ModelInvocationCompletedFinishReason `json:"finish_reason" validate:"required"`
-	LatencyMs                 *int                                 `json:"latency_ms,omitempty" validate:"omitempty,gte=0"`
-	ModelInvocationID         string                               `json:"model_invocation_id" validate:"required,min=1"`
-	ResponseArtifactReference artifact_reference.Reference         `json:"response_artifact_reference" validate:"required"`
-	Usage                     map[string]any                       `json:"usage" validate:"required"`
+	// BudgetUsage budget usage committed for this model invocation.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// CompletedAt when the model invocation completed.
+	CompletedAt time.Time `json:"completed_at" validate:"required"`
+	// FinishReason provider or adapter normalized finish reason.
+	FinishReason ModelInvocationCompletedFinishReason `json:"finish_reason" validate:"required"`
+	// LatencyMs elapsed invocation latency in milliseconds.
+	LatencyMs *int `json:"latency_ms,omitempty" validate:"omitempty,gte=0"`
+	// ModelInvocationID model invocation that completed.
+	ModelInvocationID string `json:"model_invocation_id" validate:"required,min=1"`
+	// ResponseArtifactReference artifact reference for the raw model response.
+	ResponseArtifactReference artifact_reference.Reference `json:"response_artifact_reference" validate:"required"`
+	// Usage model usage recorded for this invocation.
+	Usage ModelInvocationCompletedUsage `json:"usage" validate:"required"`
+}
+
+// ModelInvocationCompletedUsage model usage recorded for this invocation.
+type ModelInvocationCompletedUsage struct {
+	CachedInputTokens *int `json:"cached_input_tokens,omitempty" validate:"omitempty,gte=0"`
+	InputTokens       int  `json:"input_tokens" validate:"required,gte=0"`
+	OutputTokens      int  `json:"output_tokens" validate:"required,gte=0"`
+	ReasoningTokens   *int `json:"reasoning_tokens,omitempty" validate:"omitempty,gte=0"`
+	TotalTokens       *int `json:"total_tokens,omitempty" validate:"omitempty,gte=0"`
 }
 
 func (value ModelInvocationCompleted) Validate() error {

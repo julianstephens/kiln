@@ -14,6 +14,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Candidate repository content candidate returned by search or source retrieval, with source, content, cost, relevance, provenance, and validity metadata.
 type Candidate struct {
 	AlternativeRepresentations []repository_alternative_representation.AlternativeRepresentation `json:"alternative_representations" validate:"required"`
 	Content                    repository_content.Content                                        `json:"content" validate:"required"`

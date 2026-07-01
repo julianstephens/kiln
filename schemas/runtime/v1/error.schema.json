@@ -1,0 +1,68 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/error.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln runtime error",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "kiln_error"
+    ],
+    "properties": {
+        "kiln_error": {
+            "type": "object",
+            "description": "Information about the error that occurred.",
+            "additionalProperties": false,
+            "required": [
+                "code",
+                "category",
+                "message",
+                "retryable",
+                "details"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "The error code.",
+                    "minLength": 1,
+                    "pattern": "^runtime\\."
+                },
+                "category": {
+                    "type": "string",
+                    "description": "The error category.",
+                    "enum": [
+                        "compatibility",
+                        "validation",
+                        "lifecycle",
+                        "shutdown",
+                        "internal"
+                    ]
+                },
+                "message": {
+                    "type": "string",
+                    "description": "A human-readable message describing the error.",
+                    "minLength": 1
+                },
+                "retryable": {
+                    "type": "boolean",
+                    "description": "Whether the error is retryable."
+                },
+                "details": {
+                    "type": "object",
+                    "description": "Additional details about the error.",
+                    "additionalProperties": true
+                },
+                "correlation_id": {
+                    "type": "string",
+                    "description": "A correlation ID for the error, if available.",
+                    "minLength": 1
+                },
+                "runtime_id": {
+                    "type": "string",
+                    "description": "The unique identifier of the runtime that generated the error.",
+                    "minLength": 1
+                }
+            }
+        }
+    }
+}

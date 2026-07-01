@@ -38,9 +38,10 @@ const (
 	GrantCreationSourceImport GrantCreationSource = "import"
 )
 
+// Grant is generated from a nested JSON Schema object.
 type Grant struct {
 	AllowedOperations []string               `json:"allowed_operations" validate:"required"`
-	ApprovalMetadata  map[string]any         `json:"approval_metadata" validate:"required"`
+	ApprovalMetadata  GrantApprovalMetadata  `json:"approval_metadata" validate:"required"`
 	CapabilityScope   capability_scope.Scope `json:"capability_scope" validate:"required"`
 	CapabilityType    GrantCapabilityType    `json:"capability_type" validate:"required"`
 	CreationSource    GrantCreationSource    `json:"creation_source" validate:"required"`
@@ -49,6 +50,14 @@ type Grant struct {
 	Revoked           bool                   `json:"revoked" validate:"required"`
 	RunID             string                 `json:"run_id" validate:"required,min=1"`
 	StartsAt          time.Time              `json:"starts_at" validate:"required"`
+}
+
+// GrantApprovalMetadata is generated from a nested JSON Schema object.
+type GrantApprovalMetadata struct {
+	ApprovalReference *string    `json:"approval_reference,omitempty" validate:"omitempty,min=1"`
+	ApprovalRequired  bool       `json:"approval_required" validate:"required"`
+	ApprovedAt        *time.Time `json:"approved_at,omitempty" validate:"omitempty"`
+	ApprovedBy        *string    `json:"approved_by,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Grant) Validate() error {

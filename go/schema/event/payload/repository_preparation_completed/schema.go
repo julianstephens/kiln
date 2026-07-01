@@ -29,17 +29,28 @@ const (
 	RepositoryPreparationCompletedPreparedCapabilitiesItemDiagnostics RepositoryPreparationCompletedPreparedCapabilitiesItem = "diagnostics"
 )
 
+// RepositoryPreparationCompleted payload for repository.preparation_completed events.
 type RepositoryPreparationCompleted struct {
-	BudgetUsage                *budget_usage.Usage                                                 `json:"budget_usage,omitempty" validate:"omitempty"`
-	DiagnosticLogReference     *artifact_diagnostic_log_reference.DiagnosticLogReference           `json:"diagnostic_log_reference,omitempty" validate:"omitempty"`
-	PreparationDurationSeconds float64                                                             `json:"preparation_duration_seconds" validate:"required,gte=0"`
-	PreparationStatus          repository_preparation_status.PreparationStatus                     `json:"preparation_status" validate:"required"`
-	PreparedCapabilities       []RepositoryPreparationCompletedPreparedCapabilitiesItem            `json:"prepared_capabilities" validate:"required,min=1"`
-	Repository                 repository_identifier.Identifier                                    `json:"repository" validate:"required"`
-	RepositorySessionID        string                                                              `json:"repository_session_id" validate:"required,min=1"`
-	RepositoryVersion          repository_version.Version                                          `json:"repository_version" validate:"required"`
-	SourceSnapshotReference    *artifact_repository_snapshot_reference.RepositorySnapshotReference `json:"source_snapshot_reference,omitempty" validate:"omitempty"`
-	Usage                      *repository_usage.Usage                                             `json:"usage,omitempty" validate:"omitempty"`
+	// BudgetUsage budget usage committed for repository preparation.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// DiagnosticLogReference optional diagnostic log artifact produced during preparation.
+	DiagnosticLogReference *artifact_diagnostic_log_reference.DiagnosticLogReference `json:"diagnostic_log_reference,omitempty" validate:"omitempty"`
+	// PreparationDurationSeconds elapsed wall-clock duration of repository preparation.
+	PreparationDurationSeconds float64 `json:"preparation_duration_seconds" validate:"required,gte=0"`
+	// PreparationStatus final preparation status for the repository session.
+	PreparationStatus repository_preparation_status.PreparationStatus `json:"preparation_status" validate:"required"`
+	// PreparedCapabilities repository protocol capabilities available after preparation.
+	PreparedCapabilities []RepositoryPreparationCompletedPreparedCapabilitiesItem `json:"prepared_capabilities" validate:"required,min=1"`
+	// Repository the repository that was prepared.
+	Repository repository_identifier.Identifier `json:"repository" validate:"required"`
+	// RepositorySessionID the repository session that was prepared.
+	RepositorySessionID string `json:"repository_session_id" validate:"required,min=1"`
+	// RepositoryVersion the repository version available after preparation.
+	RepositoryVersion repository_version.Version `json:"repository_version" validate:"required"`
+	// SourceSnapshotReference optional artifact reference for a repository snapshot produced during preparation.
+	SourceSnapshotReference *artifact_repository_snapshot_reference.RepositorySnapshotReference `json:"source_snapshot_reference,omitempty" validate:"omitempty"`
+	// Usage repository-operation usage recorded during preparation.
+	Usage *repository_usage.Usage `json:"usage,omitempty" validate:"omitempty"`
 }
 
 func (value RepositoryPreparationCompleted) Validate() error {

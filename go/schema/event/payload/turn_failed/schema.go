@@ -11,18 +11,30 @@ import (
 	"time"
 )
 
+// TurnFailed payload for turn.failed events.
 type TurnFailed struct {
-	BudgetUsage            *budget_usage.Usage              `json:"budget_usage,omitempty" validate:"omitempty"`
-	ContextStateRevision   *int                             `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
-	Error                  run_error.Error                  `json:"error" validate:"required"`
-	FailedAt               time.Time                        `json:"failed_at" validate:"required"`
-	FailureCategory        run_error_category.ErrorCategory `json:"failure_category" validate:"required"`
-	ModelInvocationIds     []string                         `json:"model_invocation_ids,omitempty" validate:"omitempty"`
-	PartialOutputReference *artifact_reference.Reference    `json:"partial_output_reference,omitempty" validate:"omitempty"`
-	Retryable              *bool                            `json:"retryable,omitempty" validate:"omitempty"`
-	ToolCallIds            []string                         `json:"tool_call_ids,omitempty" validate:"omitempty"`
-	TurnID                 string                           `json:"turn_id" validate:"required,min=1"`
-	TurnIndex              int                              `json:"turn_index" validate:"required,gte=0"`
+	// BudgetUsage budget usage committed before this turn failed.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// ContextStateRevision context state revision observed when the turn failed.
+	ContextStateRevision *int `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
+	// Error run-level error describing the turn failure.
+	Error run_error.Error `json:"error" validate:"required"`
+	// FailedAt when the turn failed.
+	FailedAt time.Time `json:"failed_at" validate:"required"`
+	// FailureCategory normalized category of turn failure.
+	FailureCategory run_error_category.ErrorCategory `json:"failure_category" validate:"required"`
+	// ModelInvocationIds model invocations attempted during this turn.
+	ModelInvocationIds []string `json:"model_invocation_ids,omitempty" validate:"omitempty"`
+	// PartialOutputReference optional artifact reference for partial turn output produced before failure.
+	PartialOutputReference *artifact_reference.Reference `json:"partial_output_reference,omitempty" validate:"omitempty"`
+	// Retryable whether this turn failure may be retried.
+	Retryable *bool `json:"retryable,omitempty" validate:"omitempty"`
+	// ToolCallIds tool calls attempted or processed during this turn.
+	ToolCallIds []string `json:"tool_call_ids,omitempty" validate:"omitempty"`
+	// TurnID identity for the turn that failed.
+	TurnID string `json:"turn_id" validate:"required,min=1"`
+	// TurnIndex zero-based index of this turn within the run.
+	TurnIndex int `json:"turn_index" validate:"required,gte=0"`
 }
 
 func (value TurnFailed) Validate() error {

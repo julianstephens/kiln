@@ -25,13 +25,20 @@ const (
 	RunFailedCleanupStatusUnknown RunFailedCleanupStatus = "unknown"
 )
 
+// RunFailed is generated from a nested JSON Schema object.
 type RunFailed struct {
-	CleanupStatus                RunFailedCleanupStatus             `json:"cleanup_status" validate:"required"`
-	FailureCategory              run_error_category.ErrorCategory   `json:"failure_category" validate:"required"`
-	FailureDetail                *run_error.Error                   `json:"failure_detail,omitempty" validate:"omitempty"`
+	// CleanupStatus the status of the cleanup process for this run.
+	CleanupStatus RunFailedCleanupStatus `json:"cleanup_status" validate:"required"`
+	// FailureCategory the category of failure that caused this run to stop.
+	FailureCategory run_error_category.ErrorCategory `json:"failure_category" validate:"required"`
+	// FailureDetail additional details about the failure that caused this run to stop.
+	FailureDetail *run_error.Error `json:"failure_detail,omitempty" validate:"omitempty"`
+	// LastSuccessfulLifecycleState the last successful lifecycle state that this run was in before it failed.
 	LastSuccessfulLifecycleState run_lifecycle_state.LifecycleState `json:"last_successful_lifecycle_state" validate:"required"`
-	PartialResultReferences      []artifact_reference.Reference     `json:"partial_result_references,omitempty" validate:"omitempty"`
-	StopReason                   run_stop_reason.StopReason         `json:"stop_reason" validate:"required"`
+	// PartialResultReferences the artifact references that contain partial results produced by this run before it failed.
+	PartialResultReferences []artifact_reference.Reference `json:"partial_result_references,omitempty" validate:"omitempty"`
+	// StopReason the reason that this run was stopped.
+	StopReason run_stop_reason.StopReason `json:"stop_reason" validate:"required"`
 }
 
 func (value RunFailed) Validate() error {

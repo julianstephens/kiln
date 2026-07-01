@@ -15,10 +15,14 @@ const (
 	DecisionDecisionDenied DecisionDecision = "denied"
 )
 
+// Decision is generated from a nested JSON Schema object.
 type Decision struct {
-	Decision DecisionDecision       `json:"decision" validate:"required"`
-	Grant    capability_grant.Grant `json:"grant" validate:"required"`
-	Reason   string                 `json:"reason" validate:"required,min=1"`
+	// Decision the decision that was made for this capability request.
+	Decision DecisionDecision `json:"decision" validate:"required"`
+	// Grant the grant that was issued for this capability request.
+	Grant capability_grant.Grant `json:"grant" validate:"required"`
+	// Reason the reason that this capability request was granted or denied.
+	Reason string `json:"reason" validate:"required,min=1"`
 }
 
 func (value Decision) Validate() error {

@@ -1,0 +1,98 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/initialize-result.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln runtime initialize result",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "runtime",
+        "protocol_version",
+        "schema_set_version",
+        "compatibility_major",
+        "supported_method_namespaces",
+        "supported_methods",
+        "build"
+    ],
+    "properties": {
+        "runtime": {
+            "type": "object",
+            "description": "Information about the runtime that was initialized.",
+            "additionalProperties": false,
+            "required": [
+                "id",
+                "name",
+                "version"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The unique identifier of the runtime.",
+                    "minLength": 1
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the runtime.",
+                    "minLength": 1
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the runtime.",
+                    "minLength": 1
+                }
+            }
+        },
+        "protocol_version": {
+            "type": "string",
+            "description": "The version of the Kiln runtime protocol that the runtime supports.",
+            "minLength": 1
+        },
+        "schema_set_version": {
+            "type": "string",
+            "description": "The version of the Kiln runtime schema set that the runtime supports.",
+            "minLength": 1
+        },
+        "compatibility_major": {
+            "type": "integer",
+            "description": "The major version of the Kiln runtime protocol that the runtime supports.",
+            "minimum": 0
+        },
+        "supported_method_namespaces": {
+            "type": "array",
+            "description": "The list of method namespaces that the runtime supports.",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "supported_methods": {
+            "type": "array",
+            "description": "The list of methods that the runtime supports.",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "build": {
+            "type": "object",
+            "description": "Information about the build of the runtime.",
+            "additionalProperties": false,
+            "required": [
+                "commit",
+                "date"
+            ],
+            "properties": {
+                "commit": {
+                    "type": "string",
+                    "description": "The commit hash of the build.",
+                    "minLength": 1
+                },
+                "date": {
+                    "type": "string",
+                    "description": "The date of the build in ISO 8601 format.",
+                    "format": "date-time"
+                }
+            }
+        }
+    }
+}

@@ -6,10 +6,14 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// RepositoryVersionPinned is generated from a nested JSON Schema object.
 type RepositoryVersionPinned struct {
-	ContentDigest       string `json:"content_digest" validate:"required,min=1"`
+	// ContentDigest the content digest of the repository version that was pinned.
+	ContentDigest string `json:"content_digest" validate:"required,min=1"`
+	// RepositoryVersionID the repository version that was pinned.
 	RepositoryVersionID string `json:"repository_version_id" validate:"required,min=1"`
-	SourceRevision      string `json:"source_revision" validate:"required,min=1"`
+	// SourceRevision the source revision that was pinned.
+	SourceRevision string `json:"source_revision" validate:"required,min=1"`
 }
 
 func (value RepositoryVersionPinned) Validate() error {

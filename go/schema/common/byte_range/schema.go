@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// ByteRange inclusive byte offset range within a source or artifact payload.
 type ByteRange struct {
 	End   int `json:"end" validate:"required,gte=0"`
 	Start int `json:"start" validate:"required,gte=0"`

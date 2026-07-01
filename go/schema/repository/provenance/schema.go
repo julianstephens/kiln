@@ -15,6 +15,7 @@ const (
 	ProvenanceCreationMethodExtracted ProvenanceCreationMethod = "extracted"
 )
 
+// Provenance provenance metadata describing how repository content or representations were extracted or generated.
 type Provenance struct {
 	CreatedAt         time.Time                `json:"created_at" validate:"required"`
 	CreationMethod    ProvenanceCreationMethod `json:"creation_method" validate:"required"`

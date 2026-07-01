@@ -1,0 +1,13 @@
+{
+    "kiln_error": {
+        "code": "runtime.validation.invalid_initialize_payload",
+        "category": "validation",
+        "message": "initialize payload failed validation",
+        "retryable": false,
+        "details": {
+            "field": "protocol_version"
+        },
+        "correlation_id": "corr_01",
+        "runtime_id": "runtime_01"
+    }
+}

@@ -16,16 +16,26 @@ const (
 	UsageMeasurementReconciled UsageMeasurement = "reconciled"
 )
 
+// Usage provider-neutral model usage and accounting fields for a model invocation.
 type Usage struct {
-	BillableInputTokens  *int              `json:"billable_input_tokens,omitempty" validate:"omitempty,gte=0"`
-	BillableOutputTokens *int              `json:"billable_output_tokens,omitempty" validate:"omitempty,gte=0"`
-	CachedInputTokens    *int              `json:"cached_input_tokens,omitempty" validate:"omitempty,gte=0"`
-	EstimatedCostUsd     *float64          `json:"estimated_cost_usd,omitempty" validate:"omitempty,gte=0"`
-	InputTokens          int               `json:"input_tokens" validate:"required,gte=0"`
-	Measurement          *UsageMeasurement `json:"measurement,omitempty" validate:"omitempty"`
-	OutputTokens         int               `json:"output_tokens" validate:"required,gte=0"`
-	ReasoningTokens      *int              `json:"reasoning_tokens,omitempty" validate:"omitempty,gte=0"`
-	TotalTokens          int               `json:"total_tokens" validate:"required,gte=0"`
+	// BillableInputTokens input tokens counted for billing or budget accounting.
+	BillableInputTokens *int `json:"billable_input_tokens,omitempty" validate:"omitempty,gte=0"`
+	// BillableOutputTokens output tokens counted for billing or budget accounting.
+	BillableOutputTokens *int `json:"billable_output_tokens,omitempty" validate:"omitempty,gte=0"`
+	// CachedInputTokens input tokens served from a provider or adapter cache.
+	CachedInputTokens *int `json:"cached_input_tokens,omitempty" validate:"omitempty,gte=0"`
+	// EstimatedCostUsd estimated provider-neutral monetary cost in USD.
+	EstimatedCostUsd *float64 `json:"estimated_cost_usd,omitempty" validate:"omitempty,gte=0"`
+	// InputTokens input tokens consumed by the model invocation.
+	InputTokens int `json:"input_tokens" validate:"required,gte=0"`
+	// Measurement whether usage was estimated, actual, or reconciled.
+	Measurement *UsageMeasurement `json:"measurement,omitempty" validate:"omitempty"`
+	// OutputTokens output tokens produced by the model invocation.
+	OutputTokens int `json:"output_tokens" validate:"required,gte=0"`
+	// ReasoningTokens output-side reasoning tokens, when reported separately by the provider or adapter.
+	ReasoningTokens *int `json:"reasoning_tokens,omitempty" validate:"omitempty,gte=0"`
+	// TotalTokens total tokens accounted for by the model invocation.
+	TotalTokens int `json:"total_tokens" validate:"required,gte=0"`
 }
 
 func (value Usage) Validate() error {
