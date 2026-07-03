@@ -19,7 +19,9 @@ func TestOpenLogSink_StderrUsesFallbackWriter(t *testing.T) {
 	var buf bytes.Buffer
 	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{Kind: runtime.LogSinkKindStderr}, &buf)
 	utest.AssertNil(t, err)
-	defer sink.Close()
+	defer func() {
+		_ = sink.Close()
+	}()
 
 	_, err = io.WriteString(sink, "hello\n")
 	utest.AssertNil(t, err)
@@ -32,7 +34,9 @@ func TestOpenLogSink_EmptyKindUsesFallbackWriter(t *testing.T) {
 	var buf bytes.Buffer
 	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{}, &buf)
 	utest.AssertNil(t, err)
-	defer sink.Close()
+	defer func() {
+		_ = sink.Close()
+	}()
 
 	_, err = io.WriteString(sink, "hello\n")
 	utest.AssertNil(t, err)
@@ -51,7 +55,9 @@ func TestOpenLogSink_LocalFileWritesActiveLogFile(t *testing.T) {
 		MaxFiles:  3,
 	}, nil)
 	utest.AssertNil(t, err)
-	defer sink.Close()
+	defer func() {
+		_ = sink.Close()
+	}()
 
 	_, err = io.WriteString(sink, "first\n")
 	utest.AssertNil(t, err)
@@ -73,7 +79,9 @@ func TestOpenLogSink_LocalFileRotatesWhenNextWriteWouldExceedLimit(t *testing.T)
 		MaxFiles:  2,
 	}, nil)
 	utest.AssertNil(t, err)
-	defer sink.Close()
+	defer func() {
+		_ = sink.Close()
+	}()
 
 	_, err = io.WriteString(sink, "first\n")
 	utest.AssertNil(t, err)
@@ -101,7 +109,9 @@ func TestOpenLogSink_LocalFileRemovesOldestRotatedFile(t *testing.T) {
 		MaxFiles:  2,
 	}, nil)
 	utest.AssertNil(t, err)
-	defer sink.Close()
+	defer func() {
+		_ = sink.Close()
+	}()
 
 	for _, line := range []string{"a\n", "b\n", "c\n", "d\n"} {
 		_, err = io.WriteString(sink, line)
@@ -137,7 +147,9 @@ func TestOpenLogSink_LocalFileCanCompressRotatedFiles(t *testing.T) {
 		Compress:  true,
 	}, nil)
 	utest.AssertNil(t, err)
-	defer sink.Close()
+	defer func() {
+		_ = sink.Close()
+	}()
 
 	_, err = io.WriteString(sink, "first\n")
 	utest.AssertNil(t, err)
@@ -146,11 +158,15 @@ func TestOpenLogSink_LocalFileCanCompressRotatedFiles(t *testing.T) {
 
 	file, err := os.Open(filepath.Join(dir, "runtime.log.1.gz"))
 	utest.AssertNil(t, err)
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	reader, err := gzip.NewReader(file)
 	utest.AssertNil(t, err)
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	content, err := io.ReadAll(reader)
 	utest.AssertNil(t, err)
