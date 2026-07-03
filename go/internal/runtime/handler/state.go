@@ -10,15 +10,15 @@ import (
 
 // HandlerState holds the mutable state of the runtime, including initialization status and last fatal error.
 type HandlerState struct {
-	mu sync.Mutex
+	Mu sync.Mutex
 
-	initialized   bool
-	initialParams initialize_request_payload.InitializeRequestPayload
-	initialResult initialize_result.InitializeResult
+	Initialized   bool
+	InitialParams initialize_request_payload.InitializeRequestPayload
+	InitialResult initialize_result.InitializeResult
 
-	ready    bool
-	draining bool
-	shutdown bool
+	Ready    bool
+	Draining bool
+	Shutdown bool
 
-	lastFatalStartupError *runtime_error.ErrorKilnError
+	LastFatalStartupError *runtime_error.ErrorKilnError
 }

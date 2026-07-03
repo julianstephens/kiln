@@ -2,6 +2,7 @@ package util
 
 import (
 	"reflect"
+	"strings"
 )
 
 // StructToMap converts any struct type into a map[string]any using generics and reflection.
@@ -32,7 +33,9 @@ func StructToMap[T any](obj T) map[string]any {
 		// Use JSON tag as key if available, otherwise use field name
 		key := field.Name
 		if tag := field.Tag.Get("json"); tag != "" && tag != "-" {
-			key = tag
+			// Extract the key part before any comma (e.g., "last_fatal_startup_error,omitempty" -> "last_fatal_startup_error")
+			parts := strings.Split(tag, ",")
+			key = parts[0]
 		}
 
 		result[key] = fieldVal.Interface()

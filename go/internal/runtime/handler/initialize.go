@@ -17,44 +17,44 @@ import (
 // MakeInitializeHandler returns a Handler closure that captures state and deps.
 func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) contract.Handler {
 	return func(ctx context.Context, req protocol.Request) protocol.Message {
-		state.mu.Lock()
-		defer state.mu.Unlock()
+		state.Mu.Lock()
+		defer state.Mu.Unlock()
 
 		res, err := protocol.KilnMethods["runtime.initialize"].ValidateParams(req.Params)
 		if err != nil {
 			kilnErr := invalidRequestParamsError(req.Params)
-			state.lastFatalStartupError = &kilnErr.Data
+			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		}
 
 		validatedParams, ok := res.(initialize_request_payload.InitializeRequestPayload)
 		if !ok {
 			kilnErr := invalidRequestParamsError(req.Params)
-			state.lastFatalStartupError = &kilnErr.Data
+			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		}
 
-		if state.initialized {
-			if sameInitializeParams(state.initialParams, validatedParams) {
-				return protocol.NewSuccessResponse(req.ID, util.StructToMap(state.initialResult))
+		if state.Initialized {
+			if sameInitializeParams(state.InitialParams, validatedParams) {
+				return protocol.NewSuccessResponse(req.ID, util.StructToMap(state.InitialResult))
 			}
-			kilnErr := alreadyInitializedWithDifferentParams(util.StructToMap(state.initialParams), req.Params)
-			state.lastFatalStartupError = &kilnErr.Data
+			kilnErr := alreadyInitializedWithDifferentParams(util.StructToMap(state.InitialParams), req.Params)
+			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		}
 
 		switch {
 		case validatedParams.ProtocolVersion != contract.RuntimeProtocolVersion:
 			kilnErr := unsupportedProtocolVersionError(validatedParams.ProtocolVersion)
-			state.lastFatalStartupError = &kilnErr.Data
+			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		case validatedParams.SchemaSetVersion != schema.SchemaSetVersion:
 			kilnErr := incompatibleSchemaSetVersionError(validatedParams.SchemaSetVersion)
-			state.lastFatalStartupError = &kilnErr.Data
+			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		case validatedParams.CompatibilityMajor != schema.CompatibilityMajor:
 			kilnErr := incompatibleCompatibiltyMajor(validatedParams.CompatibilityMajor)
-			state.lastFatalStartupError = &kilnErr.Data
+			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		}
 
@@ -75,10 +75,10 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			},
 		}
 
-		state.initialized = true
-		state.ready = true
-		state.initialParams = validatedParams
-		state.initialResult = result
+		state.Initialized = true
+		state.Ready = true
+		state.InitialParams = validatedParams
+		state.InitialResult = result
 
 		return protocol.NewSuccessResponse(req.ID, util.StructToMap(result))
 	}

@@ -13,13 +13,13 @@ import (
 // and returns a response containing the current health status of the runtime.
 func MakeHealthHandler(state *HandlerState) contract.Handler {
 	return func(ctx context.Context, req protocol.Request) protocol.Message {
-		state.mu.Lock()
-		isReady := state.ready
-		isShutdown := state.shutdown
-		isDraining := state.draining
-		isInitialized := state.initialized
-		lastFatalError := state.lastFatalStartupError
-		state.mu.Unlock()
+		state.Mu.Lock()
+		isReady := state.Ready
+		isShutdown := state.Shutdown
+		isDraining := state.Draining
+		isInitialized := state.Initialized
+		lastFatalError := state.LastFatalStartupError
+		state.Mu.Unlock()
 
 		return protocol.NewSuccessResponse(req.ID, util.StructToMap(health_result.HealthResult{
 			Draining:              isDraining,

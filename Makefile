@@ -10,6 +10,8 @@ GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
 GO_RUNTIME_VERSION ?= 0.1.0
+BUILD_DATE := $(shell date +%F)
+BUILD_COMMIT := $(shell git rev-parse --short HEAD)
 
 
 default: check
@@ -101,7 +103,7 @@ build-go:
 	cd $(GO_DIR) && \
 		$(GO) build \
 			-o "$(CURDIR)/$(DIST_DIR)/bin/kiln-runtime" \
-			-ldflags "-X 'contract.BuildVersion=$(GO_RUNTIME_VERSION)' -X 'contract.BuildDate=$(date +%F)' -X 'contract.BuildCommit=$(git rev-parse --short HEAD)'" \
+			-ldflags "-X 'contract.BuildVersion=$(GO_RUNTIME_VERSION)' -X 'contract.BuildDate=$(BUILD_DATE)' -X 'contract.BuildCommit=$(BUILD_COMMIT)'" \
 			./cmd/kiln-runtime
 
 # ---------------------------------------------------------------------------
