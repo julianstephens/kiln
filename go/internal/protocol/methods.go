@@ -124,6 +124,7 @@ func SupportedMethods() []string {
 	for k := range KilnMethods {
 		res = append(res, k)
 	}
+	slices.Sort(res)
 	return res
 }
 
@@ -136,5 +137,6 @@ func SupportedMethodNamespaces() []string {
 			res = append(res, namespace)
 		}
 	}
+	slices.Sort(res)
 	return res
 }
