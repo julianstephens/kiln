@@ -34,6 +34,23 @@ func TestRun_Preconditions_TableDriven(t *testing.T) {
 			},
 			wantErr: runtime.ErrOutputStreamMissing,
 		},
+		{
+			name: "invalid log sink config returns expected error",
+			cfg: runtime.Config{
+				Input:  bytes.NewBuffer(nil),
+				Output: &bytes.Buffer{},
+				LogSink: runtime.LogSinkConfig{
+					Kind:     runtime.LogSinkKindLocalFile,
+					Filename: "runtime.log",
+					MaxBytes: 1,
+					MaxFiles: 1,
+				},
+			},
+			wantErr: &runtime.Error{
+				Code:    runtime.CodeLogSinkOpenFailed,
+				Message: "failed to open log sink",
+			},
+		},
 	}
 
 	for _, tc := range tests {
