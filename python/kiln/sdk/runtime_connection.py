@@ -1,7 +1,4 @@
-from typing import get_args
-
 from kiln.protocol.jsonrpc import (
-    DEFAULT_JSONRPC_VERSION,
     JsonRpcErrorResponse,
     JsonRpcRequest,
     JsonRpcSuccessResponse,
@@ -15,13 +12,13 @@ from kiln.schemas.runtime import (
     RuntimeInitializeRequestPayload,
     RuntimeInitializeResult,
 )
-from kiln.schemas.runtime.initialize_request_payload import (
-    Client as RuntimeClient,
-)
+from kiln.schemas.runtime.initialize_request_payload import Client as RuntimeClient
 
 from . import PACKAGE_NAME, __version__
 from ._runtime_os.win32 import ServerProcess
 from .errors import RuntimeMethodError, RuntimeProcessError
+
+RUNTIME_PROTOCOL_VERSION = "2026-07-01"
 
 
 class RuntimeStdioConnection:
@@ -52,7 +49,7 @@ class RuntimeStdioConnection:
         """
         params = RuntimeInitializeRequestPayload.model_validate(
             {
-                "protocol_version": get_args(DEFAULT_JSONRPC_VERSION)[0],
+                "protocol_version": RUNTIME_PROTOCOL_VERSION,
                 "schema_set_version": SCHEMA_SET_VERSION,
                 "compatibility_major": COMPATIBILITY_MAJOR,
                 "client": RuntimeClient(name=PACKAGE_NAME, version=__version__),

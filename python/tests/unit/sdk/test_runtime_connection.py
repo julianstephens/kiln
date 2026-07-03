@@ -16,7 +16,7 @@ from kiln.protocol.jsonrpc import (
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
 from kiln.sdk import PACKAGE_NAME, __version__
 from kiln.sdk.errors import RuntimeMethodError, RuntimeProcessError
-from kiln.sdk.runtime_connection import RuntimeStdioConnection
+from kiln.sdk.runtime_connection import RUNTIME_PROTOCOL_VERSION, RuntimeStdioConnection
 
 
 class _FakePeer:
@@ -95,10 +95,7 @@ async def test_initialize_returns_runtime_initialize_result(mocker) -> None:
     assert fake_peer.last_request is not None
     assert fake_peer.last_request.method == "runtime.initialize"
     assert fake_peer.last_request.params is not None
-    assert (
-        fake_peer.last_request.params["protocol_version"]
-        == get_args(DEFAULT_JSONRPC_VERSION)[0]
-    )
+    assert fake_peer.last_request.params["protocol_version"] == RUNTIME_PROTOCOL_VERSION
     assert fake_peer.last_request.params["schema_set_version"] == SCHEMA_SET_VERSION
     assert fake_peer.last_request.params["compatibility_major"] == COMPATIBILITY_MAJOR
     assert fake_peer.last_request.params["client"] == {
