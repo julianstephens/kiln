@@ -26,7 +26,9 @@ func Run(ctx context.Context, cfg Config) error {
 			Details: err.Error(),
 		}
 	}
-	defer logSink.Close()
+	defer func() {
+		_ = logSink.Close()
+	}()
 
 	build, err := contract.NewBuildInfo()
 	if err != nil {
