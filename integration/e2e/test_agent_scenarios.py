@@ -4,8 +4,6 @@ Each scenario is run independently. New tests are added by:
 1. Creating a scenario class in scenarios/agent_lifecycle.py or similar
 2. Exporting it from scenarios/__init__.py
 3. Adding it to SCENARIOS list below
-
-No test function boilerplate needed.
 """
 
 from pathlib import Path
