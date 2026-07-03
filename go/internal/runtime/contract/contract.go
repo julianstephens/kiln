@@ -2,6 +2,7 @@ package contract
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/julianstephens/kiln/go/internal/protocol"
 )
@@ -9,7 +10,8 @@ import (
 type Handler func(context.Context, protocol.Request) protocol.Message
 
 type RuntimeDeps struct {
-	Build BuildInfo
+	Build  BuildInfo
+	Logger *slog.Logger
 	// Add other shared deps here
 }
 

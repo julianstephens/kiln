@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/julianstephens/kiln/go/internal/logger"
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
 	"github.com/julianstephens/kiln/go/internal/runtime/handler"
@@ -18,7 +19,7 @@ func Run(ctx context.Context, cfg Config) error {
 		return ErrOutputStreamMissing
 	}
 
-	logSink, err := OpenLogSink(cfg.LogSink, cfg.Error)
+	appLogger, logCloser, err := logger.NewLogger(cfg.Logging, cfg.Error)
 	if err != nil {
 		return &Error{
 			Code:    CodeLogSinkOpenFailed,
@@ -26,25 +27,34 @@ func Run(ctx context.Context, cfg Config) error {
 			Details: err.Error(),
 		}
 	}
-	defer func() {
-		_ = logSink.Close()
-	}()
 
 	build, err := contract.NewBuildInfo()
 	if err != nil {
+		_ = logCloser.Close()
 		return &Error{
 			Code:    "runtime.build_info_error",
 			Message: fmt.Sprintf("Failed to retrieve build info: %v", err),
 		}
 	}
+	defer func() {
+		_ = logCloser.Close()
+	}()
 	// Later: - open persistence
-	deps := &contract.RuntimeDeps{Build: *build}
+	deps := &contract.RuntimeDeps{Build: *build, Logger: appLogger.With("component", "runtime")}
 	state := &handler.HandlerState{}
+	deps.Logger.Debug("runtime starting",
+		"build_version", build.Version,
+		"build_commit", build.Commit,
+		"build_date", build.Date,
+	)
 
 	// - register protocol handlers
 	router := NewRouter()
 	router.Register("runtime.initialize", handler.MakeInitializeHandler(state, deps))
 	router.Register("runtime.health", handler.MakeHealthHandler(state))
+	deps.Logger.Debug("runtime handlers registered",
+		"handlers", []string{"runtime.initialize", "runtime.health"},
+	)
 
 	// - emit runtime.session_started
 	// - enter request loop
@@ -64,9 +74,14 @@ func Run(ctx context.Context, cfg Config) error {
 			continue
 		}
 
+		deps.Logger.Debug("runtime request received", "request", req.ToJSON())
+
 		var msg protocol.Message
 		protocolReq, ok := req.(protocol.Request)
 		if !ok {
+			deps.Logger.Debug("runtime request had unexpected type",
+				"request", req.ToJSON(),
+			)
 			msg = protocol.NewErrorResponse(protocol.ID{Null: true}, protocol.ErrorObject{
 				Code:    contract.JSONRPCInvalidRequest,
 				Message: "Invalid request format",
@@ -82,8 +97,17 @@ func Run(ctx context.Context, cfg Config) error {
 		}
 
 		if msg == nil {
+			deps.Logger.Debug("dispatching runtime request",
+				"method", protocolReq.Method,
+				"id", protocolReq.ID.JSONValue(),
+			)
 			msg = router.Dispatch(cancelCtx, protocolReq)
 		}
+
+		deps.Logger.Debug("runtime response ready",
+			"request_id", protocolReq.ID.JSONValue(),
+			"response_type", fmt.Sprintf("%T", msg),
+		)
 
 		if err := peer.Send(msg); err != nil {
 			return err

@@ -1,4 +1,4 @@
-package runtime
+package logger
 
 import (
 	"compress/gzip"
@@ -138,6 +138,7 @@ func (s *rotatingFileLogSink) openLocked() error {
 		return fmt.Errorf("stat active log file: %w", err)
 	}
 
+	// #nosec G304 -- path is validated and constrained to the configured log directory
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 	if err != nil {
 		return fmt.Errorf("open active log file: %w", err)
@@ -228,11 +229,13 @@ func (s *rotatingFileLogSink) rotatedPath(index int) string {
 }
 
 func gzipFile(src string, dst string) error {
+	// #nosec G304 -- src is derived from validated sink configuration and rotation state
 	in, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("open log file for compression: %w", err)
 	}
 
+	// #nosec G304 -- dst is derived from validated sink configuration and rotation state
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
 	if err != nil {
 		if closeErr := in.Close(); closeErr != nil {

@@ -81,7 +81,7 @@ class Peer:
         Raises:
             RuntimeStreamClosedError: If the stream is closed unexpectedly.
         """
-        line = encode_frame(message.model_dump(mode="json"))
+        line = encode_frame(message.model_dump(mode="json", exclude_none=True))
         await self._stdin.send(line)
 
     async def request(self, message: JsonRpcRequest) -> JsonRpcMessage:

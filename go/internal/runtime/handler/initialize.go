@@ -20,22 +20,54 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 		state.Mu.Lock()
 		defer state.Mu.Unlock()
 
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("initialize request received",
+				"request_id", req.ID.JSONValue(),
+				"params", req.Params,
+			)
+		}
+
 		res, err := protocol.KilnMethods["runtime.initialize"].ValidateParams(req.Params)
 		if err != nil {
+			if deps != nil && deps.Logger != nil {
+				deps.Logger.Debug("initialize request validation failed",
+					"request_id", req.ID.JSONValue(),
+					"params", req.Params,
+					"error", err.Error(),
+				)
+			}
 			kilnErr := invalidRequestParamsError(req.Params)
 			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		}
 
-		validatedParams, ok := res.(initialize_request_payload.InitializeRequestPayload)
+		validatedParams, ok := res.(*initialize_request_payload.InitializeRequestPayload)
 		if !ok {
+			if deps != nil && deps.Logger != nil {
+				deps.Logger.Debug("initialize request validation returned unexpected type",
+					"request_id", req.ID.JSONValue(),
+					"params", req.Params,
+					"validated_type", fmt.Sprintf("%T", res),
+				)
+			}
 			kilnErr := invalidRequestParamsError(req.Params)
 			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
+		}
+
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("initialize request validated",
+				"request_id", req.ID.JSONValue(),
+				"protocol_version", validatedParams.ProtocolVersion,
+				"schema_set_version", validatedParams.SchemaSetVersion,
+				"compatibility_major", validatedParams.CompatibilityMajor,
+				"client_name", validatedParams.Client.Name,
+				"client_version", validatedParams.Client.Version,
+			)
 		}
 
 		if state.Initialized {
-			if sameInitializeParams(state.InitialParams, validatedParams) {
+			if sameInitializeParams(state.InitialParams, *validatedParams) {
 				return protocol.NewSuccessResponse(req.ID, util.StructToMap(state.InitialResult))
 			}
 			kilnErr := alreadyInitializedWithDifferentParams(util.StructToMap(state.InitialParams), req.Params)
@@ -77,7 +109,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 
 		state.Initialized = true
 		state.Ready = true
-		state.InitialParams = validatedParams
+		state.InitialParams = *validatedParams
 		state.InitialResult = result
 
 		return protocol.NewSuccessResponse(req.ID, util.StructToMap(result))

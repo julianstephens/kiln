@@ -7,6 +7,7 @@ import (
 
 	utest "github.com/julianstephens/go-utils/tests"
 
+	"github.com/julianstephens/kiln/go/internal/logger"
 	"github.com/julianstephens/kiln/go/internal/runtime"
 )
 
@@ -39,11 +40,14 @@ func TestRun_Preconditions_TableDriven(t *testing.T) {
 			cfg: runtime.Config{
 				Input:  bytes.NewBuffer(nil),
 				Output: &bytes.Buffer{},
-				LogSink: runtime.LogSinkConfig{
-					Kind:     runtime.LogSinkKindLocalFile,
-					Filename: "runtime.log",
-					MaxBytes: 1,
-					MaxFiles: 1,
+				Logging: logger.LoggingConfig{
+					Level: "info",
+					Sink: logger.LogSinkConfig{
+						Kind:     logger.LogSinkKindLocalFile,
+						Filename: "runtime.log",
+						MaxBytes: 1,
+						MaxFiles: 1,
+					},
 				},
 			},
 			wantErr: &runtime.Error{

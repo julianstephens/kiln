@@ -251,17 +251,33 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 	}
 
 	if data, ok := errorRaw["data"]; ok && data != nil {
-		_, ok := data.(map[string]any)
+		dataMap, ok := data.(map[string]any)
 		if !ok {
 			return ErrorResponse{}, NewInvalidJSONRPCFrameError("error.data must be a JSON object when present")
 		}
-		// TODO: add err info
+
+		category := ""
+		if cat, ok := dataMap["category"].(string); ok {
+			category = cat
+			if category == "" {
+				category = "internal"
+			}
+			if !isValidErrorCategory(category) {
+				category = "internal"
+			}
+		}
+
+		retryable := false
+		if r, ok := dataMap["retryable"].(bool); ok {
+			retryable = r
+		}
+
 		errObj.Data = runtime_error.ErrorKilnError{
-			Code:      "",
-			Category:  "",
-			Message:   "",
-			Retryable: false,
-			Details:   map[string]any{},
+			Code:      fmt.Sprintf("%d", int(codeFloat)),
+			Category:  runtime_error.ErrorKilnErrorCategory(category),
+			Message:   message,
+			Retryable: retryable,
+			Details:   dataMap,
 		}
 	}
 
@@ -294,6 +310,8 @@ func isValidNonNullID(id ID) bool {
 func messageToJSON(msg Message) (JSONObject, error) {
 	switch m := msg.(type) {
 	case *Request:
+		return messageToJSON(*m)
+	case Request:
 		return JSONObject{
 			"jsonrpc": m.JSONRPC,
 			"id":      m.ID.JSONValue(),
@@ -301,12 +319,16 @@ func messageToJSON(msg Message) (JSONObject, error) {
 			"params":  m.Params,
 		}, nil
 	case *SuccessResponse:
+		return messageToJSON(*m)
+	case SuccessResponse:
 		return JSONObject{
 			"jsonrpc": m.JSONRPC,
 			"id":      m.ID.JSONValue(),
 			"result":  m.Result,
 		}, nil
 	case *ErrorResponse:
+		return messageToJSON(*m)
+	case ErrorResponse:
 		return JSONObject{
 			"jsonrpc": m.JSONRPC,
 			"id":      m.ID.JSONValue(),
@@ -318,5 +340,14 @@ func messageToJSON(msg Message) (JSONObject, error) {
 		}, nil
 	default:
 		return nil, NewFramingError(fmt.Errorf("unknown message type: %T", msg))
+	}
+}
+
+func isValidErrorCategory(category string) bool {
+	switch category {
+	case "compatibility", "validation", "lifecycle", "shutdown", "internal":
+		return true
+	default:
+		return false
 	}
 }

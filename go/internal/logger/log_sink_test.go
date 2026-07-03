@@ -1,4 +1,4 @@
-package runtime_test
+package logger_test
 
 import (
 	"bytes"
@@ -10,14 +10,14 @@ import (
 
 	utest "github.com/julianstephens/go-utils/tests"
 
-	"github.com/julianstephens/kiln/go/internal/runtime"
+	"github.com/julianstephens/kiln/go/internal/logger"
 )
 
 func TestOpenLogSink_StderrUsesFallbackWriter(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
-	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{Kind: runtime.LogSinkKindStderr}, &buf)
+	sink, err := logger.OpenLogSink(logger.LogSinkConfig{Kind: logger.LogSinkKindStderr}, &buf)
 	utest.AssertNil(t, err)
 	defer func() {
 		_ = sink.Close()
@@ -32,7 +32,7 @@ func TestOpenLogSink_EmptyKindUsesFallbackWriter(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
-	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{}, &buf)
+	sink, err := logger.OpenLogSink(logger.LogSinkConfig{}, &buf)
 	utest.AssertNil(t, err)
 	defer func() {
 		_ = sink.Close()
@@ -47,10 +47,10 @@ func TestOpenLogSink_LocalFileWritesActiveLogFile(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{
-		Kind:      runtime.LogSinkKindLocalFile,
+	sink, err := logger.OpenLogSink(logger.LogSinkConfig{
+		Kind:      logger.LogSinkKindLocalFile,
 		Directory: dir,
-		Filename:  "runtime.log",
+		Filename:  "logger.log",
 		MaxBytes:  1024,
 		MaxFiles:  3,
 	}, nil)
@@ -62,7 +62,8 @@ func TestOpenLogSink_LocalFileWritesActiveLogFile(t *testing.T) {
 	_, err = io.WriteString(sink, "first\n")
 	utest.AssertNil(t, err)
 
-	content, err := os.ReadFile(filepath.Join(dir, "runtime.log"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	content, err := os.ReadFile(filepath.Join(dir, "logger.log"))
 	utest.AssertNil(t, err)
 	utest.AssertEqual(t, string(content), "first\n")
 }
@@ -71,10 +72,10 @@ func TestOpenLogSink_LocalFileRotatesWhenNextWriteWouldExceedLimit(t *testing.T)
 	t.Parallel()
 
 	dir := t.TempDir()
-	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{
-		Kind:      runtime.LogSinkKindLocalFile,
+	sink, err := logger.OpenLogSink(logger.LogSinkConfig{
+		Kind:      logger.LogSinkKindLocalFile,
 		Directory: dir,
-		Filename:  "runtime.log",
+		Filename:  "logger.log",
 		MaxBytes:  6,
 		MaxFiles:  2,
 	}, nil)
@@ -88,11 +89,13 @@ func TestOpenLogSink_LocalFileRotatesWhenNextWriteWouldExceedLimit(t *testing.T)
 	_, err = io.WriteString(sink, "second\n")
 	utest.AssertNil(t, err)
 
-	active, err := os.ReadFile(filepath.Join(dir, "runtime.log"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	active, err := os.ReadFile(filepath.Join(dir, "logger.log"))
 	utest.AssertNil(t, err)
 	utest.AssertEqual(t, string(active), "second\n")
 
-	rotated, err := os.ReadFile(filepath.Join(dir, "runtime.log.1"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	rotated, err := os.ReadFile(filepath.Join(dir, "logger.log.1"))
 	utest.AssertNil(t, err)
 	utest.AssertEqual(t, string(rotated), "first\n")
 }
@@ -101,10 +104,10 @@ func TestOpenLogSink_LocalFileRemovesOldestRotatedFile(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{
-		Kind:      runtime.LogSinkKindLocalFile,
+	sink, err := logger.OpenLogSink(logger.LogSinkConfig{
+		Kind:      logger.LogSinkKindLocalFile,
 		Directory: dir,
-		Filename:  "runtime.log",
+		Filename:  "logger.log",
 		MaxBytes:  2,
 		MaxFiles:  2,
 	}, nil)
@@ -118,19 +121,22 @@ func TestOpenLogSink_LocalFileRemovesOldestRotatedFile(t *testing.T) {
 		utest.AssertNil(t, err)
 	}
 
-	active, err := os.ReadFile(filepath.Join(dir, "runtime.log"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	active, err := os.ReadFile(filepath.Join(dir, "logger.log"))
 	utest.AssertNil(t, err)
 	utest.AssertEqual(t, string(active), "d\n")
 
-	first, err := os.ReadFile(filepath.Join(dir, "runtime.log.1"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	first, err := os.ReadFile(filepath.Join(dir, "logger.log.1"))
 	utest.AssertNil(t, err)
 	utest.AssertEqual(t, string(first), "c\n")
 
-	second, err := os.ReadFile(filepath.Join(dir, "runtime.log.2"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	second, err := os.ReadFile(filepath.Join(dir, "logger.log.2"))
 	utest.AssertNil(t, err)
 	utest.AssertEqual(t, string(second), "b\n")
 
-	_, err = os.Stat(filepath.Join(dir, "runtime.log.3"))
+	_, err = os.Stat(filepath.Join(dir, "logger.log.3"))
 	utest.AssertTrue(t, os.IsNotExist(err), "expected third rotated log file to be absent")
 }
 
@@ -138,10 +144,10 @@ func TestOpenLogSink_LocalFileCanCompressRotatedFiles(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	sink, err := runtime.OpenLogSink(runtime.LogSinkConfig{
-		Kind:      runtime.LogSinkKindLocalFile,
+	sink, err := logger.OpenLogSink(logger.LogSinkConfig{
+		Kind:      logger.LogSinkKindLocalFile,
 		Directory: dir,
-		Filename:  "runtime.log",
+		Filename:  "logger.log",
 		MaxBytes:  6,
 		MaxFiles:  2,
 		Compress:  true,
@@ -156,7 +162,8 @@ func TestOpenLogSink_LocalFileCanCompressRotatedFiles(t *testing.T) {
 	_, err = io.WriteString(sink, "second\n")
 	utest.AssertNil(t, err)
 
-	file, err := os.Open(filepath.Join(dir, "runtime.log.1.gz"))
+	// #nosec G304 -- test fixture path is derived from t.TempDir()
+	file, err := os.Open(filepath.Join(dir, "logger.log.1.gz"))
 	utest.AssertNil(t, err)
 	defer func() {
 		_ = file.Close()
@@ -178,21 +185,21 @@ func TestOpenLogSink_LocalFileRejectsInvalidConfig(t *testing.T) {
 
 	tests := []struct {
 		name string
-		cfg  runtime.LogSinkConfig
+		cfg  logger.LogSinkConfig
 	}{
 		{
 			name: "missing directory",
-			cfg: runtime.LogSinkConfig{
-				Kind:     runtime.LogSinkKindLocalFile,
-				Filename: "runtime.log",
+			cfg: logger.LogSinkConfig{
+				Kind:     logger.LogSinkKindLocalFile,
+				Filename: "logger.log",
 				MaxBytes: 1,
 				MaxFiles: 1,
 			},
 		},
 		{
 			name: "missing filename",
-			cfg: runtime.LogSinkConfig{
-				Kind:      runtime.LogSinkKindLocalFile,
+			cfg: logger.LogSinkConfig{
+				Kind:      logger.LogSinkKindLocalFile,
 				Directory: t.TempDir(),
 				MaxBytes:  1,
 				MaxFiles:  1,
@@ -200,29 +207,29 @@ func TestOpenLogSink_LocalFileRejectsInvalidConfig(t *testing.T) {
 		},
 		{
 			name: "filename contains path separator",
-			cfg: runtime.LogSinkConfig{
-				Kind:      runtime.LogSinkKindLocalFile,
+			cfg: logger.LogSinkConfig{
+				Kind:      logger.LogSinkKindLocalFile,
 				Directory: t.TempDir(),
-				Filename:  filepath.Join("nested", "runtime.log"),
+				Filename:  filepath.Join("nested", "logger.log"),
 				MaxBytes:  1,
 				MaxFiles:  1,
 			},
 		},
 		{
 			name: "missing max bytes",
-			cfg: runtime.LogSinkConfig{
-				Kind:      runtime.LogSinkKindLocalFile,
+			cfg: logger.LogSinkConfig{
+				Kind:      logger.LogSinkKindLocalFile,
 				Directory: t.TempDir(),
-				Filename:  "runtime.log",
+				Filename:  "logger.log",
 				MaxFiles:  1,
 			},
 		},
 		{
 			name: "missing max files",
-			cfg: runtime.LogSinkConfig{
-				Kind:      runtime.LogSinkKindLocalFile,
+			cfg: logger.LogSinkConfig{
+				Kind:      logger.LogSinkKindLocalFile,
 				Directory: t.TempDir(),
-				Filename:  "runtime.log",
+				Filename:  "logger.log",
 				MaxBytes:  1,
 			},
 		},
@@ -233,7 +240,7 @@ func TestOpenLogSink_LocalFileRejectsInvalidConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			sink, err := runtime.OpenLogSink(tc.cfg, nil)
+			sink, err := logger.OpenLogSink(tc.cfg, nil)
 			utest.AssertNotNil(t, err)
 			utest.AssertNil(t, sink)
 		})
