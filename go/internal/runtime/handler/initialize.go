@@ -85,7 +85,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		case validatedParams.CompatibilityMajor != schema.CompatibilityMajor:
-			kilnErr := incompatibleCompatibiltyMajor(validatedParams.CompatibilityMajor)
+			kilnErr := incompatibleCompatibilityMajor(validatedParams.CompatibilityMajor)
 			state.LastFatalStartupError = &kilnErr.Data
 			return protocol.NewErrorResponse(req.ID, kilnErr)
 		}
@@ -181,13 +181,13 @@ func incompatibleSchemaSetVersionError(requested string) protocol.ErrorObject {
 	}
 }
 
-func incompatibleCompatibiltyMajor(requested int) protocol.ErrorObject {
+func incompatibleCompatibilityMajor(requested int) protocol.ErrorObject {
 	return protocol.ErrorObject{
 		Code:    contract.KilnRuntimeIncompatibleCompatibilityMajor,
 		Message: "Incompatible compatibility major",
 		Data: runtime_error.ErrorKilnError{
 			Category:  "compatibility",
-			Code:      "runtime.incompatible_compatibilty_major",
+			Code:      "runtime.incompatible_compatibility_major",
 			Message:   "Incompatible compatibility major",
 			Retryable: false,
 			Details: map[string]any{
