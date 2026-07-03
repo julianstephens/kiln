@@ -18,6 +18,16 @@ func Run(ctx context.Context, cfg Config) error {
 		return ErrOutputStreamMissing
 	}
 
+	logSink, err := OpenLogSink(cfg.LogSink, cfg.Error)
+	if err != nil {
+		return &Error{
+			Code:    CodeLogSinkOpenFailed,
+			Message: "failed to open log sink",
+			Details: err.Error(),
+		}
+	}
+	defer logSink.Close()
+
 	build, err := contract.NewBuildInfo()
 	if err != nil {
 		return &Error{
