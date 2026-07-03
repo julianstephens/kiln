@@ -6,6 +6,7 @@ import (
 	utest "github.com/julianstephens/go-utils/tests"
 
 	"github.com/julianstephens/kiln/go/internal/protocol"
+	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
 func TestParseMessage_TableDriven(t *testing.T) {
@@ -25,7 +26,7 @@ func TestParseMessage_TableDriven(t *testing.T) {
 		{
 			name: "valid request accepted",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(42),
 				"method":  "repository.search",
 				"params": map[string]any{
@@ -33,7 +34,7 @@ func TestParseMessage_TableDriven(t *testing.T) {
 				},
 			},
 			want: protocol.Request{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      protocol.ID{Number: &requestID},
 				Method:  "repository.search",
 				Params: map[string]any{
@@ -44,12 +45,12 @@ func TestParseMessage_TableDriven(t *testing.T) {
 		{
 			name: "unknown method request accepted as JSON-RPC",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(7),
 				"method":  "custom.unknown",
 			},
 			want: protocol.Request{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      protocol.ID{Number: &unknownMethodID},
 				Method:  "custom.unknown",
 			},
@@ -57,14 +58,14 @@ func TestParseMessage_TableDriven(t *testing.T) {
 		{
 			name: "success response without method accepted",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(99),
 				"result": map[string]any{
 					"ok": true,
 				},
 			},
 			want: protocol.SuccessResponse{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      protocol.ID{Number: &successID},
 				Result: map[string]any{
 					"ok": true,
@@ -74,7 +75,7 @@ func TestParseMessage_TableDriven(t *testing.T) {
 		{
 			name: "error response with id null accepted",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      nil,
 				"error": map[string]any{
 					"code":    float64(-32000),
@@ -85,13 +86,17 @@ func TestParseMessage_TableDriven(t *testing.T) {
 				},
 			},
 			want: protocol.ErrorResponse{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      protocol.ID{Null: true},
 				Error: protocol.ErrorObject{
 					Code:    -32000,
 					Message: "something failed",
-					Data: map[string]any{
-						"detail": "oops",
+					Data: runtime_error.ErrorKilnError{
+						Code:      "",
+						Category:  "",
+						Message:   "",
+						Retryable: false,
+						Details:   map[string]any{},
 					},
 				},
 			},
@@ -99,7 +104,7 @@ func TestParseMessage_TableDriven(t *testing.T) {
 		{
 			name: "result + error together rejected",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"result":  map[string]any{},
 				"error": map[string]any{
@@ -113,7 +118,7 @@ func TestParseMessage_TableDriven(t *testing.T) {
 		{
 			name: "params without method rejected",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"params":  map[string]any{},
 			},
@@ -166,7 +171,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "request id missing",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"method":  "repository.search",
 			},
 			wantErrContains: "request id is required",
@@ -174,7 +179,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "request id null",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      nil,
 				"method":  "repository.search",
 			},
@@ -183,7 +188,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "request id invalid type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      true,
 				"method":  "repository.search",
 			},
@@ -192,7 +197,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "request fractional id rejected",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      1.25,
 				"method":  "repository.search",
 			},
@@ -201,7 +206,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "request method empty",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"method":  "",
 			},
@@ -210,7 +215,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "request params wrong type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"method":  "repository.search",
 				"params":  []any{},
@@ -220,7 +225,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "success response id missing",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"result":  map[string]any{},
 			},
 			wantErrContains: "success response id is required",
@@ -228,7 +233,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "success response id invalid type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      true,
 				"result":  map[string]any{},
 			},
@@ -237,7 +242,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "success response fractional id rejected",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      1.25,
 				"result":  map[string]any{},
 			},
@@ -246,7 +251,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "success response result wrong type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"result":  []any{},
 			},
@@ -255,7 +260,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error response missing id field",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"error": map[string]any{
 					"code":    float64(-1),
 					"message": "bad",
@@ -266,7 +271,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error response id invalid type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      true,
 				"error": map[string]any{
 					"code":    float64(-1),
@@ -278,7 +283,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error response fractional id rejected",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      1.25,
 				"error": map[string]any{
 					"code":    float64(-1),
@@ -290,7 +295,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error object wrong type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"error":   "boom",
 			},
@@ -299,7 +304,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error code non-integer",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"error": map[string]any{
 					"code":    1.25,
@@ -311,7 +316,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error message empty",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"error": map[string]any{
 					"code":    float64(-1),
@@ -323,7 +328,7 @@ func TestParseMessage_ErrorPaths_TableDriven(t *testing.T) {
 		{
 			name: "error data wrong type",
 			raw: map[string]any{
-				"jsonrpc": protocol.DEFAULT_JSONRPC_VERSION,
+				"jsonrpc": protocol.DefaultJsonRpcVersion,
 				"id":      float64(1),
 				"error": map[string]any{
 					"code":    float64(-1),

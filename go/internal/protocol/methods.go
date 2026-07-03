@@ -2,6 +2,8 @@ package protocol
 
 import (
 	"encoding/json"
+	"slices"
+	"strings"
 
 	model_error "github.com/julianstephens/kiln/go/schema/model/error"
 	model_generate_payload "github.com/julianstephens/kiln/go/schema/model/generate_payload"
@@ -13,6 +15,10 @@ import (
 	repository_session "github.com/julianstephens/kiln/go/schema/repository/session"
 	repository_source_request_payload "github.com/julianstephens/kiln/go/schema/repository/source_request_payload"
 	repository_source_result "github.com/julianstephens/kiln/go/schema/repository/source_result"
+	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
+	"github.com/julianstephens/kiln/go/schema/runtime/health_result"
+	"github.com/julianstephens/kiln/go/schema/runtime/initialize_request_payload"
+	"github.com/julianstephens/kiln/go/schema/runtime/initialize_result"
 )
 
 type MethodSpec struct {
@@ -24,9 +30,29 @@ type MethodSpec struct {
 }
 
 var KilnMethods = map[string]MethodSpec{
-	"repository.open_session": {
-		Method: "repository.open_session",
+	"runtime.initialize": {
+		Method: "runtime.initialize",
 		ValidateParams: func(v map[string]any) (any, error) {
+			return validateAs[initialize_request_payload.InitializeRequestPayload](v)
+		},
+		ValidateResult: func(v map[string]any) (any, error) {
+			return validateAs[initialize_result.InitializeResult](v)
+		},
+		ValidateErrorData: func(v map[string]any) (any, error) {
+			return validateAs[runtime_error.Error](v)
+		},
+	},
+	"runtime.health": {
+		Method: "runtime.health",
+		ValidateResult: func(v map[string]any) (any, error) {
+			return validateAs[health_result.HealthResult](v)
+		},
+		ValidateErrorData: func(v map[string]any) (any, error) {
+			return validateAs[runtime_error.Error](v)
+		},
+	},
+	"repository.open_session": {
+		Method: "repository.open_session", ValidateParams: func(v map[string]any) (any, error) {
 			return validateAs[repository_open_session_request_payload.OpenSessionRequestPayload](v)
 		},
 		ValidateResult: func(v map[string]any) (any, error) {
@@ -90,4 +116,25 @@ func validateAs[T interface{ Validate() error }](value map[string]any) (*T, erro
 	}
 
 	return &typed, nil
+}
+
+// SupportedMethods returns a slice of all supported method names in the KilnMethods map.
+func SupportedMethods() []string {
+	res := make([]string, 0, len(KilnMethods))
+	for k := range KilnMethods {
+		res = append(res, k)
+	}
+	return res
+}
+
+// SupportedMethodNamespaces returns a slice of unique namespaces for all supported methods in the KilnMethods map.
+func SupportedMethodNamespaces() []string {
+	res := make([]string, 0)
+	for k := range KilnMethods {
+		namespace := k[:strings.Index(k, ".")]
+		if !slices.Contains(res, namespace) {
+			res = append(res, namespace)
+		}
+	}
+	return res
 }

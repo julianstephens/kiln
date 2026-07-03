@@ -29,7 +29,7 @@ func TestPeerReceive_TableDriven(t *testing.T) {
 			input:    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"repository.search\",\"params\":{\"query\":\"x\"}}\n",
 			maxBytes: 1024,
 			want: protocol.Request{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID: func() protocol.ID {
 					v := int64(1)
 					return protocol.ID{Number: &v}
@@ -97,7 +97,7 @@ func TestPeerSend_WritesSingleNewlineTerminatedFrame(t *testing.T) {
 		{
 			name: "id number encoded as 1",
 			msg: protocol.Request{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      protocol.ID{Number: &numericID},
 				Method:  "repository.search",
 				Params:  map[string]any{"query": "x"},
@@ -107,7 +107,7 @@ func TestPeerSend_WritesSingleNewlineTerminatedFrame(t *testing.T) {
 		{
 			name: "id string encoded as req-1",
 			msg: protocol.Request{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      protocol.ID{String: &stringID},
 				Method:  "repository.search",
 				Params:  map[string]any{"query": "x"},
@@ -117,7 +117,7 @@ func TestPeerSend_WritesSingleNewlineTerminatedFrame(t *testing.T) {
 		{
 			name: "error response id null encoded as null",
 			msg: protocol.ErrorResponse{
-				JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+				JSONRPC: protocol.DefaultJsonRpcVersion,
 				ID:      nullID,
 				Error: protocol.ErrorObject{
 					Code:    -32000,
@@ -147,7 +147,7 @@ func TestPeerSend_WritesSingleNewlineTerminatedFrame(t *testing.T) {
 			trimmed := bytes.TrimSuffix(written, []byte("\n"))
 			var decoded map[string]any
 			utest.RequireNoError(t, json.Unmarshal(trimmed, &decoded))
-			utest.AssertEqual(t, decoded["jsonrpc"].(string), protocol.DEFAULT_JSONRPC_VERSION)
+			utest.AssertEqual(t, decoded["jsonrpc"].(string), protocol.DefaultJsonRpcVersion)
 			utest.AssertDeepEqual(t, decoded["id"], tc.wantID)
 		})
 	}
@@ -191,13 +191,13 @@ func TestPeerReceive_ReadsTwoFramesFromOneStream(t *testing.T) {
 	firstID := int64(1)
 	secondID := int64(2)
 	utest.AssertDeepEqual(t, first, protocol.Request{
-		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+		JSONRPC: protocol.DefaultJsonRpcVersion,
 		ID:      protocol.ID{Number: &firstID},
 		Method:  "repository.search",
 		Params:  map[string]any{"query": "first"},
 	})
 	utest.AssertDeepEqual(t, second, protocol.Request{
-		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+		JSONRPC: protocol.DefaultJsonRpcVersion,
 		ID:      protocol.ID{Number: &secondID},
 		Method:  "repository.search",
 		Params:  map[string]any{"query": "second"},
@@ -223,7 +223,7 @@ func TestPeerReceive_ReassemblesPartialChunksIntoOneFrame(t *testing.T) {
 
 	id := int64(1)
 	utest.AssertDeepEqual(t, got, protocol.Request{
-		JSONRPC: protocol.DEFAULT_JSONRPC_VERSION,
+		JSONRPC: protocol.DefaultJsonRpcVersion,
 		ID:      protocol.ID{Number: &id},
 		Method:  "repository.search",
 		Params:  map[string]any{"query": "chunked"},

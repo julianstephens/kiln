@@ -9,6 +9,9 @@ RUFF ?= uv run --package kiln-sdk ruff --config kiln/pyproject.toml
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
+GO_RUNTIME_VERSION ?= 0.1.0
+
+
 default: check
 
 .PHONY: \
@@ -98,6 +101,7 @@ build-go:
 	cd $(GO_DIR) && \
 		$(GO) build \
 			-o "$(CURDIR)/$(DIST_DIR)/bin/kiln-runtime" \
+			-ldflags "-X 'contract.BuildVersion=$(GO_RUNTIME_VERSION)' -X 'contract.BuildDate=$(date +%F)' -X 'contract.BuildCommit=$(git rev-parse --short HEAD)'" \
 			./cmd/kiln-runtime
 
 # ---------------------------------------------------------------------------

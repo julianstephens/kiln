@@ -1,8 +1,12 @@
 package protocol
 
-import "math"
+import (
+	"math"
 
-const DEFAULT_JSONRPC_VERSION = "2.0"
+	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
+)
+
+const DefaultJsonRpcVersion = "2.0"
 
 type ID struct {
 	String *string
@@ -37,9 +41,9 @@ type SuccessResponse struct {
 }
 
 type ErrorObject struct {
-	Code    int            `json:"code"`
-	Message string         `json:"message"`
-	Data    map[string]any `json:"data,omitempty"`
+	Code    int                          `json:"code"`
+	Message string                       `json:"message"`
+	Data    runtime_error.ErrorKilnError `json:"data"`
 }
 
 type ErrorResponse struct {
@@ -50,17 +54,57 @@ type ErrorResponse struct {
 
 type Message interface {
 	isJsonRPCMessage()
+	IsRequest() bool
+	IsSuccessResponse() bool
+	IsErrorResponse() bool
+	ToJson() map[string]any
 }
 
-func (Request) isJsonRPCMessage()         {}
-func (SuccessResponse) isJsonRPCMessage() {}
-func (ErrorResponse) isJsonRPCMessage()   {}
+func (Request) isJsonRPCMessage()       {}
+func (Request) IsRequest() bool         { return true }
+func (Request) IsSuccessResponse() bool { return false }
+func (Request) IsErrorResponse() bool   { return false }
+func (Request) ToJson() map[string]any {
+	return make(map[string]any)
+}
+
+func (SuccessResponse) isJsonRPCMessage()       {}
+func (SuccessResponse) IsSuccessResponse() bool { return true }
+func (SuccessResponse) IsRequest() bool         { return false }
+func (SuccessResponse) IsErrorResponse() bool   { return false }
+func (SuccessResponse) ToJson() map[string]any {
+	return make(map[string]any)
+}
+
+func NewSuccessResponse(id ID, result map[string]any) *SuccessResponse {
+	return &SuccessResponse{
+		JSONRPC: DefaultJsonRpcVersion,
+		ID:      id,
+		Result:  result,
+	}
+}
+
+func (ErrorResponse) isJsonRPCMessage()       {}
+func (ErrorResponse) IsErrorResponse() bool   { return true }
+func (ErrorResponse) IsRequest() bool         { return false }
+func (ErrorResponse) IsSuccessResponse() bool { return false }
+func (ErrorResponse) ToJson() map[string]any {
+	return make(map[string]any)
+}
+
+func NewErrorResponse(id ID, err ErrorObject) *ErrorResponse {
+	return &ErrorResponse{
+		JSONRPC: DefaultJsonRpcVersion,
+		ID:      id,
+		Error:   err,
+	}
+}
 
 // ParseMessage parses a raw JSON-RPC message represented as a map[string]any into a strongly typed Message (Request, SuccessResponse, or ErrorResponse).
 // It returns an error if the message is invalid or does not conform to the JSON-RPC specification.
 func ParseMessage(raw map[string]any) (Message, error) {
 	jsonrpc, ok := raw["jsonrpc"].(string)
-	if !ok || jsonrpc != DEFAULT_JSONRPC_VERSION {
+	if !ok || jsonrpc != DefaultJsonRpcVersion {
 		return nil, NewInvalidJSONRPCFrameError("invalid or missing jsonrpc field")
 	}
 
@@ -115,7 +159,7 @@ func parseRequest(raw map[string]any) (Request, error) {
 	}
 
 	req := Request{
-		JSONRPC: DEFAULT_JSONRPC_VERSION,
+		JSONRPC: DefaultJsonRpcVersion,
 		ID:      parsedID,
 		Method:  method,
 	}
@@ -152,7 +196,7 @@ func parseSuccessResponse(raw map[string]any) (SuccessResponse, error) {
 	}
 
 	return SuccessResponse{
-		JSONRPC: DEFAULT_JSONRPC_VERSION,
+		JSONRPC: DefaultJsonRpcVersion,
 		ID:      parsedID,
 		Result:  result,
 	}, nil
@@ -194,15 +238,22 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 	}
 
 	if data, ok := errorRaw["data"]; ok && data != nil {
-		dataObj, ok := data.(map[string]any)
+		_, ok := data.(map[string]any)
 		if !ok {
 			return ErrorResponse{}, NewInvalidJSONRPCFrameError("error.data must be a JSON object when present")
 		}
-		errObj.Data = dataObj
+		// TODO: add err info
+		errObj.Data = runtime_error.ErrorKilnError{
+			Code:      "",
+			Category:  "",
+			Message:   "",
+			Retryable: false,
+			Details:   map[string]any{},
+		}
 	}
 
 	return ErrorResponse{
-		JSONRPC: DEFAULT_JSONRPC_VERSION,
+		JSONRPC: DefaultJsonRpcVersion,
 		ID:      parsedID,
 		Error:   errObj,
 	}, nil

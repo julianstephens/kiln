@@ -56,14 +56,10 @@ func ValidateResponseAgainstPendingRequest(req PendingRequest, response Message)
 		if err != nil {
 			return NewInvalidJSONRPCRequestError("invalid result: "+err.Error(), false, nil)
 		}
+		return nil
 	case ErrorResponse:
-		if spec.ValidateErrorData == nil || resp.Error.Data == nil {
-			return nil
-		}
-		_, err := spec.ValidateErrorData(resp.Error.Data)
-		if err != nil {
-			return NewInvalidJSONRPCRequestError("invalid error data: "+err.Error(), false, nil)
-		}
+		// Error data is already validated during message parsing,
+		// so no additional validation is needed here.
 	default:
 		return NewInvalidJSONRPCRequestError("unexpected response type", false, nil)
 	}
