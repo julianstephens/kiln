@@ -22,6 +22,7 @@ func (e *Error) Error() string {
 const (
 	CodeInputStreamMissing  = "input_stream_missing"
 	CodeOutputStreamMissing = "output_stream_missing"
+	CodeLogSinkOpenFailed   = "log_sink_open_failed"
 )
 
 var (
