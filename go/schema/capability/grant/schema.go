@@ -47,7 +47,7 @@ type Grant struct {
 	CreationSource    GrantCreationSource    `json:"creation_source" validate:"required"`
 	ExpiresAt         time.Time              `json:"expires_at" validate:"required"`
 	GrantID           string                 `json:"grant_id" validate:"required,min=1"`
-	Revoked           bool                   `json:"revoked" validate:"required"`
+	Revoked           bool                   `json:"revoked"`
 	RunID             string                 `json:"run_id" validate:"required,min=1"`
 	StartsAt          time.Time              `json:"starts_at" validate:"required"`
 }
@@ -55,7 +55,7 @@ type Grant struct {
 // GrantApprovalMetadata is generated from a nested JSON Schema object.
 type GrantApprovalMetadata struct {
 	ApprovalReference *string    `json:"approval_reference,omitempty" validate:"omitempty,min=1"`
-	ApprovalRequired  bool       `json:"approval_required" validate:"required"`
+	ApprovalRequired  bool       `json:"approval_required"`
 	ApprovedAt        *time.Time `json:"approved_at,omitempty" validate:"omitempty"`
 	ApprovedBy        *string    `json:"approved_by,omitempty" validate:"omitempty,min=1"`
 }

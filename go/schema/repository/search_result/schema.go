@@ -11,7 +11,7 @@ import (
 type SearchResult struct {
 	Candidates  []repository_candidate.Candidate `json:"candidates" validate:"required"`
 	ResultCount int                              `json:"result_count" validate:"required,gte=0"`
-	Truncated   bool                             `json:"truncated" validate:"required"`
+	Truncated   bool                             `json:"truncated"`
 }
 
 func (value SearchResult) Validate() error {

@@ -160,7 +160,9 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
 
     schemas = manifest.get("schemas")
     if not isinstance(schemas, list) or not schemas:
-        raise GenerateGoModelsError(f"{manifest_path}: schemas must be a non-empty array")
+        raise GenerateGoModelsError(
+            f"{manifest_path}: schemas must be a non-empty array"
+        )
     for index, schema_key in enumerate(schemas):
         if not isinstance(schema_key, str) or not schema_key:
             raise GenerateGoModelsError(
@@ -188,11 +190,15 @@ def load_manifest(schema_root: Path) -> dict[str, Any]:
     return manifest
 
 
-def selected_schema_keys(manifest: dict[str, Any], *, only_entrypoints: bool) -> list[str]:
+def selected_schema_keys(
+    manifest: dict[str, Any], *, only_entrypoints: bool
+) -> list[str]:
     field = "entrypoints" if only_entrypoints else "schemas"
     values = manifest.get(field)
     if not isinstance(values, list) or not values:
-        raise GenerateGoModelsError(f"manifest field {field!r} must be a non-empty array")
+        raise GenerateGoModelsError(
+            f"manifest field {field!r} must be a non-empty array"
+        )
     return list(values)
 
 
@@ -278,7 +284,9 @@ def load_schema_definitions(
 def ref_to_target(ref: str, *, major: int) -> RefTarget | None:
     document_ref, separator, fragment = ref.partition("#")
     suffix = ".schema.json"
-    if not document_ref.startswith(SCHEMA_ID_PREFIX) or not document_ref.endswith(suffix):
+    if not document_ref.startswith(SCHEMA_ID_PREFIX) or not document_ref.endswith(
+        suffix
+    ):
         return None
 
     relative = document_ref[len(SCHEMA_ID_PREFIX) : -len(suffix)]
@@ -454,9 +462,16 @@ def import_alias_for_key(schema_key: str) -> str:
     return go_package_name("_".join(parts))
 
 
-def validate_tags_for_schema(schema: dict[str, Any], *, required: bool) -> list[str]:
+def validate_tags_for_schema(
+    schema: dict[str, Any], *, required: bool, go_type: str | None = None
+) -> list[str]:
     tags: list[str] = []
-    tags.append("required" if required else "omitempty")
+    if required:
+        # `required` fails for non-pointer bool when value is false in go-playground/validator.
+        if go_type != "bool":
+            tags.append("required")
+    else:
+        tags.append("omitempty")
     schema_type = non_null_schema_type(schema)
 
     min_length = schema.get("minLength")
@@ -469,13 +484,17 @@ def validate_tags_for_schema(schema: dict[str, Any], *, required: bool) -> list[
     if schema_type in {"integer", "number"} and isinstance(minimum, int | float):
         tags.append(f"gte={minimum}")
     exclusive_minimum = schema.get("exclusiveMinimum")
-    if schema_type in {"integer", "number"} and isinstance(exclusive_minimum, int | float):
+    if schema_type in {"integer", "number"} and isinstance(
+        exclusive_minimum, int | float
+    ):
         tags.append(f"gt={exclusive_minimum}")
     maximum = schema.get("maximum")
     if schema_type in {"integer", "number"} and isinstance(maximum, int | float):
         tags.append(f"lte={maximum}")
     exclusive_maximum = schema.get("exclusiveMaximum")
-    if schema_type in {"integer", "number"} and isinstance(exclusive_maximum, int | float):
+    if schema_type in {"integer", "number"} and isinstance(
+        exclusive_maximum, int | float
+    ):
         tags.append(f"lt={exclusive_maximum}")
     min_items = schema.get("minItems")
     if schema_type == "array" and isinstance(min_items, int):
@@ -524,11 +543,19 @@ def collect_fields_for_schema(
             nested_types=nested_types,
         )
 
-        if not is_required and not go_type.startswith("[]") and not go_type.startswith("map["):
+        if (
+            not is_required
+            and not go_type.startswith("[]")
+            and not go_type.startswith("map[")
+        ):
             if go_type != "any":
                 go_type = f"*{go_type}"
         if schema_is_nullable(property_schema) and not go_type.startswith("*"):
-            if not go_type.startswith("[]") and not go_type.startswith("map[") and go_type != "any":
+            if (
+                not go_type.startswith("[]")
+                and not go_type.startswith("map[")
+                and go_type != "any"
+            ):
                 go_type = f"*{go_type}"
 
         fields.append(
@@ -537,14 +564,18 @@ def collect_fields_for_schema(
                 json_name=json_name,
                 go_type=go_type,
                 required=is_required,
-                validate_tags=validate_tags_for_schema(property_schema, required=is_required),
+                validate_tags=validate_tags_for_schema(
+                    property_schema, required=is_required, go_type=go_type
+                ),
                 description=description_for_schema(property_schema),
             )
         )
     return fields
 
 
-def collect_enums(fields: list[Field], properties: dict[str, Any], *, parent_type_name: str) -> list[str]:
+def collect_enums(
+    fields: list[Field], properties: dict[str, Any], *, parent_type_name: str
+) -> list[str]:
     chunks: list[str] = []
     emitted: set[str] = set()
 
@@ -580,7 +611,10 @@ def collect_enums(fields: list[Field], properties: dict[str, Any], *, parent_typ
         if isinstance(items, dict):
             item_enum_values = items.get("enum")
             if isinstance(item_enum_values, list) and item_enum_values:
-                emit_enum(enum_type_name(parent_type_name, f"{field.json_name}_item"), item_enum_values)
+                emit_enum(
+                    enum_type_name(parent_type_name, f"{field.json_name}_item"),
+                    item_enum_values,
+                )
     return chunks
 
 
@@ -626,14 +660,18 @@ def render_fields(fields: list[Field]) -> str:
     return "".join(chunks)
 
 
-def render_struct_type(type_name: str, fields: list[Field], description: str | None) -> str:
+def render_struct_type(
+    type_name: str, fields: list[Field], description: str | None
+) -> str:
     chunks = [go_comment(type_name, description), f"type {type_name} struct {{\n"]
     chunks.append(render_fields(fields))
     chunks.append("}\n")
     return "".join(chunks)
 
 
-def render_model_file(definition: SchemaDefinition, *, major: int, module_root: str) -> str:
+def render_model_file(
+    definition: SchemaDefinition, *, major: int, module_root: str
+) -> str:
     package_name = package_name_for_key(definition.key)
     type_name = type_name_for_key(definition.key)
     imports: dict[str, str] = {"shared": f"{module_root.rstrip('/')}/shared"}
@@ -651,12 +689,21 @@ def render_model_file(definition: SchemaDefinition, *, major: int, module_root: 
     if not isinstance(root_properties, dict):
         root_properties = {}
 
-    chunks: list[str] = [HEADER, "\n", f"package {package_name}\n\n", render_imports(imports)]
+    chunks: list[str] = [
+        HEADER,
+        "\n",
+        f"package {package_name}\n\n",
+        render_imports(imports),
+    ]
     chunks.extend(
         chunk + "\n"
         for chunk in collect_enums(fields, root_properties, parent_type_name=type_name)
     )
-    chunks.append(render_struct_type(type_name, fields, description_for_schema(definition.document)))
+    chunks.append(
+        render_struct_type(
+            type_name, fields, description_for_schema(definition.document)
+        )
+    )
     chunks.append("\n")
 
     for nested_type in nested_types.values():
@@ -668,7 +715,11 @@ def render_model_file(definition: SchemaDefinition, *, major: int, module_root: 
                 parent_type_name=nested_type.name,
             )
         )
-        chunks.append(render_struct_type(nested_type.name, nested_type.fields, nested_type.description))
+        chunks.append(
+            render_struct_type(
+                nested_type.name, nested_type.fields, nested_type.description
+            )
+        )
         chunks.append("\n")
 
     chunks.append(f"func (value {type_name}) Validate() error {{\n")
@@ -775,7 +826,9 @@ def run_gofmt(output_root: Path, *, dry_run: bool) -> None:
     except FileNotFoundError as exc:
         raise GenerateGoModelsError("gofmt not found") from exc
     except subprocess.CalledProcessError as exc:
-        raise GenerateGoModelsError(f"gofmt failed with exit code {exc.returncode}") from exc
+        raise GenerateGoModelsError(
+            f"gofmt failed with exit code {exc.returncode}"
+        ) from exc
 
 
 def parse_args() -> argparse.Namespace:
@@ -826,7 +879,9 @@ def main() -> int:
         manifest = load_manifest(schema_root)
         major = manifest["compatibility_major"]
         schema_set_version = manifest["schema_set_version"]
-        schema_keys = selected_schema_keys(manifest, only_entrypoints=args.only_entrypoints)
+        schema_keys = selected_schema_keys(
+            manifest, only_entrypoints=args.only_entrypoints
+        )
         definitions = load_schema_definitions(schema_root, schema_keys, major=major)
 
         if not args.no_clean:
@@ -852,7 +907,9 @@ def main() -> int:
         print(f"Go model generation failed: {exc}", file=sys.stderr)
         return 1
 
-    print(f"Generated Go schema models for {len(definitions)} schema(s) in {output_root}")
+    print(
+        f"Generated Go schema models for {len(definitions)} schema(s) in {output_root}"
+    )
     return 0
 
 

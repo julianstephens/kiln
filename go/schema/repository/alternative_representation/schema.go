@@ -18,7 +18,7 @@ const (
 type AlternativeRepresentation struct {
 	Availability       AlternativeRepresentationAvailability `json:"availability" validate:"required"`
 	EstimatedTokens    int                                   `json:"estimated_tokens" validate:"required,gte=0"`
-	GenerationRequired bool                                  `json:"generation_required" validate:"required"`
+	GenerationRequired bool                                  `json:"generation_required"`
 	QualityMetadata    map[string]any                        `json:"quality_metadata" validate:"required"`
 	RepresentationKind string                                `json:"representation_kind" validate:"required,min=1"`
 }

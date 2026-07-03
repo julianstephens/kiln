@@ -65,7 +65,7 @@ type Error struct {
 	// RetryAfterSeconds suggested retry delay in seconds, when available.
 	RetryAfterSeconds *int `json:"retry_after_seconds,omitempty" validate:"omitempty,gte=0"`
 	// Retryable whether the model invocation may be retried.
-	Retryable bool `json:"retryable" validate:"required"`
+	Retryable bool `json:"retryable"`
 }
 
 func (value Error) Validate() error {

@@ -39,7 +39,7 @@ type ErrorKilnError struct {
 	// Message a human-readable message describing the error.
 	Message string `json:"message" validate:"required,min=1"`
 	// Retryable whether the error is retryable.
-	Retryable bool `json:"retryable" validate:"required"`
+	Retryable bool `json:"retryable"`
 	// RuntimeID the unique identifier of the runtime that generated the error.
 	RuntimeID *string `json:"runtime_id,omitempty" validate:"omitempty,min=1"`
 }
