@@ -26,11 +26,13 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 			return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 				Code:    contract.JSONRPCInvalidParams,
 				Message: "Health endpoint does not accept parameters",
-				Data: runtime_error.ErrorKilnError{
-					Code:     "runtime.invalid_params",
-					Category: "validation",
-					Message:  "Health endpoint does not accept parameters",
-					Details:  map[string]any{},
+				Data: runtime_error.Error{
+					KilnError: runtime_error.ErrorKilnError{
+						Code:     "runtime.invalid_params",
+						Category: "validation",
+						Message:  "Health endpoint does not accept parameters",
+						Details:  map[string]any{},
+					},
 				},
 			})
 		}

@@ -39,7 +39,7 @@ func TestMakeInitializeHandler_InvalidParams(t *testing.T) {
 
 	errResp := resp.(*protocol.ErrorResponse)
 	utest.AssertEqual(t, errResp.Error.Code, contract.JSONRPCInvalidParams)
-	utest.AssertEqual(t, errResp.Error.Data.Code, "runtime.invalid_initialize_params")
+	utest.AssertEqual(t, errResp.Error.Data.KilnError.Code, "runtime.invalid_initialize_params")
 	utest.AssertNotNil(t, state.LastFatalStartupError, "fatal error should be stored in state")
 }
 

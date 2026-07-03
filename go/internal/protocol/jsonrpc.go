@@ -42,9 +42,9 @@ type SuccessResponse struct {
 }
 
 type ErrorObject struct {
-	Code    int                          `json:"code"`
-	Message string                       `json:"message"`
-	Data    runtime_error.ErrorKilnError `json:"data"`
+	Code    int                 `json:"code"`
+	Message string              `json:"message"`
+	Data    runtime_error.Error `json:"data"`
 }
 
 type ErrorResponse struct {
@@ -272,12 +272,14 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 			retryable = r
 		}
 
-		errObj.Data = runtime_error.ErrorKilnError{
-			Code:      fmt.Sprintf("%d", int(codeFloat)),
-			Category:  runtime_error.ErrorKilnErrorCategory(category),
-			Message:   message,
-			Retryable: retryable,
-			Details:   dataMap,
+		errObj.Data = runtime_error.Error{
+			KilnError: runtime_error.ErrorKilnError{
+				Code:      fmt.Sprintf("%d", int(codeFloat)),
+				Category:  runtime_error.ErrorKilnErrorCategory(category),
+				Message:   message,
+				Retryable: retryable,
+				Details:   dataMap,
+			},
 		}
 	}
 

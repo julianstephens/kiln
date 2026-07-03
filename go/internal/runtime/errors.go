@@ -48,7 +48,7 @@ var NewInvalidJSONRPCFrameError = func(details string) *Error {
 	}
 }
 
-var NewInvalidRequestError = func(message string, data runtime_error.ErrorKilnError) *protocol.ErrorObject {
+var NewInvalidRequestError = func(message string, data runtime_error.Error) *protocol.ErrorObject {
 	return &protocol.ErrorObject{
 		Code:    contract.JSONRPCInvalidRequest,
 		Message: message,

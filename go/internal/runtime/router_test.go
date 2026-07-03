@@ -58,12 +58,14 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCMethodNotFound,
 					Message: "Method not found",
-					Data: runtime_error.ErrorKilnError{
-						Code:     "runtime.method_not_found",
-						Category: "compatibility",
-						Message:  "Method not found",
-						Details: map[string]any{
-							"requested_method": "runtime.unknown",
+					Data: runtime_error.Error{
+						KilnError: runtime_error.ErrorKilnError{
+							Code:     "runtime.method_not_found",
+							Category: "compatibility",
+							Message:  "Method not found",
+							Details: map[string]any{
+								"requested_method": "runtime.unknown",
+							},
 						},
 					},
 				},
@@ -90,14 +92,16 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCInternalError,
 					Message: "Handler returned nil",
-					Data: runtime_error.ErrorKilnError{
-						Code:     "runtime.internal_error",
-						Category: "internal",
-						Message:  "Handler returned nil response",
-						Details: map[string]any{
-							"requested_method": "runtime.health",
-							"request_params": map[string]any{
-								"probe": true,
+					Data: runtime_error.Error{
+						KilnError: runtime_error.ErrorKilnError{
+							Code:     "runtime.internal_error",
+							Category: "internal",
+							Message:  "Handler returned nil response",
+							Details: map[string]any{
+								"requested_method": "runtime.health",
+								"request_params": map[string]any{
+									"probe": true,
+								},
 							},
 						},
 					},

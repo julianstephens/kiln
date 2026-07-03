@@ -85,12 +85,14 @@ func Run(ctx context.Context, cfg Config) error {
 			msg = protocol.NewErrorResponse(protocol.ID{Null: true}, protocol.ErrorObject{
 				Code:    contract.JSONRPCInvalidRequest,
 				Message: "Invalid request format",
-				Data: runtime_error.ErrorKilnError{
-					Code:     "runtime.invalid_request_format",
-					Category: "validation",
-					Message:  "Request is not a valid JSON-RPC request object",
-					Details: map[string]any{
-						"request": req.ToJSON(),
+				Data: runtime_error.Error{
+					KilnError: runtime_error.ErrorKilnError{
+						Code:     "runtime.invalid_request_format",
+						Category: "validation",
+						Message:  "Request is not a valid JSON-RPC request object",
+						Details: map[string]any{
+							"request": req.ToJSON(),
+						},
 					},
 				},
 			})

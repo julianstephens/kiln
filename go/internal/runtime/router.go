@@ -38,12 +38,14 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 		return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 			Code:    contract.JSONRPCMethodNotFound,
 			Message: "Method not found",
-			Data: runtime_error.ErrorKilnError{
-				Code:     "runtime.method_not_found",
-				Category: "compatibility",
-				Message:  "Method not found",
-				Details: map[string]any{
-					"requested_method": req.Method,
+			Data: runtime_error.Error{
+				KilnError: runtime_error.ErrorKilnError{
+					Code:     "runtime.method_not_found",
+					Category: "compatibility",
+					Message:  "Method not found",
+					Details: map[string]any{
+						"requested_method": req.Method,
+					},
 				},
 			},
 		})
@@ -54,13 +56,15 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 		return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 			Code:    contract.JSONRPCInternalError,
 			Message: "Handler returned nil",
-			Data: runtime_error.ErrorKilnError{
-				Code:     "runtime.internal_error",
-				Category: "internal",
-				Message:  "Handler returned nil response",
-				Details: map[string]any{
-					"requested_method": req.Method,
-					"request_params":   req.Params,
+			Data: runtime_error.Error{
+				KilnError: runtime_error.ErrorKilnError{
+					Code:     "runtime.internal_error",
+					Category: "internal",
+					Message:  "Handler returned nil response",
+					Details: map[string]any{
+						"requested_method": req.Method,
+						"request_params":   req.Params,
+					},
 				},
 			},
 		})

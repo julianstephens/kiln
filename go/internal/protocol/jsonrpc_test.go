@@ -91,13 +91,15 @@ func TestParseMessage_TableDriven(t *testing.T) {
 				Error: protocol.ErrorObject{
 					Code:    -32000,
 					Message: "something failed",
-					Data: runtime_error.ErrorKilnError{
-						Code:      "-32000",
-						Category:  "",
-						Message:   "something failed",
-						Retryable: false,
-						Details: map[string]any{
-							"detail": "oops",
+					Data: runtime_error.Error{
+						KilnError: runtime_error.ErrorKilnError{
+							Code:      "-32000",
+							Category:  "",
+							Message:   "something failed",
+							Retryable: false,
+							Details: map[string]any{
+								"detail": "oops",
+							},
 						},
 					},
 				},
