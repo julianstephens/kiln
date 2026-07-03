@@ -9,7 +9,7 @@ type BuildInfo struct {
 }
 
 func NewBuildInfo() (*BuildInfo, error) {
-	t, err := time.Parse(BuildDate, time.DateOnly)
+	t, err := time.Parse(time.DateOnly, BuildDate)
 	if err != nil {
 		return nil, err
 	}

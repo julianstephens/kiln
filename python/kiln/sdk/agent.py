@@ -48,11 +48,11 @@ class Agent:
             client=client,
         )
 
-    def run(self, task: str) -> RunResult:
+    async def run(self, task: str) -> RunResult:
         if not task.strip():
             raise TaskEmptyError
 
-        return self._client.create_run(
+        return await self._client.create_run(
             repository=self._config.repository,
             task=task,
             budget=self._config.budget,
@@ -64,5 +64,5 @@ class Agent:
     async def __aenter__(self) -> "Agent":
         return self
 
-    async def __aexit__(self, *_: object) -> None:
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.close()

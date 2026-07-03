@@ -59,7 +59,7 @@ class RuntimeStdioConnection:
             JsonRpcRequest(
                 id=new_request_id(),
                 method="runtime.initialize",
-                params=params.model_dump(),
+                params=params.root.model_dump(),
             )
         )
 
@@ -75,7 +75,9 @@ class RuntimeStdioConnection:
                 method="runtime.initialize",
                 jsonrpc_code=res.error.code,
                 message=res.error.message,
-                kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
+                kiln_error=KilnRuntimeError.model_validate(
+                    {"kiln_error": res.error.data or {}}
+                ),
             )
         if isinstance(res, JsonRpcSuccessResponse):
             return RuntimeInitializeResult.model_validate(res.result)
@@ -106,7 +108,9 @@ class RuntimeStdioConnection:
                 method="runtime.health",
                 jsonrpc_code=res.error.code,
                 message=res.error.message,
-                kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
+                kiln_error=KilnRuntimeError.model_validate(
+                    {"kiln_error": res.error.data or {}}
+                ),
             )
         if isinstance(res, JsonRpcSuccessResponse):
             return RuntimeHealthResult.model_validate(res.result)

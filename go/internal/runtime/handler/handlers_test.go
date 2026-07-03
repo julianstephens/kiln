@@ -28,7 +28,7 @@ func TestMakeInitializeHandler_InvalidParams(t *testing.T) {
 	requestID := int64(1)
 
 	req := protocol.Request{
-		JSONRPC: protocol.DefaultJsonRpcVersion,
+		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.initialize",
 		Params:  map[string]any{},
@@ -55,7 +55,7 @@ func TestMakeHealthHandler_Ready(t *testing.T) {
 	requestID := int64(10)
 
 	req := protocol.Request{
-		JSONRPC: protocol.DefaultJsonRpcVersion,
+		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.health",
 	}
@@ -87,7 +87,7 @@ func TestMakeHealthHandler_NotReady(t *testing.T) {
 	requestID := int64(11)
 
 	req := protocol.Request{
-		JSONRPC: protocol.DefaultJsonRpcVersion,
+		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.health",
 	}
@@ -120,7 +120,7 @@ func TestMakeHealthHandler_AfterShutdown(t *testing.T) {
 	requestID := int64(12)
 
 	req := protocol.Request{
-		JSONRPC: protocol.DefaultJsonRpcVersion,
+		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.health",
 	}
@@ -150,7 +150,7 @@ func TestMakeHealthHandler_NotInitialized(t *testing.T) {
 	requestID := int64(13)
 
 	req := protocol.Request{
-		JSONRPC: protocol.DefaultJsonRpcVersion,
+		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.health",
 	}
@@ -190,7 +190,7 @@ func TestMakeHealthHandler_WithFatalError(t *testing.T) {
 	requestID := int64(14)
 
 	req := protocol.Request{
-		JSONRPC: protocol.DefaultJsonRpcVersion,
+		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.health",
 	}

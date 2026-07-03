@@ -38,7 +38,7 @@ class RuntimeClient:
             raise RuntimeProcessError(message=("runtime process is not ready"))
         return cls(process, connection)
 
-    def create_run(
+    async def create_run(
         self,
         repository: Path,
         task: str,

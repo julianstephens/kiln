@@ -10,6 +10,7 @@ GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
 GO_RUNTIME_VERSION ?= 0.1.0
+CONTRACT_PACKAGE ?= github.com/julianstephens/kiln/go/internal/runtime/contract
 BUILD_DATE := $(shell date +%F)
 BUILD_COMMIT := $(shell git rev-parse --short HEAD)
 
@@ -21,7 +22,7 @@ default: check
 	format format-python format-go \
 	format-check format-check-python format-check-go \
 	lint lint-python lint-go \
-	test test-python test-go \
+	test test-python test-go test-e2e \
 	build build-python build-go \
 	validate-schemas \
 	generate generate-python generate-go \
@@ -85,6 +86,10 @@ test-python:
 test-go:
 	cd $(GO_DIR) && $(GO) test -v ./...
 
+test-e2e: build-go
+	cd $(PYTHON_DIR) && uv sync --package kiln-sdk
+	uv run pytest $(CURDIR)/integration/e2e -v --tb=short
+
 # ---------------------------------------------------------------------------
 # Builds
 # ---------------------------------------------------------------------------
@@ -103,7 +108,7 @@ build-go:
 	cd $(GO_DIR) && \
 		$(GO) build \
 			-o "$(CURDIR)/$(DIST_DIR)/bin/kiln-runtime" \
-			-ldflags "-X 'contract.BuildVersion=$(GO_RUNTIME_VERSION)' -X 'contract.BuildDate=$(BUILD_DATE)' -X 'contract.BuildCommit=$(BUILD_COMMIT)'" \
+			-ldflags "-X '$(CONTRACT_PACKAGE).BuildVersion=$(GO_RUNTIME_VERSION)' -X '$(CONTRACT_PACKAGE).BuildDate=$(BUILD_DATE)' -X '$(CONTRACT_PACKAGE).BuildCommit=$(BUILD_COMMIT)'" \
 			./cmd/kiln-runtime
 
 # ---------------------------------------------------------------------------

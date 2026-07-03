@@ -14,8 +14,6 @@ from ._runtime_os.win32 import (
 )
 from .errors import (
     MissingRuntimeBinaryError,
-    StdinUnavailableError,
-    StdoutUnavailableError,
 )
 
 
@@ -24,16 +22,8 @@ class RuntimeProcess:
     process: ServerProcess
 
     @property
-    def stdin(self):
-        if self.process.stdin is None:
-            raise StdinUnavailableError
-        return self.process.stdin
-
-    @property
-    def stdout(self):
-        if self.process.stdout is None:
-            raise StdoutUnavailableError
-        return self.process.stdout
+    def is_alive(self) -> bool:
+        return self.process.returncode is None
 
     @classmethod
     async def start(cls, binary: Path | None = None) -> "RuntimeProcess":

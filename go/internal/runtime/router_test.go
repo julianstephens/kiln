@@ -33,12 +33,12 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				})
 			},
 			req: protocol.Request{
-				JSONRPC: protocol.DefaultJsonRpcVersion,
+				JSONRPC: protocol.DefaultJSONRPCVersion,
 				ID:      protocol.ID{Number: &successID},
 				Method:  "runtime.health",
 			},
 			want: &protocol.SuccessResponse{
-				JSONRPC: protocol.DefaultJsonRpcVersion,
+				JSONRPC: protocol.DefaultJSONRPCVersion,
 				ID:      protocol.ID{Number: &successID},
 				Result:  map[string]any{"ok": true},
 			},
@@ -48,12 +48,12 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 			setup: func(r *runtime.Router) {
 			},
 			req: protocol.Request{
-				JSONRPC: protocol.DefaultJsonRpcVersion,
+				JSONRPC: protocol.DefaultJSONRPCVersion,
 				ID:      protocol.ID{Number: &unknownID},
 				Method:  "runtime.unknown",
 			},
 			want: &protocol.ErrorResponse{
-				JSONRPC: protocol.DefaultJsonRpcVersion,
+				JSONRPC: protocol.DefaultJSONRPCVersion,
 				ID:      protocol.ID{Number: &unknownID},
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCMethodNotFound,
@@ -77,7 +77,7 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				})
 			},
 			req: protocol.Request{
-				JSONRPC: protocol.DefaultJsonRpcVersion,
+				JSONRPC: protocol.DefaultJSONRPCVersion,
 				ID:      protocol.ID{Number: &nilHandlerID},
 				Method:  "runtime.health",
 				Params: map[string]any{
@@ -85,7 +85,7 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				},
 			},
 			want: &protocol.ErrorResponse{
-				JSONRPC: protocol.DefaultJsonRpcVersion,
+				JSONRPC: protocol.DefaultJSONRPCVersion,
 				ID:      protocol.ID{Number: &nilHandlerID},
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCInternalError,

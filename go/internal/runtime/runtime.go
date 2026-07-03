@@ -63,7 +63,7 @@ func Run(ctx context.Context, cfg Config) error {
 					Category: "validation",
 					Message:  "Request is not a valid JSON-RPC request object",
 					Details: map[string]any{
-						"request": req.ToJson(),
+						"request": req.ToJSON(),
 					},
 				},
 			})

@@ -27,11 +27,14 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
-        with:
+        withl:
           version: 0.11.17
 
       - name: Validate code
         run: uv sync --dev --package kiln-sdk && make check
+
+      # - name: Run e2e tests
+      #   run: make test-e2e
 
       - name: Check generated Python schema synchronization
         run: |
