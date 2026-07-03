@@ -232,24 +232,51 @@ func gzipFile(src string, dst string) error {
 	if err != nil {
 		return fmt.Errorf("open log file for compression: %w", err)
 	}
-	defer in.Close()
 
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
 	if err != nil {
+		if closeErr := in.Close(); closeErr != nil {
+			return fmt.Errorf("open compressed log file: %w; close source log file: %w", err, closeErr)
+		}
 		return fmt.Errorf("open compressed log file: %w", err)
 	}
-	defer out.Close()
 
 	zw := gzip.NewWriter(out)
 	if _, err := io.Copy(zw, in); err != nil {
-		closeErr := zw.Close()
-		if closeErr != nil {
-			return fmt.Errorf("compress log file: %w; close gzip writer: %w", err, closeErr)
+		closeGzipErr := zw.Close()
+		closeOutErr := out.Close()
+		closeInErr := in.Close()
+		if closeGzipErr != nil {
+			return fmt.Errorf("compress log file: %w; close gzip writer: %w", err, closeGzipErr)
+		}
+		if closeOutErr != nil {
+			return fmt.Errorf("compress log file: %w; close compressed log file: %w", err, closeOutErr)
+		}
+		if closeInErr != nil {
+			return fmt.Errorf("compress log file: %w; close source log file: %w", err, closeInErr)
 		}
 		return fmt.Errorf("compress log file: %w", err)
 	}
 	if err := zw.Close(); err != nil {
+		closeOutErr := out.Close()
+		closeInErr := in.Close()
+		if closeOutErr != nil {
+			return fmt.Errorf("close gzip writer: %w; close compressed log file: %w", err, closeOutErr)
+		}
+		if closeInErr != nil {
+			return fmt.Errorf("close gzip writer: %w; close source log file: %w", err, closeInErr)
+		}
 		return fmt.Errorf("close gzip writer: %w", err)
+	}
+	if err := out.Close(); err != nil {
+		closeInErr := in.Close()
+		if closeInErr != nil {
+			return fmt.Errorf("close compressed log file: %w; close source log file: %w", err, closeInErr)
+		}
+		return fmt.Errorf("close compressed log file: %w", err)
+	}
+	if err := in.Close(); err != nil {
+		return fmt.Errorf("close source log file: %w", err)
 	}
 	return nil
 }
