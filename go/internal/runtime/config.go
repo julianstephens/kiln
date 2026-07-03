@@ -6,4 +6,6 @@ type Config struct {
 	Input  io.Reader
 	Output io.Writer
 	Error  io.Writer
+
+	LogSink LogSinkConfig
 }
