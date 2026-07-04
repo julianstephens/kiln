@@ -64,7 +64,7 @@ class RuntimeProcess:
                 command=[str(binary)],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                stderr=sys.stderr,
+                stderr=subprocess.PIPE,
                 env=_runtime_environment(),
                 start_new_session=True,
             )

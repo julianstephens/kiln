@@ -47,8 +47,6 @@ def normalize_exit_status(returncode: int | None) -> tuple[int | None, int | Non
     being the absolute value of the returncode. A None returncode indicates that the
     process is still running.
     """
-    if returncode is not None and returncode < 0:
-        return None, -returncode
     return returncode, None
 
 
@@ -146,10 +144,12 @@ async def create_windows_process(
     try:
         process = await anyio.open_process(
             [command, *args],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             env=env,
             # Ensure we don't create console windows for each process
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            stderr=errlog,
             cwd=cwd,
         )
     except NotImplementedError:
