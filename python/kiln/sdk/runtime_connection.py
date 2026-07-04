@@ -28,6 +28,11 @@ class RuntimeStdioConnection:
     peer: Peer
     process: ServerProcess
 
+    _draining: bool
+    _initialized: bool
+    _ready: bool
+    _shutdown: bool
+
     def __init__(self, process: ServerProcess):
         self.process = process
         if not process.stdin:
@@ -38,6 +43,22 @@ class RuntimeStdioConnection:
             stdin=process.stdin,
             stdout=BufferedByteReceiveStream(process.stdout),
         )
+
+    @property
+    def draining(self) -> bool:
+        return self._draining
+
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
+
+    @property
+    def ready(self) -> bool:
+        return self._ready
+
+    @property
+    def shutdown(self) -> bool:
+        return self._shutdown
 
     async def initialize(self) -> RuntimeInitializeResult:
         """Initialize a connection to a runtime process over standard input and
@@ -109,7 +130,12 @@ class RuntimeStdioConnection:
                 kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
             )
         if isinstance(res, JsonRpcSuccessResponse):
-            return RuntimeHealthResult.model_validate(res.result)
+            health_res = RuntimeHealthResult.model_validate(res.result)
+            self._draining = health_res.root.draining
+            self._initialized = health_res.root.initialized
+            self._ready = health_res.root.ready
+            self._shutdown = health_res.root.shutdown
+            return health_res
 
         raise RuntimeProcessError(
             message="runtime process returned an unexpected response type"
