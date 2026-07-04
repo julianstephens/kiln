@@ -306,15 +306,18 @@ func messageToJSON(msg Message) (JSONObject, error) {
 	case *ErrorResponse:
 		return messageToJSON(*m)
 	case ErrorResponse:
-		return JSONObject{
+		err := JSONObject{
 			"jsonrpc": m.JSONRPC,
 			"id":      m.ID.JSONValue(),
 			"error": map[string]any{
 				"code":    m.Error.Code,
 				"message": m.Error.Message,
-				"data":    m.Error.Data,
 			},
-		}, nil
+		}
+		if m.Error.Data != nil {
+			err["error"].(map[string]any)["data"] = m.Error.Data
+		}
+		return err, nil
 	default:
 		return nil, NewFramingError(fmt.Errorf("unknown message type: %T", msg))
 	}

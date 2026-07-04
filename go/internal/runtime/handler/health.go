@@ -30,9 +30,6 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 				Retryable: false,
 				Details:   map[string]any{},
 			}
-			state.Mu.Lock()
-			state.LastFatalStartupError = &inner
-			state.Mu.Unlock()
 			return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 				Code:    contract.JSONRPCInvalidParams,
 				Message: "Health endpoint does not accept parameters",

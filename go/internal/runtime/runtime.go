@@ -91,9 +91,6 @@ func Run(ctx context.Context, cfg Config) error {
 					"request": req.ToJSON(),
 				},
 			}
-			state.Mu.Lock()
-			state.LastFatalStartupError = &inner
-			state.Mu.Unlock()
 			msg = protocol.NewErrorResponse(protocol.ID{Null: true}, protocol.ErrorObject{
 				Code:    contract.JSONRPCInvalidRequest,
 				Message: "Invalid request format",
