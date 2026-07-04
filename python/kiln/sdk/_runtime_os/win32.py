@@ -81,9 +81,11 @@ class FallbackProcess:
         self.popen: subprocess.Popen[bytes] = popen_obj
         stdin = popen_obj.stdin
         stdout = popen_obj.stdout
+        stderr = popen_obj.stderr
 
         self.stdin = FileWriteStream(cast(BinaryIO, stdin)) if stdin else None
         self.stdout = FileReadStream(cast(BinaryIO, stdout)) if stdout else None
+        self.stderr = FileReadStream(cast(BinaryIO, stderr)) if stderr else None
 
     async def wait(self) -> int:
         """Waits for exit by polling the Popen.
