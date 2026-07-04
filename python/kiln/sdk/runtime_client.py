@@ -3,14 +3,17 @@ from typing import NoReturn
 
 from kiln.models.budget import Budget
 from kiln.models.run import RunResult
+from kiln.protocol.errors import RuntimeConnectionClosedError
 
 from .errors import RuntimeProcessError, RuntimeProcessExitedError
-from .runtime_connection import RuntimeStdioConnection
-from .runtime_exit import InflightRequestDisposition, RuntimeExitStatus
+from .runtime_connection import RuntimeConnectionState, RuntimeStdioConnection
 from .runtime_process import RuntimeProcess
 
 
 class RuntimeClient:
+    """Represents a client that connects to a runtime process and allows interaction
+    with it."""
+
     def __init__(
         self, process: RuntimeProcess, connection: RuntimeStdioConnection
     ) -> None:
@@ -37,28 +40,25 @@ class RuntimeClient:
         def _raise_not_ready() -> NoReturn:
             raise RuntimeProcessError(message=("runtime process is not ready"))
 
-        def _raise_unexpected_exit(
-            exit_status: RuntimeExitStatus,
-            in_flight: tuple[InflightRequestDisposition, ...],
-        ) -> NoReturn:
-            raise RuntimeProcessExitedError(
-                exit_status=exit_status, in_flight=in_flight
-            )
-
         try:
-            connection = RuntimeStdioConnection(process=process.process)
+            connection = RuntimeStdioConnection(
+                process=process.process, state=RuntimeConnectionState.STARTING
+            )
             await connection.initialize()
-            if process.exit_status is not None:
-                _raise_unexpected_exit(
-                    process.exit_status,
-                    connection.inflight_disposition("failed_process_exited"),
-                )
-
             health = await connection.health()
             if not health.root.ready:
                 _raise_not_ready()
 
             return cls(process, connection)
+        except RuntimeConnectionClosedError as exc:
+            exit_status = process.exit_status
+            if exit_status is not None and not exit_status.expected:
+                raise RuntimeProcessExitedError(
+                    exit_status=exit_status,
+                    in_flight=exc.in_flight
+                    or connection.inflight_disposition("failed_process_exited"),
+                ) from exc
+            raise
         except BaseException:
             await process.aclose()
             raise

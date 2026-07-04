@@ -72,7 +72,7 @@ class RuntimeProcess:
         return cls(process=process)
 
     async def aclose(self) -> None:
-        self._intentional_close = True
+        self._expected_exit = True
         if sys.platform == "win32":
             await terminate_windows_process_tree(self.process)
         else:

@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 from kiln.protocol.jsonrpc import (
     JsonRpcErrorResponse,
     JsonRpcRequest,
@@ -22,6 +24,16 @@ from .runtime_exit import InflightDisposition, InflightRequestDisposition
 RUNTIME_PROTOCOL_VERSION = "2026-07-01"
 
 
+class RuntimeConnectionState(StrEnum):
+    """Represents the state of a connection to a runtime process."""
+
+    STARTING = "starting"
+    READY = "ready"
+    DRAINING = "draining"
+    EXITED = "exited"
+    FAILED = "failed"
+
+
 class RuntimeStdioConnection:
     """Represents a connection to a runtime process over standard input and
     output streams."""
@@ -34,7 +46,7 @@ class RuntimeStdioConnection:
     _ready: bool
     _shutdown: bool
 
-    def __init__(self, process: ServerProcess):
+    def __init__(self, process: ServerProcess, state: RuntimeConnectionState):
         self.process = process
         if not process.stdin:
             raise RuntimeProcessError(message="runtime process stdin is unavailable")
@@ -44,6 +56,32 @@ class RuntimeStdioConnection:
             stdin=process.stdin,
             stdout=BufferedByteReceiveStream(process.stdout),
         )
+        match state:
+            case RuntimeConnectionState.STARTING:
+                self._draining = False
+                self._initialized = False
+                self._ready = False
+                self._shutdown = False
+            case RuntimeConnectionState.READY:
+                self._draining = False
+                self._initialized = True
+                self._ready = True
+                self._shutdown = False
+            case RuntimeConnectionState.DRAINING:
+                self._draining = True
+                self._initialized = True
+                self._ready = False
+                self._shutdown = False
+            case RuntimeConnectionState.EXITED:
+                self._draining = False
+                self._initialized = False
+                self._ready = False
+                self._shutdown = True
+            case RuntimeConnectionState.FAILED:
+                self._draining = False
+                self._initialized = False
+                self._ready = False
+                self._shutdown = True
 
     @property
     def draining(self) -> bool:
