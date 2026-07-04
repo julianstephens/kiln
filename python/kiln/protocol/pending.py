@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Generator
 
 from pydantic import BaseModel
 
@@ -61,6 +62,15 @@ class PendingRequests:
             The number of pending requests.
         """
         return len(self._by_id)
+
+    def __iter__(self) -> Generator[PendingRequest, None, None]:
+        """Yield each pending request in the collection.
+
+        Returns:
+            Generator of PendingRequest instances.
+        """
+        for request in self._by_id.values():
+            yield request
 
 
 def validate_response_against_pending_method(

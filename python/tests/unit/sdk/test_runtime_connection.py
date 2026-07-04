@@ -475,3 +475,94 @@ async def test_health_sends_non_empty_request_id(mocker) -> None:
     assert captured_request.method == "runtime.health"
     assert captured_request.params is None
     assert result.root.ready is True
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_process_exit_during_request(mocker) -> None:
+    """Test that process exit during request is detected and raised.
+
+    Simulates the case where the runtime process exits while an RPC request
+    is in flight, resulting in a broken pipe or connection error.
+    """
+
+    class ProcessExitDuringRequestPeer:
+        """Fake peer that simulates process exit mid-request."""
+
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            # Simulate process exit by raising connection error
+            raise RuntimeProcessError(message="runtime process exited during request")
+
+    peer = ProcessExitDuringRequestPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(RuntimeProcessError, match="exited during request"):
+        await conn.initialize()
+
+
+@pytest.mark.anyio
+async def test_health_raises_on_process_exit_during_request(mocker) -> None:
+    """Test that health() detects process exit during request."""
+
+    class ProcessExitDuringRequestPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            raise RuntimeProcessError(message="runtime process exited unexpectedly")
+
+    peer = ProcessExitDuringRequestPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    with pytest.raises(RuntimeProcessError, match="exited unexpectedly"):
+        await conn.health()
+
+
+@pytest.mark.anyio
+async def test_multiple_sequential_initialize_calls(mocker) -> None:
+    """Test that initialize can be called multiple times (returns same result)."""
+    call_count = 0
+
+    class CountingPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            nonlocal call_count
+            call_count += 1
+            self.last_request = message
+            return JsonRpcSuccessResponse(
+                id=message.id, result=_initialize_result_payload()
+            )
+
+    peer = CountingPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process())
+
+    # First initialize succeeds
+    result1 = await conn.initialize()
+    assert result1.root.runtime.id == "runtime-1"
+    assert call_count == 1
+
+    # Second initialize should also succeed (idempotent)
+    result2 = await conn.initialize()
+    assert result2.root.runtime.id == "runtime-1"
+    assert call_count == 2

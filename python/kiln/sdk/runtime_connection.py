@@ -17,6 +17,7 @@ from kiln.schemas.runtime.initialize_request_payload import Client as RuntimeCli
 from . import PACKAGE_NAME, __version__
 from ._runtime_os.win32 import ServerProcess
 from .errors import RuntimeMethodError, RuntimeProcessError
+from .runtime_exit import InflightDisposition, InflightRequestDisposition
 
 RUNTIME_PROTOCOL_VERSION = "2026-07-01"
 
@@ -60,6 +61,20 @@ class RuntimeStdioConnection:
     def shutdown(self) -> bool:
         return self._shutdown
 
+    def inflight_disposition(
+        self, disposition: InflightDisposition = "unknown"
+    ) -> tuple[InflightRequestDisposition, ...]:
+        res = []
+        for inflight_req in self.peer._pending_requests:
+            res.append(
+                InflightRequestDisposition(
+                    request_id=str(inflight_req.id),
+                    method=inflight_req.method,
+                    disposition=disposition,
+                )
+            )
+        return tuple(res)
+
     async def initialize(self) -> RuntimeInitializeResult:
         """Initialize a connection to a runtime process over standard input and
         output streams.
@@ -76,6 +91,7 @@ class RuntimeStdioConnection:
                 "client": RuntimeClient(name=PACKAGE_NAME, version=__version__),
             }
         )
+
         res = await self.peer.request(
             JsonRpcRequest(
                 id=new_request_id(),
@@ -83,7 +99,6 @@ class RuntimeStdioConnection:
                 params=params.root.model_dump(),
             )
         )
-
         if isinstance(res, JsonRpcRequest):
             raise RuntimeProcessError(
                 message=(

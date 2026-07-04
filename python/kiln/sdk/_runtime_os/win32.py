@@ -40,6 +40,18 @@ _process_jobs: "weakref.WeakKeyDictionary[Process | FallbackProcess, object]" = 
 )
 
 
+def normalize_exit_status(returncode: int | None) -> tuple[int | None, int | None]:
+    """Normalizes a process returncode to a (returncode, signal) tuple. A positive
+    returncode indicates the process exited normally with that code. A negative
+    returncode indicates the process was terminated by a signal, with the signal number
+    being the absolute value of the returncode. A None returncode indicates that the
+    process is still running.
+    """
+    if returncode is not None and returncode < 0:
+        return None, -returncode
+    return returncode, None
+
+
 def get_windows_executable_command(command: str) -> str:
     """Resolves the command to a Windows executable path.
 

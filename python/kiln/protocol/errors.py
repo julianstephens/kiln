@@ -69,3 +69,16 @@ class JsonRpcResponseIdMismatchError(RuntimeError):
                 f"received {received_id}"
             )
         )
+
+
+class RuntimeConnectionClosedError(RuntimeError):
+    def __init__(self, message: str = "runtime connection closed") -> None:
+        super().__init__(message)
+
+
+class RuntimeProcessExitedError(RuntimeConnectionClosedError):
+    def __init__(self, returncode: int | None = None) -> None:
+        super().__init__(
+            f"runtime process exited unexpectedly: returncode={returncode}"
+        )
+        self.returncode = returncode

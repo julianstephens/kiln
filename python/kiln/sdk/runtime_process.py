@@ -1,7 +1,7 @@
 import os
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import anyio
@@ -12,18 +12,41 @@ from ._runtime_os.win32 import (
     create_windows_process,
     terminate_windows_process_tree,
 )
-from .errors import (
-    MissingRuntimeBinaryError,
-)
+from .errors import MissingRuntimeBinaryError
+from .runtime_exit import RuntimeExitStatus, StderrTailBuffer
+
+if sys.platform == "win32":
+    from ._runtime_os.win32 import normalize_exit_status
+else:
+    from ._runtime_os.posix import normalize_exit_status
 
 
 @dataclass
 class RuntimeProcess:
     process: ServerProcess
+    _stderr_tail: StderrTailBuffer = field(default_factory=StderrTailBuffer)
+    _expected_exit: bool = False
+    _last_exit_status: RuntimeExitStatus | None = None
 
     @property
     def is_alive(self) -> bool:
         return self.process.returncode is None
+
+    @property
+    def exit_status(self) -> RuntimeExitStatus | None:
+        exit_code, signal = normalize_exit_status(self.process.returncode)
+
+        if exit_code is None or signal is None:
+            return None
+
+        status = RuntimeExitStatus(
+            expected=self._expected_exit,
+            returncode=exit_code,
+            signal=signal,
+            stderr_tail=self._stderr_tail.text(),
+        )
+        self._last_exit_status = status
+        return status
 
     @classmethod
     async def start(cls, binary: Path | None = None) -> "RuntimeProcess":
@@ -49,6 +72,7 @@ class RuntimeProcess:
         return cls(process=process)
 
     async def aclose(self) -> None:
+        self._intentional_close = True
         if sys.platform == "win32":
             await terminate_windows_process_tree(self.process)
         else:

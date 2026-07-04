@@ -8,6 +8,7 @@ from anyio.streams.buffered import (
 from .errors import (
     JsonRpcFrameExceedsSizeLimitError,
     JsonRpcResponseIdMismatchError,
+    RuntimeConnectionClosedError,
     RuntimeStreamClosedError,
     UnexpectedJsonRpcMessageError,
 )
@@ -127,6 +128,14 @@ class Peer:
                 )
 
             self._pending_requests.pop(res.id)
+        except RuntimeStreamClosedError as exc:
+            raise RuntimeConnectionClosedError(
+                message=(
+                    "runtime stream closed while waiting "
+                    f"for response to {message.method}"
+                )
+            ) from exc
+        else:
             return res
         finally:
             if message.id in self._pending_requests:

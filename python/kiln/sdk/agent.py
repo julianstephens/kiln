@@ -7,8 +7,8 @@ from kiln.logger import DefaultLoggingConfig, LoggingConfig, configure_logging
 from kiln.models.budget import Budget
 from kiln.models.run import RunResult
 
-from .client import RuntimeClient
 from .errors import RepositoryNotFoundError, TaskEmptyError
+from .runtime_client import RuntimeClient
 
 
 @dataclass(frozen=True)
