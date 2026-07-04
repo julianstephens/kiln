@@ -73,7 +73,6 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 				return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(state.InitialResult))
 			}
 			err := alreadyInitializedWithDifferentParams(util.MustStructToMap(state.InitialParams), req.Params)
-			state.LastFatalStartupError = &err.inner
 			return protocol.NewErrorResponse(req.ID, err.response)
 		}
 
