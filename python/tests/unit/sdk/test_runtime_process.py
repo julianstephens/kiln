@@ -282,10 +282,10 @@ class TestRuntimeProcessStderrHandling:
     """Tests for handling stderr output during startup."""
 
     @pytest.mark.anyio
-    async def test_start_passes_stderr_to_sys_stderr(
+    async def test_start_uses_stderr_pipe_on_posix(
         self, mocker: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Test that stderr is passed to sys.stderr (POSIX)."""
+        """Test that stderr is piped on POSIX systems."""
         fake_process = SimpleNamespace(
             stdin=mocker.MagicMock(),
             stdout=mocker.MagicMock(),
@@ -306,9 +306,9 @@ class TestRuntimeProcessStderrHandling:
 
         await RuntimeProcess.start()
 
-        # Verify stderr is passed to sys.stderr
+        # Verify stderr is piped (subprocess.PIPE = -1)
         call_args = open_process_mock.call_args
-        assert call_args.kwargs["stderr"] == sys.stderr
+        assert call_args.kwargs["stderr"] == subprocess.PIPE
 
     @pytest.mark.anyio
     async def test_start_passes_stderr_to_windows_process_creator(

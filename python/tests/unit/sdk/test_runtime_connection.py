@@ -16,7 +16,11 @@ from kiln.protocol.jsonrpc import (
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
 from kiln.sdk import PACKAGE_NAME, __version__
 from kiln.sdk.errors import RuntimeMethodError, RuntimeProcessError
-from kiln.sdk.runtime_connection import RUNTIME_PROTOCOL_VERSION, RuntimeStdioConnection
+from kiln.sdk.runtime_connection import (
+    RUNTIME_PROTOCOL_VERSION,
+    RuntimeConnectionState,
+    RuntimeStdioConnection,
+)
 
 
 class _FakePeer:
@@ -70,12 +74,12 @@ def _health_result_payload() -> dict[str, Any]:
 
 def test_init_rejects_missing_stdin() -> None:
     with pytest.raises(RuntimeProcessError, match="stdin is unavailable"):
-        RuntimeStdioConnection(_process(stdin=None))
+        RuntimeStdioConnection(_process(stdin=None), RuntimeConnectionState.STARTING)
 
 
 def test_init_rejects_missing_stdout() -> None:
     with pytest.raises(RuntimeProcessError, match="stdout is unavailable"):
-        RuntimeStdioConnection(_process(stdout=None))
+        RuntimeStdioConnection(_process(stdout=None), RuntimeConnectionState.STARTING)
 
 
 @pytest.mark.anyio
@@ -88,7 +92,7 @@ async def test_initialize_returns_runtime_initialize_result(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.initialize()
 
     assert result.root.runtime.id == "runtime-1"
@@ -129,7 +133,7 @@ async def test_initialize_raises_on_jsonrpc_error_response(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError, match=r"jsonrpc_code=-32000, message=boom"):
         await conn.initialize()
@@ -145,7 +149,7 @@ async def test_health_returns_runtime_health_result(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     assert result.root.ready is True
@@ -162,7 +166,7 @@ async def test_health_raises_on_unexpected_request_response(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeProcessError, match="unexpected request"):
         await conn.health()
@@ -197,7 +201,7 @@ async def test_error_data_validation_and_preservation(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError) as exc_info:
         await conn.initialize()
@@ -235,7 +239,7 @@ async def test_initialize_raises_on_incompatible_protocol_version(mocker) -> Non
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError, match="incompatible protocol version"):
         await conn.initialize()
@@ -268,7 +272,7 @@ async def test_initialize_raises_on_incompatible_schema_set(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError, match="incompatible schema-set"):
         await conn.initialize()
@@ -291,7 +295,7 @@ async def test_initialize_raises_on_malformed_success_result(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(ValidationError):  # ValidationError
         await conn.initialize()
@@ -322,7 +326,7 @@ async def test_initialize_raises_on_malformed_error_data(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(ValidationError):
         await conn.initialize()
@@ -339,7 +343,7 @@ async def test_health_not_ready(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     assert result.root.ready is False
@@ -358,7 +362,7 @@ async def test_health_after_shutdown(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     assert result.root.shutdown is True
@@ -394,7 +398,7 @@ async def test_initialize_and_health_ordering(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     # Call initialize then health
     await conn.initialize()
@@ -465,7 +469,7 @@ async def test_health_sends_non_empty_request_id(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     # Verify the captured request has a non-empty ID
@@ -502,7 +506,7 @@ async def test_initialize_raises_on_process_exit_during_request(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeProcessError, match="exited during request"):
         await conn.initialize()
@@ -526,7 +530,7 @@ async def test_health_raises_on_process_exit_during_request(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeProcessError, match="exited unexpectedly"):
         await conn.health()
@@ -555,7 +559,7 @@ async def test_multiple_sequential_initialize_calls(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     # First initialize succeeds
     result1 = await conn.initialize()
