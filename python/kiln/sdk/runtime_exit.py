@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Literal
+
+from kiln.protocol.pending import InflightRequestDisposition
 
 
 @dataclass(frozen=True)
@@ -12,25 +13,6 @@ class RuntimeExitStatus:
     stderr_tail: str
 
 
-InflightDisposition = Literal[
-    "completed",
-    "failed_connection_closed",
-    "failed_process_exited",
-    "cancelled",
-    "unknown",
-]
-
-
-@dataclass(frozen=True)
-class InflightRequestDisposition:
-    """Represents the disposition of an in-flight request when a runtime connection is
-    closed."""
-
-    request_id: str
-    method: str
-    disposition: InflightDisposition
-
-
 @dataclass(frozen=True)
 class RuntimeConnectionFailure:
     """Represents a failure of a runtime connection."""
@@ -40,6 +22,9 @@ class RuntimeConnectionFailure:
 
 class StderrTailBuffer:
     """A buffer that keeps the last N bytes of stderr output from a runtime process."""
+
+    _max_bytes: int
+    _buf: bytearray
 
     def __init__(self, max_bytes: int = 16_384):
         self._max_bytes = max_bytes

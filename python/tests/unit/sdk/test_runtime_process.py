@@ -1,7 +1,6 @@
 """Tests for RuntimeProcess startup and lifecycle."""
 
 import subprocess
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -309,35 +308,6 @@ class TestRuntimeProcessStderrHandling:
         # Verify stderr is piped (subprocess.PIPE = -1)
         call_args = open_process_mock.call_args
         assert call_args.kwargs["stderr"] == subprocess.PIPE
-
-    @pytest.mark.anyio
-    async def test_start_passes_stderr_to_windows_process_creator(
-        self, mocker: Any, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Test that stderr is passed to create_windows_process (Windows)."""
-        fake_process = SimpleNamespace(
-            stdin=mocker.MagicMock(),
-            stdout=mocker.MagicMock(),
-            returncode=None,
-        )
-
-        monkeypatch.setattr("sys.platform", "win32")
-
-        create_windows_process_mock = mocker.patch(
-            "kiln.sdk.runtime_process.create_windows_process",
-            return_value=fake_process,
-        )
-
-        mocker.patch(
-            "kiln.sdk.runtime_process._find_runtime_binary",
-            return_value=Path("C:\\kiln\\runtime.exe"),
-        )
-
-        await RuntimeProcess.start()
-
-        # Verify errlog is passed
-        call_args = create_windows_process_mock.call_args
-        assert call_args.kwargs["errlog"] == sys.stderr
 
     @pytest.mark.anyio
     async def test_runtime_environment_includes_allowed_vars(

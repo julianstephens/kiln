@@ -1,4 +1,7 @@
-from kiln.sdk.runtime_exit import InflightRequestDisposition
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .pending import InflightRequestDisposition
 
 
 class FramingError(RuntimeError):
@@ -78,7 +81,7 @@ class RuntimeConnectionClosedError(RuntimeError):
     def __init__(
         self,
         message: str = "runtime connection closed",
-        in_flight: tuple[InflightRequestDisposition, ...] = (),
+        in_flight: tuple["InflightRequestDisposition", ...] = (),
     ) -> None:
         self.in_flight = in_flight
         super().__init__(message)

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Any, get_args
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from kiln.protocol.jsonrpc import (
-    DEFAULT_JSONRPC_VERSION,
     JsonRpcErrorObject,
     JsonRpcErrorResponse,
     JsonRpcRequest,
@@ -50,7 +49,7 @@ def _initialize_result_payload() -> dict[str, Any]:
             "name": "kiln-runtime",
             "version": "0.1.0",
         },
-        "protocol_version": get_args(DEFAULT_JSONRPC_VERSION)[0],
+        "protocol_version": RUNTIME_PROTOCOL_VERSION,
         "schema_set_version": SCHEMA_SET_VERSION,
         "compatibility_major": COMPATIBILITY_MAJOR,
         "supported_method_namespaces": ["runtime"],
@@ -80,6 +79,23 @@ def test_init_rejects_missing_stdin() -> None:
 def test_init_rejects_missing_stdout() -> None:
     with pytest.raises(RuntimeProcessError, match="stdout is unavailable"):
         RuntimeStdioConnection(_process(stdout=None), RuntimeConnectionState.STARTING)
+
+
+@pytest.mark.parametrize(
+    ("initial_state", "expected_state"),
+    [
+        (RuntimeConnectionState.STARTING, RuntimeConnectionState.STARTING),
+        (RuntimeConnectionState.READY, RuntimeConnectionState.READY),
+        (RuntimeConnectionState.DRAINING, RuntimeConnectionState.DRAINING),
+        (RuntimeConnectionState.EXITED, RuntimeConnectionState.EXITED),
+    ],
+)
+def test_init_sets_connection_state(
+    initial_state: RuntimeConnectionState, expected_state: RuntimeConnectionState
+) -> None:
+    conn = RuntimeStdioConnection(_process(), initial_state)
+
+    assert conn.state == expected_state
 
 
 @pytest.mark.anyio
@@ -153,6 +169,7 @@ async def test_health_returns_runtime_health_result(mocker) -> None:
     result = await conn.health()
 
     assert result.root.ready is True
+    assert conn.state == RuntimeConnectionState.READY
     assert fake_peer.last_request is not None
     assert fake_peer.last_request.method == "runtime.health"
     assert fake_peer.last_request.params is None
@@ -348,6 +365,25 @@ async def test_health_not_ready(mocker) -> None:
 
     assert result.root.ready is False
     assert result.root.initialized is True
+    assert conn.state == RuntimeConnectionState.EXITED
+
+
+@pytest.mark.anyio
+async def test_health_sets_draining_state(mocker) -> None:
+    health_payload = _health_result_payload()
+    health_payload["ready"] = False
+    health_payload["draining"] = True
+    fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=health_payload))
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+    result = await conn.health()
+
+    assert result.root.draining is True
+    assert conn.state == RuntimeConnectionState.DRAINING
 
 
 @pytest.mark.anyio
@@ -356,6 +392,7 @@ async def test_health_after_shutdown(mocker) -> None:
     health_payload = _health_result_payload()
     health_payload["shutdown"] = True
     health_payload["ready"] = False
+    health_payload["initialized"] = False
     fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=health_payload))
     mocker.patch(
         "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
@@ -367,6 +404,7 @@ async def test_health_after_shutdown(mocker) -> None:
 
     assert result.root.shutdown is True
     assert result.root.ready is False
+    assert conn.state == RuntimeConnectionState.EXITED
 
 
 @pytest.mark.anyio

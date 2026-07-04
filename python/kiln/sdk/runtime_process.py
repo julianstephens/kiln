@@ -23,6 +23,8 @@ else:
 
 @dataclass
 class RuntimeProcess:
+    """Represents a runtime process that can be started and monitored."""
+
     process: ServerProcess
     _stderr_tail: StderrTailBuffer = field(default_factory=StderrTailBuffer)
     _expected_exit: bool = False
@@ -30,10 +32,12 @@ class RuntimeProcess:
 
     @property
     def is_alive(self) -> bool:
+        """Whether the runtime process is still alive (i.e., has not exited)."""
         return self.process.returncode is None
 
     @property
     def exit_status(self) -> RuntimeExitStatus | None:
+        """The exit status of the runtime process, or None if it is still running."""
         if self.process.returncode is None:
             return None
 
@@ -48,15 +52,28 @@ class RuntimeProcess:
         self._last_exit_status = status
         return status
 
+    @property
+    def stderr_tail(self) -> StderrTailBuffer:
+        """The tail of the runtime process's standard error output."""
+        return self._stderr_tail
+
     @classmethod
     async def start(cls, binary: Path | None = None) -> "RuntimeProcess":
+        """Start a new runtime process.
+
+        Args:
+            binary: Optional path to the runtime binary. If not provided, the default
+                binary will be used.
+
+        Returns:
+            The `RuntimeProcess` instance representing the started process.
+        """
         binary = binary or _find_runtime_binary()
 
         if sys.platform == "win32":
             process = await create_windows_process(
                 command=str(binary),
                 args=[],
-                errlog=sys.stderr,
                 env=_runtime_environment(),
             )
         else:
@@ -72,7 +89,9 @@ class RuntimeProcess:
         return cls(process=process)
 
     async def aclose(self) -> None:
-        self._expected_exit = True
+        """Close the runtime process, terminating it if it is still running."""
+        if self.process.returncode is None:
+            self._expected_exit = True
         if sys.platform == "win32":
             await terminate_windows_process_tree(self.process)
         else:
