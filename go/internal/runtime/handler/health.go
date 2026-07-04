@@ -5,8 +5,8 @@ import (
 
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
+	"github.com/julianstephens/kiln/go/internal/runtime/rpcerror"
 	"github.com/julianstephens/kiln/go/internal/util"
-	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/julianstephens/kiln/go/schema/runtime/health_result"
 )
 
@@ -23,20 +23,7 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 		state.Mu.Unlock()
 
 		if req.Params != nil {
-			inner := runtime_error.ErrorKilnError{
-				Code:      "runtime.invalid_params",
-				Category:  "validation",
-				Message:   "Health endpoint does not accept parameters",
-				Retryable: false,
-				Details:   map[string]any{},
-			}
-			return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
-				Code:    contract.JSONRPCInvalidParams,
-				Message: "Health endpoint does not accept parameters",
-				Data: util.MustStructToMap(runtime_error.Error{
-					KilnError: inner,
-				}),
-			})
+			return rpcerror.InvalidParams(req.ID, "Health endpoint does not accept parameters", nil)
 		}
 
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(health_result.HealthResult{
