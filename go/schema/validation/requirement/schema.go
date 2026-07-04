@@ -42,6 +42,7 @@ const (
 	RequirementTriggerOnDemand RequirementTrigger = "on_demand"
 )
 
+// Requirement is generated from a nested JSON Schema object.
 type Requirement struct {
 	BudgetLimits           *budget_limits.Limits      `json:"budget_limits,omitempty" validate:"omitempty"`
 	CapabilityRequirements []string                   `json:"capability_requirements,omitempty" validate:"omitempty,min=1"`

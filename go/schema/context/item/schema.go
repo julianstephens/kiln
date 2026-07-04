@@ -3,6 +3,9 @@
 package item
 
 import (
+	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	repository_candidate "github.com/julianstephens/kiln/go/schema/repository/candidate"
+	repository_source "github.com/julianstephens/kiln/go/schema/repository/source"
 	"github.com/julianstephens/kiln/go/schema/shared"
 	"time"
 )
@@ -103,26 +106,84 @@ const (
 	ItemPriorityRequired ItemPriority = "required"
 )
 
+// Item a durable item of context that may be made available, admitted into active context, rendered, evicted, or marked stale.
 type Item struct {
-	ActiveOrder       *int                 `json:"active_order,omitempty" validate:"omitempty,gte=0"`
-	AdmissionReason   *ItemAdmissionReason `json:"admission_reason,omitempty" validate:"omitempty"`
-	AdmittedAt        *time.Time           `json:"admitted_at,omitempty" validate:"omitempty"`
-	ContentReference  map[string]any       `json:"content_reference" validate:"required"`
-	ContextID         string               `json:"context_id" validate:"required,min=1"`
-	CreatedAt         time.Time            `json:"created_at" validate:"required"`
-	EstimatedTokens   int                  `json:"estimated_tokens" validate:"required,gte=0"`
-	EvictedAt         *time.Time           `json:"evicted_at,omitempty" validate:"omitempty"`
-	EvictionReason    *ItemEvictionReason  `json:"eviction_reason,omitempty" validate:"omitempty"`
-	InvalidatedAt     *time.Time           `json:"invalidated_at,omitempty" validate:"omitempty"`
-	ItemID            string               `json:"item_id" validate:"required,min=1"`
-	ItemKind          ItemItemKind         `json:"item_kind" validate:"required"`
-	ItemStatus        ItemItemStatus       `json:"item_status" validate:"required"`
-	Metadata          map[string]any       `json:"metadata,omitempty" validate:"omitempty"`
-	Pinned            *bool                `json:"pinned,omitempty" validate:"omitempty"`
-	Priority          *ItemPriority        `json:"priority,omitempty" validate:"omitempty"`
-	SourceEventID     *string              `json:"source_event_id,omitempty" validate:"omitempty,min=1"`
-	SourceOperationID *string              `json:"source_operation_id,omitempty" validate:"omitempty,min=1"`
-	StaleAt           *time.Time           `json:"stale_at,omitempty" validate:"omitempty"`
+	// ActiveOrder order of this item when admitted into active context.
+	ActiveOrder *int `json:"active_order,omitempty" validate:"omitempty,gte=0"`
+	// AdmissionReason reason this item was admitted into active context.
+	AdmissionReason *ItemAdmissionReason `json:"admission_reason,omitempty" validate:"omitempty"`
+	// AdmittedAt when this item was admitted into active context.
+	AdmittedAt *time.Time `json:"admitted_at,omitempty" validate:"omitempty"`
+	// ContentReference reference to the item's underlying content.
+	ContentReference ItemContentReference `json:"content_reference" validate:"required"`
+	// ContextID context ledger this item belongs to.
+	ContextID string `json:"context_id" validate:"required,min=1"`
+	// CreatedAt when this context item was created.
+	CreatedAt time.Time `json:"created_at" validate:"required"`
+	// EstimatedTokens estimated token cost of admitting this item into context.
+	EstimatedTokens int `json:"estimated_tokens" validate:"required,gte=0"`
+	// EvictedAt when this item was evicted from active context.
+	EvictedAt *time.Time `json:"evicted_at,omitempty" validate:"omitempty"`
+	// EvictionReason reason this item was evicted from active context.
+	EvictionReason *ItemEvictionReason `json:"eviction_reason,omitempty" validate:"omitempty"`
+	// InvalidatedAt when this item was invalidated.
+	InvalidatedAt *time.Time `json:"invalidated_at,omitempty" validate:"omitempty"`
+	// ItemID stable identity for this context item.
+	ItemID string `json:"item_id" validate:"required,min=1"`
+	// ItemKind kind of content represented by this context item.
+	ItemKind ItemItemKind `json:"item_kind" validate:"required"`
+	// ItemStatus current lifecycle status of the context item.
+	ItemStatus ItemItemStatus `json:"item_status" validate:"required"`
+	// Metadata small non-sensitive item metadata.
+	Metadata map[string]any `json:"metadata,omitempty" validate:"omitempty"`
+	// Pinned whether this item should be treated as pinned by context planning.
+	Pinned *bool `json:"pinned,omitempty" validate:"omitempty"`
+	// Priority planner-visible priority for this context item.
+	Priority *ItemPriority `json:"priority,omitempty" validate:"omitempty"`
+	// SourceEventID event that made this item available, when applicable.
+	SourceEventID *string `json:"source_event_id,omitempty" validate:"omitempty,min=1"`
+	// SourceOperationID operation that produced or retrieved this item, when applicable.
+	SourceOperationID *string `json:"source_operation_id,omitempty" validate:"omitempty,min=1"`
+	// StaleAt when this item became stale.
+	StaleAt *time.Time `json:"stale_at,omitempty" validate:"omitempty"`
+}
+
+type ItemContentReferenceReferenceKind string
+
+const (
+	ItemContentReferenceReferenceKindInline ItemContentReferenceReferenceKind = "inline"
+
+	ItemContentReferenceReferenceKindArtifact ItemContentReferenceReferenceKind = "artifact"
+
+	ItemContentReferenceReferenceKindRepositorySource ItemContentReferenceReferenceKind = "repository_source"
+
+	ItemContentReferenceReferenceKindRepositoryCandidate ItemContentReferenceReferenceKind = "repository_candidate"
+
+	ItemContentReferenceReferenceKindMessage ItemContentReferenceReferenceKind = "message"
+
+	ItemContentReferenceReferenceKindState ItemContentReferenceReferenceKind = "state"
+
+	ItemContentReferenceReferenceKindExternal ItemContentReferenceReferenceKind = "external"
+)
+
+// ItemContentReference reference to the item's underlying content.
+type ItemContentReference struct {
+	// ArtifactReference artifact containing the item content.
+	ArtifactReference *artifact_reference.Reference `json:"artifact_reference,omitempty" validate:"omitempty"`
+	// ExternalReference external reference represented by this item.
+	ExternalReference *string `json:"external_reference,omitempty" validate:"omitempty,min=1"`
+	// InlineContent inline context content for small items.
+	InlineContent *string `json:"inline_content,omitempty" validate:"omitempty,min=1"`
+	// MessageID message identity represented by this item.
+	MessageID *string `json:"message_id,omitempty" validate:"omitempty,min=1"`
+	// ReferenceKind kind of content reference used by the item.
+	ReferenceKind ItemContentReferenceReferenceKind `json:"reference_kind" validate:"required"`
+	// RepositoryCandidate repository candidate represented by this item.
+	RepositoryCandidate *repository_candidate.Candidate `json:"repository_candidate,omitempty" validate:"omitempty"`
+	// RepositorySource repository source location represented by this item.
+	RepositorySource *repository_source.Source `json:"repository_source,omitempty" validate:"omitempty"`
+	// StateReference opaque state reference represented by this item.
+	StateReference *string `json:"state_reference,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Item) Validate() error {

@@ -16,6 +16,7 @@ const (
 	StateModeCustom StateMode = "custom"
 )
 
+// State is generated from a nested JSON Schema object.
 type State struct {
 	ArtifactSizeBytes         any            `json:"artifact_size_bytes,omitempty" validate:"omitempty"`
 	CommandOutputSizeBytes    any            `json:"command_output_size_bytes,omitempty" validate:"omitempty"`

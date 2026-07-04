@@ -34,11 +34,66 @@ const (
 	RuntimeSessionReadySupportedProtocolCapabilitiesItemWorkspacePatch RuntimeSessionReadySupportedProtocolCapabilitiesItem = "workspace.patch"
 )
 
+// RuntimeSessionReady payload for runtime.session_ready events.
 type RuntimeSessionReady struct {
-	AvailableAdapters             []map[string]any                                       `json:"available_adapters" validate:"required,min=1"`
-	DatabaseSchemaVersion         string                                                 `json:"database_schema_version" validate:"required,min=1"`
-	RuntimeSessionID              string                                                 `json:"runtime_session_id" validate:"required,min=1"`
+	// AvailableAdapters adapters available to the runtime session.
+	AvailableAdapters []RuntimeSessionReadyAvailableAdaptersItem `json:"available_adapters" validate:"required,min=1"`
+	// DatabaseSchemaVersion the loaded database schema version.
+	DatabaseSchemaVersion string `json:"database_schema_version" validate:"required,min=1"`
+	// RuntimeSessionID the runtime session that is now ready.
+	RuntimeSessionID string `json:"runtime_session_id" validate:"required,min=1"`
+	// SupportedProtocolCapabilities protocol capabilities supported by this runtime session.
 	SupportedProtocolCapabilities []RuntimeSessionReadySupportedProtocolCapabilitiesItem `json:"supported_protocol_capabilities" validate:"required,min=1"`
+}
+
+type RuntimeSessionReadyAvailableAdaptersItemAdapterKind string
+
+const (
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindRepository RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "repository"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindModel RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "model"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindArtifact RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "artifact"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindBudget RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "budget"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindCapability RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "capability"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindWorkspace RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "workspace"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindValidation RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "validation"
+
+	RuntimeSessionReadyAvailableAdaptersItemAdapterKindTelemetry RuntimeSessionReadyAvailableAdaptersItemAdapterKind = "telemetry"
+)
+
+type RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile string
+
+const (
+	RuntimeSessionReadyAvailableAdaptersItemCapabilityProfileReadOnly RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile = "read_only"
+
+	RuntimeSessionReadyAvailableAdaptersItemCapabilityProfileReadWrite RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile = "read_write"
+
+	RuntimeSessionReadyAvailableAdaptersItemCapabilityProfileNetworked RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile = "networked"
+
+	RuntimeSessionReadyAvailableAdaptersItemCapabilityProfileSandboxed RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile = "sandboxed"
+
+	RuntimeSessionReadyAvailableAdaptersItemCapabilityProfileExternal RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile = "external"
+
+	RuntimeSessionReadyAvailableAdaptersItemCapabilityProfileUnknown RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile = "unknown"
+)
+
+// RuntimeSessionReadyAvailableAdaptersItem is generated from a nested JSON Schema object.
+type RuntimeSessionReadyAvailableAdaptersItem struct {
+	// AdapterID stable runtime-local adapter identity.
+	AdapterID string `json:"adapter_id" validate:"required,min=1"`
+	// AdapterKind logical adapter kind.
+	AdapterKind RuntimeSessionReadyAvailableAdaptersItemAdapterKind `json:"adapter_kind" validate:"required"`
+	// AdapterVersion adapter implementation version.
+	AdapterVersion string `json:"adapter_version" validate:"required,min=1"`
+	// CapabilityProfile optional coarse capability profile exposed by the adapter.
+	CapabilityProfile *RuntimeSessionReadyAvailableAdaptersItemCapabilityProfile `json:"capability_profile,omitempty" validate:"omitempty"`
+	// SupportedOperations operations supported by this adapter.
+	SupportedOperations []string `json:"supported_operations,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RuntimeSessionReady) Validate() error {

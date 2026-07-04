@@ -7,11 +7,12 @@ import (
 	"time"
 )
 
+// TaskProvenance is generated from a nested JSON Schema object.
 type TaskProvenance struct {
 	CreatedAt  time.Time `json:"created_at" validate:"required"`
 	SourceID   string    `json:"source_id" validate:"required,min=1"`
 	SourceKind string    `json:"source_kind" validate:"required,min=1"`
-	Trusted    bool      `json:"trusted" validate:"required"`
+	Trusted    bool      `json:"trusted"`
 }
 
 func (value TaskProvenance) Validate() error {

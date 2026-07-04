@@ -1,0 +1,126 @@
+package runtime_test
+
+import (
+	"context"
+	"testing"
+
+	utest "github.com/julianstephens/go-utils/tests"
+
+	"github.com/julianstephens/kiln/go/internal/protocol"
+	"github.com/julianstephens/kiln/go/internal/runtime"
+	"github.com/julianstephens/kiln/go/internal/runtime/contract"
+)
+
+func TestRouterDispatch_TableDriven(t *testing.T) {
+	t.Parallel()
+
+	successID := int64(42)
+	unknownID := int64(99)
+	nilHandlerID := int64(77)
+
+	tests := []struct {
+		name  string
+		setup func(*runtime.Router)
+		req   protocol.Request
+		want  protocol.Message
+	}{
+		{
+			name: "registered handler returns message",
+			setup: func(r *runtime.Router) {
+				r.Register("runtime.health", func(ctx context.Context, req protocol.Request) protocol.Message {
+					return protocol.NewSuccessResponse(req.ID, map[string]any{"ok": true})
+				})
+			},
+			req: protocol.Request{
+				JSONRPC: protocol.DefaultJSONRPCVersion,
+				ID:      protocol.ID{Number: &successID},
+				Method:  "runtime.health",
+			},
+			want: &protocol.SuccessResponse{
+				JSONRPC: protocol.DefaultJSONRPCVersion,
+				ID:      protocol.ID{Number: &successID},
+				Result:  map[string]any{"ok": true},
+			},
+		},
+		{
+			name: "unknown method returns method not found error",
+			setup: func(r *runtime.Router) {
+			},
+			req: protocol.Request{
+				JSONRPC: protocol.DefaultJSONRPCVersion,
+				ID:      protocol.ID{Number: &unknownID},
+				Method:  "runtime.unknown",
+			},
+			want: &protocol.ErrorResponse{
+				JSONRPC: protocol.DefaultJSONRPCVersion,
+				ID:      protocol.ID{Number: &unknownID},
+				Error: protocol.ErrorObject{
+					Code:    contract.JSONRPCMethodNotFound,
+					Message: "Method not found",
+					Data: map[string]any{
+						"kiln_error": map[string]any{
+							"code":      "runtime.method_not_found",
+							"category":  "compatibility",
+							"message":   "Method not found",
+							"retryable": false,
+							"details": map[string]any{
+								"requested_method": "runtime.unknown",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "nil handler response returns internal error",
+			setup: func(r *runtime.Router) {
+				r.Register("runtime.health", func(ctx context.Context, req protocol.Request) protocol.Message {
+					return nil
+				})
+			},
+			req: protocol.Request{
+				JSONRPC: protocol.DefaultJSONRPCVersion,
+				ID:      protocol.ID{Number: &nilHandlerID},
+				Method:  "runtime.health",
+				Params: map[string]any{
+					"probe": true,
+				},
+			},
+			want: &protocol.ErrorResponse{
+				JSONRPC: protocol.DefaultJSONRPCVersion,
+				ID:      protocol.ID{Number: &nilHandlerID},
+				Error: protocol.ErrorObject{
+					Code:    contract.JSONRPCInternalError,
+					Message: "Handler returned nil",
+					Data: map[string]any{
+						"kiln_error": map[string]any{
+							"code":      "runtime.internal_error",
+							"category":  "internal",
+							"message":   "Handler returned nil response",
+							"retryable": false,
+							"details": map[string]any{
+								"requested_method": "runtime.health",
+								"request_params": map[string]any{
+									"probe": true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			router := runtime.NewRouter()
+			tc.setup(router)
+
+			got := router.Dispatch(context.Background(), tc.req)
+			utest.AssertDeepEqual(t, got, tc.want)
+		})
+	}
+}

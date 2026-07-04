@@ -7,9 +7,10 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// SourceResult is generated from a nested JSON Schema object.
 type SourceResult struct {
 	Candidates []repository_candidate.Candidate `json:"candidates" validate:"required,min=1"`
-	Truncated  bool                             `json:"truncated" validate:"required"`
+	Truncated  bool                             `json:"truncated"`
 }
 
 func (value SourceResult) Validate() error {

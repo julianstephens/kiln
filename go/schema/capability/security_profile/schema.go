@@ -7,16 +7,29 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// SecurityProfile is generated from a nested JSON Schema object.
 type SecurityProfile struct {
-	ArtifactAccessRules      []any                    `json:"artifact_access_rules,omitempty" validate:"omitempty,min=1"`
-	DefaultDenySettings      map[string]any           `json:"default_deny_settings,omitempty" validate:"omitempty"`
-	ExternalIntegrationRules []any                    `json:"external_integration_rules,omitempty" validate:"omitempty,min=1"`
-	FilesystemReadScopes     []capability_scope.Scope `json:"filesystem_read_scopes,omitempty" validate:"omitempty,min=1"`
-	FilesystemWriteScopes    []capability_scope.Scope `json:"filesystem_write_scopes,omitempty" validate:"omitempty,min=1"`
-	ModelEgressRules         []any                    `json:"model_egress_rules,omitempty" validate:"omitempty,min=1"`
-	NetworkRules             []any                    `json:"network_rules,omitempty" validate:"omitempty,min=1"`
-	ProcessExecutionRules    []any                    `json:"process_execution_rules,omitempty" validate:"omitempty,min=1"`
-	ValidationRules          []any                    `json:"validation_rules,omitempty" validate:"omitempty,min=1"`
+	ArtifactAccessRules      []any                               `json:"artifact_access_rules,omitempty" validate:"omitempty,min=1"`
+	DefaultDenySettings      *SecurityProfileDefaultDenySettings `json:"default_deny_settings,omitempty" validate:"omitempty"`
+	ExternalIntegrationRules []any                               `json:"external_integration_rules,omitempty" validate:"omitempty,min=1"`
+	FilesystemReadScopes     []capability_scope.Scope            `json:"filesystem_read_scopes,omitempty" validate:"omitempty,min=1"`
+	FilesystemWriteScopes    []capability_scope.Scope            `json:"filesystem_write_scopes,omitempty" validate:"omitempty,min=1"`
+	ModelEgressRules         []any                               `json:"model_egress_rules,omitempty" validate:"omitempty,min=1"`
+	NetworkRules             []any                               `json:"network_rules,omitempty" validate:"omitempty,min=1"`
+	ProcessExecutionRules    []any                               `json:"process_execution_rules,omitempty" validate:"omitempty,min=1"`
+	ValidationRules          []any                               `json:"validation_rules,omitempty" validate:"omitempty,min=1"`
+}
+
+// SecurityProfileDefaultDenySettings is generated from a nested JSON Schema object.
+type SecurityProfileDefaultDenySettings struct {
+	ArtifactAccess            *bool `json:"artifact_access,omitempty" validate:"omitempty"`
+	ExternalIntegrationAccess *bool `json:"external_integration_access,omitempty" validate:"omitempty"`
+	FilesystemRead            *bool `json:"filesystem_read,omitempty" validate:"omitempty"`
+	FilesystemWrite           *bool `json:"filesystem_write,omitempty" validate:"omitempty"`
+	ModelEgress               *bool `json:"model_egress,omitempty" validate:"omitempty"`
+	NetworkAccess             *bool `json:"network_access,omitempty" validate:"omitempty"`
+	ProcessExecution          *bool `json:"process_execution,omitempty" validate:"omitempty"`
+	ValidationAccess          *bool `json:"validation_access,omitempty" validate:"omitempty"`
 }
 
 func (value SecurityProfile) Validate() error {

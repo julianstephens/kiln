@@ -6,15 +6,24 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// ContextPlanApplied payload for context.plan_applied events.
 type ContextPlanApplied struct {
-	ActiveItems          []map[string]any `json:"active_items" validate:"required"`
-	AdmittedItemIds      []string         `json:"admitted_item_ids,omitempty" validate:"omitempty"`
-	ContextID            string           `json:"context_id" validate:"required,min=1"`
-	ContextPlanID        string           `json:"context_plan_id" validate:"required,min=1"`
-	ContextStateRevision int              `json:"context_state_revision" validate:"required,gte=0"`
-	CurrentTokenEstimate int              `json:"current_token_estimate" validate:"required,gte=0"`
-	EvictedItemIds       []string         `json:"evicted_item_ids,omitempty" validate:"omitempty"`
-	ModelContextLimit    int              `json:"model_context_limit" validate:"required,gte=0"`
+	// ActiveItems active context items after applying the plan.
+	ActiveItems          []ContextPlanAppliedActiveItemsItem `json:"active_items" validate:"required"`
+	AdmittedItemIds      []string                            `json:"admitted_item_ids,omitempty" validate:"omitempty"`
+	ContextID            string                              `json:"context_id" validate:"required,min=1"`
+	ContextPlanID        string                              `json:"context_plan_id" validate:"required,min=1"`
+	ContextStateRevision int                                 `json:"context_state_revision" validate:"required,gte=0"`
+	CurrentTokenEstimate int                                 `json:"current_token_estimate" validate:"required,gte=0"`
+	EvictedItemIds       []string                            `json:"evicted_item_ids,omitempty" validate:"omitempty"`
+	ModelContextLimit    int                                 `json:"model_context_limit" validate:"required,gte=0"`
+}
+
+// ContextPlanAppliedActiveItemsItem is generated from a nested JSON Schema object.
+type ContextPlanAppliedActiveItemsItem struct {
+	EstimatedTokens *int   `json:"estimated_tokens,omitempty" validate:"omitempty,gte=0"`
+	ItemID          string `json:"item_id" validate:"required,min=1"`
+	Order           int    `json:"order" validate:"required,gte=0"`
 }
 
 func (value ContextPlanApplied) Validate() error {

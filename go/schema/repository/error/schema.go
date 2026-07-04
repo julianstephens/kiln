@@ -40,6 +40,7 @@ const (
 	ErrorCategoryInternal ErrorCategory = "internal"
 )
 
+// Error repository-protocol error details including category, diagnostics, operation context, and related artifacts.
 type Error struct {
 	ArtifactReferences  []artifact_diagnostic_log_reference.DiagnosticLogReference `json:"artifact_references" validate:"required"`
 	Category            ErrorCategory                                              `json:"category" validate:"required"`
@@ -50,7 +51,7 @@ type Error struct {
 	OperationID         string                                                     `json:"operation_id" validate:"required,min=1"`
 	RepositorySessionID string                                                     `json:"repository_session_id" validate:"required,min=1"`
 	RepositoryVersion   map[string]any                                             `json:"repository_version" validate:"required"`
-	Retryable           bool                                                       `json:"retryable" validate:"required"`
+	Retryable           bool                                                       `json:"retryable"`
 	WorkspaceVersion    map[string]any                                             `json:"workspace_version" validate:"required"`
 }
 

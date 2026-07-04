@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 )
 
@@ -52,7 +51,7 @@ func (p *Peer) Receive(ctx context.Context) (Message, error) {
 // Send encodes a JSON-RPC message and writes it to the output stream.
 // It returns an error if the message cannot be encoded or if there is an error writing to the stream.
 func (p *Peer) Send(msg Message) error {
-	raw, err := messageToJSONObject(msg)
+	raw, err := messageToJSON(msg)
 	if err != nil {
 		return err
 	}
@@ -68,36 +67,6 @@ func (p *Peer) Send(msg Message) error {
 	}
 
 	return p.out.Flush()
-}
-
-func messageToJSONObject(msg Message) (JSONObject, error) {
-	switch m := msg.(type) {
-	case Request:
-		return JSONObject{
-			"jsonrpc": m.JSONRPC,
-			"id":      m.ID.JSONValue(),
-			"method":  m.Method,
-			"params":  m.Params,
-		}, nil
-	case SuccessResponse:
-		return JSONObject{
-			"jsonrpc": m.JSONRPC,
-			"id":      m.ID.JSONValue(),
-			"result":  m.Result,
-		}, nil
-	case ErrorResponse:
-		return JSONObject{
-			"jsonrpc": m.JSONRPC,
-			"id":      m.ID.JSONValue(),
-			"error": map[string]any{
-				"code":    m.Error.Code,
-				"message": m.Error.Message,
-				"data":    m.Error.Data,
-			},
-		}, nil
-	default:
-		return nil, NewFramingError(fmt.Errorf("unknown message type: %T", msg))
-	}
 }
 
 func readLineBounded(r *bufio.Reader, maxBytes int) ([]byte, error) {

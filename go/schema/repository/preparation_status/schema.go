@@ -19,6 +19,7 @@ const (
 	PreparationStatusRefreshStateFailed PreparationStatusRefreshState = "failed"
 )
 
+// PreparationStatus repository preparation state, including version context, index or refresh state, checkpoints, and diagnostics.
 type PreparationStatus struct {
 	CurrentIndexState      *string                            `json:"current_index_state,omitempty" validate:"omitempty,min=1"`
 	Diagnostics            []repository_diagnostic.Diagnostic `json:"diagnostics" validate:"required"`

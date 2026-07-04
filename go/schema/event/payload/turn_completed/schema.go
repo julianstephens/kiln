@@ -25,16 +25,26 @@ const (
 	TurnCompletedTurnOutcomeNoOp TurnCompletedTurnOutcome = "no_op"
 )
 
+// TurnCompleted payload for turn.completed events.
 type TurnCompleted struct {
-	BudgetUsage          *budget_usage.Usage           `json:"budget_usage,omitempty" validate:"omitempty"`
-	CompletedAt          time.Time                     `json:"completed_at" validate:"required"`
-	ContextStateRevision *int                          `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
-	ModelInvocationIds   []string                      `json:"model_invocation_ids,omitempty" validate:"omitempty"`
-	OutputReference      *artifact_reference.Reference `json:"output_reference,omitempty" validate:"omitempty"`
-	ToolCallIds          []string                      `json:"tool_call_ids,omitempty" validate:"omitempty"`
-	TurnID               string                        `json:"turn_id" validate:"required,min=1"`
-	TurnIndex            int                           `json:"turn_index" validate:"required,gte=0"`
-	TurnOutcome          TurnCompletedTurnOutcome      `json:"turn_outcome" validate:"required"`
+	// BudgetUsage budget usage committed for this turn.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// CompletedAt when the turn completed.
+	CompletedAt time.Time `json:"completed_at" validate:"required"`
+	// ContextStateRevision context state revision after the turn completed.
+	ContextStateRevision *int `json:"context_state_revision,omitempty" validate:"omitempty,gte=0"`
+	// ModelInvocationIds model invocations performed during this turn.
+	ModelInvocationIds []string `json:"model_invocation_ids,omitempty" validate:"omitempty"`
+	// OutputReference optional artifact reference for the normalized turn output.
+	OutputReference *artifact_reference.Reference `json:"output_reference,omitempty" validate:"omitempty"`
+	// ToolCallIds tool calls requested or processed during this turn.
+	ToolCallIds []string `json:"tool_call_ids,omitempty" validate:"omitempty"`
+	// TurnID identity for the turn that completed.
+	TurnID string `json:"turn_id" validate:"required,min=1"`
+	// TurnIndex zero-based index of this turn within the run.
+	TurnIndex int `json:"turn_index" validate:"required,gte=0"`
+	// TurnOutcome normalized outcome of the completed turn.
+	TurnOutcome TurnCompletedTurnOutcome `json:"turn_outcome" validate:"required"`
 }
 
 func (value TurnCompleted) Validate() error {

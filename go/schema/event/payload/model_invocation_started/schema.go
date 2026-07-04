@@ -27,14 +27,22 @@ const (
 	ModelInvocationStartedRequestKindRecovery ModelInvocationStartedRequestKind = "recovery"
 )
 
+// ModelInvocationStarted payload for model.invocation_started events.
 type ModelInvocationStarted struct {
-	InputTokenEstimate       int                                `json:"input_token_estimate" validate:"required,gte=0"`
-	ModelConfiguration       model_configuration.Configuration  `json:"model_configuration" validate:"required"`
-	ModelInvocationID        string                             `json:"model_invocation_id" validate:"required,min=1"`
-	RequestArtifactReference artifact_reference.Reference       `json:"request_artifact_reference" validate:"required"`
-	RequestKind              *ModelInvocationStartedRequestKind `json:"request_kind,omitempty" validate:"omitempty"`
-	StartedAt                time.Time                          `json:"started_at" validate:"required"`
-	StreamingEnabled         *bool                              `json:"streaming_enabled,omitempty" validate:"omitempty"`
+	// InputTokenEstimate estimated input tokens sent to the model.
+	InputTokenEstimate int `json:"input_token_estimate" validate:"required,gte=0"`
+	// ModelConfiguration model configuration used for the invocation.
+	ModelConfiguration model_configuration.Configuration `json:"model_configuration" validate:"required"`
+	// ModelInvocationID operation-local identity for this model invocation.
+	ModelInvocationID string `json:"model_invocation_id" validate:"required,min=1"`
+	// RequestArtifactReference artifact reference for the rendered model request sent to the model adapter or provider.
+	RequestArtifactReference artifact_reference.Reference `json:"request_artifact_reference" validate:"required"`
+	// RequestKind logical kind of model request being invoked.
+	RequestKind *ModelInvocationStartedRequestKind `json:"request_kind,omitempty" validate:"omitempty"`
+	// StartedAt when the model invocation started.
+	StartedAt time.Time `json:"started_at" validate:"required"`
+	// StreamingEnabled whether this invocation requested streaming output.
+	StreamingEnabled *bool `json:"streaming_enabled,omitempty" validate:"omitempty"`
 }
 
 func (value ModelInvocationStarted) Validate() error {

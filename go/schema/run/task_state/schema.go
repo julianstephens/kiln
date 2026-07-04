@@ -3,19 +3,36 @@
 package task_state
 
 import (
+	common_source_range "github.com/julianstephens/kiln/go/schema/common/source_range"
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// TaskState is generated from a nested JSON Schema object.
 type TaskState struct {
-	CompletedSteps      []string         `json:"completed_steps" validate:"required"`
-	CompletionEvidence  []string         `json:"completion_evidence" validate:"required"`
-	CurrentObjective    string           `json:"current_objective" validate:"required,min=1"`
-	CurrentPlan         string           `json:"current_plan" validate:"required,min=1"`
-	Hypotheses          []string         `json:"hypotheses" validate:"required"`
-	KnownFailures       []string         `json:"known_failures,omitempty" validate:"omitempty"`
-	ProposedChanges     []map[string]any `json:"proposed_changes,omitempty" validate:"omitempty"`
-	StateRevision       string           `json:"state_revision" validate:"required,min=1"`
-	UnresolvedQuestions []string         `json:"unresolved_questions" validate:"required"`
+	CompletedSteps      []string                       `json:"completed_steps" validate:"required"`
+	CompletionEvidence  []string                       `json:"completion_evidence" validate:"required"`
+	CurrentObjective    string                         `json:"current_objective" validate:"required,min=1"`
+	CurrentPlan         string                         `json:"current_plan" validate:"required,min=1"`
+	Hypotheses          []string                       `json:"hypotheses" validate:"required"`
+	KnownFailures       []string                       `json:"known_failures,omitempty" validate:"omitempty"`
+	ProposedChanges     []TaskStateProposedChangesItem `json:"proposed_changes,omitempty" validate:"omitempty"`
+	StateRevision       string                         `json:"state_revision" validate:"required,min=1"`
+	UnresolvedQuestions []string                       `json:"unresolved_questions" validate:"required"`
+}
+
+type TaskStateProposedChangesItemAction string
+
+const (
+	TaskStateProposedChangesItemActionAdd TaskStateProposedChangesItemAction = "add"
+
+	TaskStateProposedChangesItemActionDelete TaskStateProposedChangesItemAction = "delete"
+)
+
+// TaskStateProposedChangesItem is generated from a nested JSON Schema object.
+type TaskStateProposedChangesItem struct {
+	Action      TaskStateProposedChangesItemAction `json:"action" validate:"required"`
+	Content     *string                            `json:"content,omitempty" validate:"omitempty,min=1"`
+	TargetRange common_source_range.SourceRange    `json:"target_range" validate:"required"`
 }
 
 func (value TaskState) Validate() error {

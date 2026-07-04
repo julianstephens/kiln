@@ -16,6 +16,7 @@ const (
 	ConfigurationToolCallModeUnrestricted ConfigurationToolCallMode = "unrestricted"
 )
 
+// Configuration is generated from a nested JSON Schema object.
 type Configuration struct {
 	ContextLimit         int                       `json:"context_limit" validate:"required,gte=1"`
 	GenerationParameters map[string]any            `json:"generation_parameters" validate:"required"`

@@ -19,17 +19,28 @@ const (
 	VersionPreparationStatusFailed VersionPreparationStatus = "failed"
 )
 
+// Version is generated from a nested JSON Schema object.
 type Version struct {
-	ContentDigest              string                   `json:"content_digest" validate:"required,min=1"`
-	CreatedAt                  time.Time                `json:"created_at" validate:"required"`
-	CreationReason             string                   `json:"creation_reason" validate:"required,min=1"`
-	IndexCompatibilityMetadata map[string]any           `json:"index_compatibility_metadata" validate:"required"`
-	ParentRepositoryVersionID  *string                  `json:"parent_repository_version_id,omitempty" validate:"omitempty,min=1"`
-	PreparationStatus          VersionPreparationStatus `json:"preparation_status" validate:"required"`
-	RepositoryID               string                   `json:"repository_id" validate:"required,min=1"`
-	SnapshotID                 *string                  `json:"snapshot_id,omitempty" validate:"omitempty,min=1"`
-	SourceRevision             *string                  `json:"source_revision,omitempty" validate:"omitempty,min=1"`
-	VersionID                  string                   `json:"version_id" validate:"required,min=1"`
+	// ContentDigest the digest of the content of this version of the repository.
+	ContentDigest string `json:"content_digest" validate:"required,min=1"`
+	// CreatedAt the timestamp when this version of the repository was created.
+	CreatedAt time.Time `json:"created_at" validate:"required"`
+	// CreationReason the reason that this version of the repository was created.
+	CreationReason string `json:"creation_reason" validate:"required,min=1"`
+	// IndexCompatibilityMetadata the metadata that describes the compatibility of this version of the repository with the index.
+	IndexCompatibilityMetadata map[string]any `json:"index_compatibility_metadata" validate:"required"`
+	// ParentRepositoryVersionID the unique identifier for the parent version of the repository that this version was created from.
+	ParentRepositoryVersionID *string `json:"parent_repository_version_id,omitempty" validate:"omitempty,min=1"`
+	// PreparationStatus the status of the preparation of this version of the repository.
+	PreparationStatus VersionPreparationStatus `json:"preparation_status" validate:"required"`
+	// RepositoryID the unique identifier for the repository that this version belongs to.
+	RepositoryID string `json:"repository_id" validate:"required,min=1"`
+	// SnapshotID the unique identifier for the snapshot that this version of the repository was created from.
+	SnapshotID *string `json:"snapshot_id,omitempty" validate:"omitempty,min=1"`
+	// SourceRevision the source revision that this version of the repository was created from.
+	SourceRevision *string `json:"source_revision,omitempty" validate:"omitempty,min=1"`
+	// VersionID the unique identifier for this version of the repository.
+	VersionID string `json:"version_id" validate:"required,min=1"`
 }
 
 func (value Version) Validate() error {

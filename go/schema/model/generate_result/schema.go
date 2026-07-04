@@ -4,6 +4,7 @@ package generate_result
 
 import (
 	artifact_reference "github.com/julianstephens/kiln/go/schema/artifact/reference"
+	common_source_range "github.com/julianstephens/kiln/go/schema/common/source_range"
 	model_usage "github.com/julianstephens/kiln/go/schema/model/usage"
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
@@ -24,16 +25,70 @@ const (
 	GenerateResultFinishReasonUnknown GenerateResultFinishReason = "unknown"
 )
 
+// GenerateResult provider-neutral result of model generation, including generated content, finish reason, usage, and optional support metadata.
 type GenerateResult struct {
-	Answer                    *string                       `json:"answer,omitempty" validate:"omitempty,min=1"`
-	AnswerArtifactReference   *artifact_reference.Reference `json:"answer_artifact_reference,omitempty" validate:"omitempty"`
-	Citations                 []map[string]any              `json:"citations,omitempty" validate:"omitempty,min=1"`
-	FinishReason              GenerateResultFinishReason    `json:"finish_reason" validate:"required"`
+	// Answer generated textual answer, when returned inline.
+	Answer *string `json:"answer,omitempty" validate:"omitempty,min=1"`
+	// AnswerArtifactReference artifact reference for generated answer content, when not returned inline.
+	AnswerArtifactReference *artifact_reference.Reference `json:"answer_artifact_reference,omitempty" validate:"omitempty"`
+	// Citations structured citations supporting generated content.
+	Citations []GenerateResultCitationsItem `json:"citations,omitempty" validate:"omitempty,min=1"`
+	// FinishReason provider-neutral reason generation stopped.
+	FinishReason GenerateResultFinishReason `json:"finish_reason" validate:"required"`
+	// ResponseArtifactReference artifact reference for the raw model response.
 	ResponseArtifactReference *artifact_reference.Reference `json:"response_artifact_reference,omitempty" validate:"omitempty"`
-	StructuredOutput          map[string]any                `json:"structured_output,omitempty" validate:"omitempty"`
-	SupportMetadata           map[string]any                `json:"support_metadata,omitempty" validate:"omitempty"`
-	ToolCallRequests          []map[string]any              `json:"tool_call_requests,omitempty" validate:"omitempty,min=1"`
-	Usage                     model_usage.Usage             `json:"usage" validate:"required"`
+	// StructuredOutput provider-neutral structured output, when the response mode requested structured JSON.
+	StructuredOutput map[string]any `json:"structured_output,omitempty" validate:"omitempty"`
+	// SupportMetadata provider-neutral support metadata for generated claims, citations, or retrieval grounding.
+	SupportMetadata *GenerateResultSupportMetadata `json:"support_metadata,omitempty" validate:"omitempty"`
+	// ToolCallRequests tool calls requested by the model.
+	ToolCallRequests []GenerateResultToolCallRequestsItem `json:"tool_call_requests,omitempty" validate:"omitempty,min=1"`
+	Usage            model_usage.Usage                    `json:"usage" validate:"required"`
+}
+
+// GenerateResultCitationsItem is generated from a nested JSON Schema object.
+type GenerateResultCitationsItem struct {
+	// CitationID stable identity for this citation.
+	CitationID string `json:"citation_id" validate:"required,min=1"`
+	// Confidence confidence that this citation supports the associated generated content.
+	Confidence *float64 `json:"confidence,omitempty" validate:"omitempty,gte=0,lte=1"`
+	// QuotedText quoted text supporting the generated content, when retained.
+	QuotedText *string `json:"quoted_text,omitempty" validate:"omitempty,min=1"`
+	// SourceRange source range supporting the generated content, when applicable.
+	SourceRange *common_source_range.SourceRange `json:"source_range,omitempty" validate:"omitempty"`
+	// SourceReference artifact reference for the cited source.
+	SourceReference artifact_reference.Reference `json:"source_reference" validate:"required"`
+}
+
+type GenerateResultSupportMetadataGroundingStatus string
+
+const (
+	GenerateResultSupportMetadataGroundingStatusGrounded GenerateResultSupportMetadataGroundingStatus = "grounded"
+
+	GenerateResultSupportMetadataGroundingStatusPartiallyGrounded GenerateResultSupportMetadataGroundingStatus = "partially_grounded"
+
+	GenerateResultSupportMetadataGroundingStatusUngrounded GenerateResultSupportMetadataGroundingStatus = "ungrounded"
+
+	GenerateResultSupportMetadataGroundingStatusNotEvaluated GenerateResultSupportMetadataGroundingStatus = "not_evaluated"
+)
+
+// GenerateResultSupportMetadata provider-neutral support metadata for generated claims, citations, or retrieval grounding.
+type GenerateResultSupportMetadata struct {
+	GroundingStatus           *GenerateResultSupportMetadataGroundingStatus `json:"grounding_status,omitempty" validate:"omitempty"`
+	SupportArtifactReferences []artifact_reference.Reference                `json:"support_artifact_references,omitempty" validate:"omitempty,min=1"`
+	UnsupportedClaimCount     *int                                          `json:"unsupported_claim_count,omitempty" validate:"omitempty,gte=0"`
+}
+
+// GenerateResultToolCallRequestsItem is generated from a nested JSON Schema object.
+type GenerateResultToolCallRequestsItem struct {
+	// Arguments inline tool-call arguments for small argument payloads.
+	Arguments map[string]any `json:"arguments,omitempty" validate:"omitempty"`
+	// ArgumentsArtifactReference artifact reference for large or sensitive tool-call arguments.
+	ArgumentsArtifactReference *artifact_reference.Reference `json:"arguments_artifact_reference,omitempty" validate:"omitempty"`
+	// ToolCallID stable identity for this requested tool call.
+	ToolCallID string `json:"tool_call_id" validate:"required,min=1"`
+	// ToolName name of the requested tool.
+	ToolName string `json:"tool_name" validate:"required,min=1"`
 }
 
 func (value GenerateResult) Validate() error {

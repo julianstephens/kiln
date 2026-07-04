@@ -27,16 +27,26 @@ const (
 	ModelRequestRenderedRequestKindRecovery ModelRequestRenderedRequestKind = "recovery"
 )
 
+// ModelRequestRendered payload for model.request_rendered events.
 type ModelRequestRendered struct {
-	ModelConfiguration       model_configuration.Configuration `json:"model_configuration" validate:"required"`
-	ModelInvocationID        string                            `json:"model_invocation_id" validate:"required,min=1"`
-	RenderID                 string                            `json:"render_id" validate:"required,min=1"`
-	RenderedAt               time.Time                         `json:"rendered_at" validate:"required"`
-	RenderedMessagesCount    *int                              `json:"rendered_messages_count,omitempty" validate:"omitempty,gte=0"`
-	RenderedTokenEstimate    int                               `json:"rendered_token_estimate" validate:"required,gte=0"`
-	RenderedToolCount        *int                              `json:"rendered_tool_count,omitempty" validate:"omitempty,gte=0"`
-	RequestArtifactReference *artifact_reference.Reference     `json:"request_artifact_reference,omitempty" validate:"omitempty"`
-	RequestKind              *ModelRequestRenderedRequestKind  `json:"request_kind,omitempty" validate:"omitempty"`
+	// ModelConfiguration model configuration selected for the invocation.
+	ModelConfiguration model_configuration.Configuration `json:"model_configuration" validate:"required"`
+	// ModelInvocationID operation-local identity for the model invocation this rendered request belongs to.
+	ModelInvocationID string `json:"model_invocation_id" validate:"required,min=1"`
+	// RenderID context render identity used to produce the model request.
+	RenderID string `json:"render_id" validate:"required,min=1"`
+	// RenderedAt when the model request was rendered.
+	RenderedAt time.Time `json:"rendered_at" validate:"required"`
+	// RenderedMessagesCount number of messages rendered into the model request.
+	RenderedMessagesCount *int `json:"rendered_messages_count,omitempty" validate:"omitempty,gte=0"`
+	// RenderedTokenEstimate estimated number of input tokens in the rendered model request.
+	RenderedTokenEstimate int `json:"rendered_token_estimate" validate:"required,gte=0"`
+	// RenderedToolCount number of tool definitions rendered into the model request.
+	RenderedToolCount *int `json:"rendered_tool_count,omitempty" validate:"omitempty,gte=0"`
+	// RequestArtifactReference optional artifact reference for the rendered model request.
+	RequestArtifactReference *artifact_reference.Reference `json:"request_artifact_reference,omitempty" validate:"omitempty"`
+	// RequestKind logical kind of model request being rendered.
+	RequestKind *ModelRequestRenderedRequestKind `json:"request_kind,omitempty" validate:"omitempty"`
 }
 
 func (value ModelRequestRendered) Validate() error {

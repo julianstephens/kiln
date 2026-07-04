@@ -21,10 +21,14 @@ const (
 	OpenSessionRequestPayloadAllowedOperationsItemRepositoryGetDiagnostics OpenSessionRequestPayloadAllowedOperationsItem = "repository.get_diagnostics"
 )
 
+// OpenSessionRequestPayload is generated from a nested JSON Schema object.
 type OpenSessionRequestPayload struct {
+	// AllowedOperations concrete repository operations allowed for the opened session.
 	AllowedOperations []OpenSessionRequestPayloadAllowedOperationsItem `json:"allowed_operations" validate:"required,min=1"`
-	Repository        repository_identifier.Identifier                 `json:"repository" validate:"required"`
-	RunID             string                                           `json:"run_id" validate:"required,min=1"`
+	// Repository the repository identifier for the repository to open a session for.
+	Repository repository_identifier.Identifier `json:"repository" validate:"required"`
+	// RunID the run identifier for the run that is requesting to open a session.
+	RunID string `json:"run_id" validate:"required,min=1"`
 }
 
 func (value OpenSessionRequestPayload) Validate() error {

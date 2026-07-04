@@ -1,3 +1,6 @@
+from kiln.schemas.runtime import RuntimeError as KilnRuntimeError
+
+
 class RepositoryError(Exception):
     """Base class for all repository errors."""
 
@@ -23,6 +26,22 @@ class RuntimeProcessError(RuntimeError):
 
     def __init__(self, message: str) -> None:
         super().__init__(f"runtime process error: {message}")
+
+
+class RuntimeMethodError(RuntimeProcessError):
+    """Raised when a runtime method call fails."""
+
+    def __init__(
+        self, method: str, jsonrpc_code: int, message: str, kiln_error: KilnRuntimeError
+    ) -> None:
+        self.method = method
+        self.jsonrpc_code = jsonrpc_code
+        self.message = message
+        self.kiln_error = kiln_error
+        super().__init__(
+            f"runtime method error: method={method}, "
+            f"jsonrpc_code={jsonrpc_code}, message={message}"
+        )
 
 
 class StdinUnavailableError(RuntimeProcessError):

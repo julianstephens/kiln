@@ -23,17 +23,20 @@ const (
 	ContextRenderedRenderTargetPreview ContextRenderedRenderTarget = "preview"
 )
 
+// ContextRendered payload for context.rendered events.
 type ContextRendered struct {
-	ContextID               string                        `json:"context_id" validate:"required,min=1"`
-	ContextStateRevision    int                           `json:"context_state_revision" validate:"required,gte=0"`
-	ModelContextLimit       *int                          `json:"model_context_limit,omitempty" validate:"omitempty,gte=0"`
+	ContextID            string `json:"context_id" validate:"required,min=1"`
+	ContextStateRevision int    `json:"context_state_revision" validate:"required,gte=0"`
+	ModelContextLimit    *int   `json:"model_context_limit,omitempty" validate:"omitempty,gte=0"`
+	// RenderArtifactReference optional artifact reference for the rendered context.
 	RenderArtifactReference *artifact_reference.Reference `json:"render_artifact_reference,omitempty" validate:"omitempty"`
 	RenderID                string                        `json:"render_id" validate:"required,min=1"`
-	RenderTarget            ContextRenderedRenderTarget   `json:"render_target" validate:"required"`
-	RenderedItemCount       int                           `json:"rendered_item_count" validate:"required,gte=0"`
-	RenderedItemIds         []string                      `json:"rendered_item_ids,omitempty" validate:"omitempty"`
-	RenderedTokenEstimate   int                           `json:"rendered_token_estimate" validate:"required,gte=0"`
-	Truncated               *bool                         `json:"truncated,omitempty" validate:"omitempty"`
+	// RenderTarget consumer or phase for which context was rendered.
+	RenderTarget          ContextRenderedRenderTarget `json:"render_target" validate:"required"`
+	RenderedItemCount     int                         `json:"rendered_item_count" validate:"required,gte=0"`
+	RenderedItemIds       []string                    `json:"rendered_item_ids,omitempty" validate:"omitempty"`
+	RenderedTokenEstimate int                         `json:"rendered_token_estimate" validate:"required,gte=0"`
+	Truncated             *bool                       `json:"truncated,omitempty" validate:"omitempty"`
 }
 
 func (value ContextRendered) Validate() error {

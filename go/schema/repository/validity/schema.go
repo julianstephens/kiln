@@ -30,6 +30,7 @@ const (
 	ValiditySynchronizationStatusOutOfSync ValiditySynchronizationStatus = "out_of_sync"
 )
 
+// Validity freshness, synchronization, and completeness status for repository content or representations.
 type Validity struct {
 	ContentCompleteness   *ValidityContentCompleteness   `json:"content_completeness,omitempty" validate:"omitempty"`
 	ContentStatus         *ValidityContentStatus         `json:"content_status,omitempty" validate:"omitempty"`

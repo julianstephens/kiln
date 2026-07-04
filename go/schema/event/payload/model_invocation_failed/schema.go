@@ -34,15 +34,24 @@ const (
 	ModelInvocationFailedFailureCategoryUnknown ModelInvocationFailedFailureCategory = "unknown"
 )
 
+// ModelInvocationFailed payload for model.invocation_failed events.
 type ModelInvocationFailed struct {
-	BudgetUsage                      *budget_usage.Usage                  `json:"budget_usage,omitempty" validate:"omitempty"`
-	Error                            run_error.Error                      `json:"error" validate:"required"`
-	FailedAt                         time.Time                            `json:"failed_at" validate:"required"`
-	FailureCategory                  ModelInvocationFailedFailureCategory `json:"failure_category" validate:"required"`
-	LatencyMs                        *int                                 `json:"latency_ms,omitempty" validate:"omitempty,gte=0"`
-	ModelInvocationID                string                               `json:"model_invocation_id" validate:"required,min=1"`
-	PartialResponseArtifactReference *artifact_reference.Reference        `json:"partial_response_artifact_reference,omitempty" validate:"omitempty"`
-	Retryable                        *bool                                `json:"retryable,omitempty" validate:"omitempty"`
+	// BudgetUsage budget usage committed before this invocation failed.
+	BudgetUsage *budget_usage.Usage `json:"budget_usage,omitempty" validate:"omitempty"`
+	// Error run-level error describing the failed model invocation.
+	Error run_error.Error `json:"error" validate:"required"`
+	// FailedAt when the model invocation failed.
+	FailedAt time.Time `json:"failed_at" validate:"required"`
+	// FailureCategory normalized model invocation failure category.
+	FailureCategory ModelInvocationFailedFailureCategory `json:"failure_category" validate:"required"`
+	// LatencyMs elapsed invocation latency before failure in milliseconds.
+	LatencyMs *int `json:"latency_ms,omitempty" validate:"omitempty,gte=0"`
+	// ModelInvocationID model invocation that failed.
+	ModelInvocationID string `json:"model_invocation_id" validate:"required,min=1"`
+	// PartialResponseArtifactReference optional artifact reference for partial model output received before failure.
+	PartialResponseArtifactReference *artifact_reference.Reference `json:"partial_response_artifact_reference,omitempty" validate:"omitempty"`
+	// Retryable whether this failure may be retried by the runtime.
+	Retryable *bool `json:"retryable,omitempty" validate:"omitempty"`
 }
 
 func (value ModelInvocationFailed) Validate() error {

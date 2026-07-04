@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// ValidationReportReference is generated from a nested JSON Schema object.
 type ValidationReportReference struct {
 	ArtifactKind any `json:"artifact_kind,omitempty" validate:"omitempty"`
 }

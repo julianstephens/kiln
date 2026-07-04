@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// PatchReference is generated from a nested JSON Schema object.
 type PatchReference struct {
 	ArtifactKind any `json:"artifact_kind,omitempty" validate:"omitempty"`
 }

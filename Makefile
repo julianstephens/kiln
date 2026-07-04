@@ -9,6 +9,12 @@ RUFF ?= uv run --package kiln-sdk ruff --config kiln/pyproject.toml
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 
+GO_RUNTIME_VERSION ?= 0.1.0
+CONTRACT_PACKAGE ?= github.com/julianstephens/kiln/go/internal/runtime/contract
+BUILD_DATE := $(shell date +%F)
+BUILD_COMMIT := $(shell git rev-parse --short HEAD)
+
+
 default: check
 
 .PHONY: \
@@ -16,7 +22,7 @@ default: check
 	format format-python format-go \
 	format-check format-check-python format-check-go \
 	lint lint-python lint-go \
-	test test-python test-go \
+	test test-python test-go test-e2e \
 	build build-python build-go \
 	validate-schemas \
 	generate generate-python generate-go \
@@ -80,6 +86,10 @@ test-python:
 test-go:
 	cd $(GO_DIR) && $(GO) test -v ./...
 
+test-e2e: build-go
+	cd $(PYTHON_DIR) && uv sync --package kiln-sdk
+	uv run pytest $(CURDIR)/integration/e2e -v --tb=short
+
 # ---------------------------------------------------------------------------
 # Builds
 # ---------------------------------------------------------------------------
@@ -98,6 +108,7 @@ build-go:
 	cd $(GO_DIR) && \
 		$(GO) build \
 			-o "$(CURDIR)/$(DIST_DIR)/bin/kiln-runtime" \
+			-ldflags "-X '$(CONTRACT_PACKAGE).BuildVersion=$(GO_RUNTIME_VERSION)' -X '$(CONTRACT_PACKAGE).BuildDate=$(BUILD_DATE)' -X '$(CONTRACT_PACKAGE).BuildCommit=$(BUILD_COMMIT)'" \
 			./cmd/kiln-runtime
 
 # ---------------------------------------------------------------------------
@@ -109,10 +120,14 @@ validate-schemas:
 # ---------------------------------------------------------------------------
 # Generate models from JSON Schemas
 # ---------------------------------------------------------------------------
+generate-check: generate
+	git diff --exit-code python/kiln/schemas
+	git diff --exit-code go/schema
+
 generate: generate-python generate-go
 
 generate-python:
-	uv run generatemodels
+	uv run generatepymodels
 
 generate-go:
 	uv run generategomodels
@@ -131,4 +146,4 @@ clean:
 		-prune \
 		-exec rm -rf {} +
 
-check: format-check lint test build	validate-schemas
+check: format-check lint test build	validate-schemas generate-check

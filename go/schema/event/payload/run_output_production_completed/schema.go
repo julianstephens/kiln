@@ -13,14 +13,22 @@ import (
 	validation_requirement "github.com/julianstephens/kiln/go/schema/validation/requirement"
 )
 
+// RunOutputProductionCompleted is generated from a nested JSON Schema object.
 type RunOutputProductionCompleted struct {
+	// ChangedFileManifestReference the changed file manifest reference that was produced by this run.
 	ChangedFileManifestReference *artifact_changed_file_manifest_reference.ChangedFileManifestReference `json:"changed_file_manifest_reference,omitempty" validate:"omitempty"`
-	FinalAnswerArtifactReference *artifact_answer_reference.AnswerReference                             `json:"final_answer_artifact_reference,omitempty" validate:"omitempty"`
-	OutputMode                   run_output_mode.OutputMode                                             `json:"output_mode" validate:"required"`
-	PatchReference               *artifact_patch_reference.PatchReference                               `json:"patch_reference,omitempty" validate:"omitempty"`
-	ReportReference              *artifact_report_reference.ReportReference                             `json:"report_reference,omitempty" validate:"omitempty"`
-	Usage                        budget_usage.Usage                                                     `json:"usage" validate:"required"`
-	ValidationRequirements       []validation_requirement.Requirement                                   `json:"validation_requirements,omitempty" validate:"omitempty,min=1"`
+	// FinalAnswerArtifactReference the artifact reference that was produced by this run.
+	FinalAnswerArtifactReference *artifact_answer_reference.AnswerReference `json:"final_answer_artifact_reference,omitempty" validate:"omitempty"`
+	// OutputMode the output mode that was used by this run.
+	OutputMode run_output_mode.OutputMode `json:"output_mode" validate:"required"`
+	// PatchReference the patch reference that was produced by this run.
+	PatchReference *artifact_patch_reference.PatchReference `json:"patch_reference,omitempty" validate:"omitempty"`
+	// ReportReference the report reference that was produced by this run.
+	ReportReference *artifact_report_reference.ReportReference `json:"report_reference,omitempty" validate:"omitempty"`
+	// Usage the usage that was produced by this run.
+	Usage budget_usage.Usage `json:"usage" validate:"required"`
+	// ValidationRequirements the validation requirements that were produced by this run.
+	ValidationRequirements []validation_requirement.Requirement `json:"validation_requirements,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value RunOutputProductionCompleted) Validate() error {

@@ -24,6 +24,7 @@ const (
 	ContextItemAdmittedAdmissionReasonPlanApplied ContextItemAdmittedAdmissionReason = "plan_applied"
 )
 
+// ContextItemAdmitted payload for context.item_admitted events.
 type ContextItemAdmitted struct {
 	AdmissionReason      ContextItemAdmittedAdmissionReason `json:"admission_reason" validate:"required"`
 	ContextID            string                             `json:"context_id" validate:"required,min=1"`
@@ -32,7 +33,8 @@ type ContextItemAdmitted struct {
 	CurrentTokenEstimate *int                               `json:"current_token_estimate,omitempty" validate:"omitempty,gte=0"`
 	EstimatedTokens      *int                               `json:"estimated_tokens,omitempty" validate:"omitempty,gte=0"`
 	ItemID               string                             `json:"item_id" validate:"required,min=1"`
-	Order                int                                `json:"order" validate:"required,gte=0"`
+	// Order position of the admitted item in active context order.
+	Order int `json:"order" validate:"required,gte=0"`
 }
 
 func (value ContextItemAdmitted) Validate() error {

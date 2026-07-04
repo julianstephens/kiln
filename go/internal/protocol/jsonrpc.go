@@ -1,8 +1,11 @@
 package protocol
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
-const DEFAULT_JSONRPC_VERSION = "2.0"
+const DefaultJSONRPCVersion = "2.0"
 
 type ID struct {
 	String *string
@@ -49,18 +52,70 @@ type ErrorResponse struct {
 }
 
 type Message interface {
-	isJsonRPCMessage()
+	isJSONRPCMessage()
+	IsRequest() bool
+	IsSuccessResponse() bool
+	IsErrorResponse() bool
+	ToJSON() map[string]any
 }
 
-func (Request) isJsonRPCMessage()         {}
-func (SuccessResponse) isJsonRPCMessage() {}
-func (ErrorResponse) isJsonRPCMessage()   {}
+func (Request) isJSONRPCMessage()       {}
+func (Request) IsRequest() bool         { return true }
+func (Request) IsSuccessResponse() bool { return false }
+func (Request) IsErrorResponse() bool   { return false }
+func (r Request) ToJSON() map[string]any {
+	obj, err := messageToJSON(r)
+	if err != nil {
+		return nil
+	}
+	return obj
+}
+
+func (SuccessResponse) isJSONRPCMessage()       {}
+func (SuccessResponse) IsSuccessResponse() bool { return true }
+func (SuccessResponse) IsRequest() bool         { return false }
+func (SuccessResponse) IsErrorResponse() bool   { return false }
+func (s SuccessResponse) ToJSON() map[string]any {
+	obj, err := messageToJSON(s)
+	if err != nil {
+		return nil
+	}
+	return obj
+}
+
+func NewSuccessResponse(id ID, result map[string]any) *SuccessResponse {
+	return &SuccessResponse{
+		JSONRPC: DefaultJSONRPCVersion,
+		ID:      id,
+		Result:  result,
+	}
+}
+
+func (ErrorResponse) isJSONRPCMessage()       {}
+func (ErrorResponse) IsErrorResponse() bool   { return true }
+func (ErrorResponse) IsRequest() bool         { return false }
+func (ErrorResponse) IsSuccessResponse() bool { return false }
+func (e ErrorResponse) ToJSON() map[string]any {
+	obj, err := messageToJSON(e)
+	if err != nil {
+		return nil
+	}
+	return obj
+}
+
+func NewErrorResponse(id ID, err ErrorObject) *ErrorResponse {
+	return &ErrorResponse{
+		JSONRPC: DefaultJSONRPCVersion,
+		ID:      id,
+		Error:   err,
+	}
+}
 
 // ParseMessage parses a raw JSON-RPC message represented as a map[string]any into a strongly typed Message (Request, SuccessResponse, or ErrorResponse).
 // It returns an error if the message is invalid or does not conform to the JSON-RPC specification.
 func ParseMessage(raw map[string]any) (Message, error) {
 	jsonrpc, ok := raw["jsonrpc"].(string)
-	if !ok || jsonrpc != DEFAULT_JSONRPC_VERSION {
+	if !ok || jsonrpc != DefaultJSONRPCVersion {
 		return nil, NewInvalidJSONRPCFrameError("invalid or missing jsonrpc field")
 	}
 
@@ -115,7 +170,7 @@ func parseRequest(raw map[string]any) (Request, error) {
 	}
 
 	req := Request{
-		JSONRPC: DEFAULT_JSONRPC_VERSION,
+		JSONRPC: DefaultJSONRPCVersion,
 		ID:      parsedID,
 		Method:  method,
 	}
@@ -152,7 +207,7 @@ func parseSuccessResponse(raw map[string]any) (SuccessResponse, error) {
 	}
 
 	return SuccessResponse{
-		JSONRPC: DEFAULT_JSONRPC_VERSION,
+		JSONRPC: DefaultJSONRPCVersion,
 		ID:      parsedID,
 		Result:  result,
 	}, nil
@@ -196,13 +251,15 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 	if data, ok := errorRaw["data"]; ok && data != nil {
 		dataObj, ok := data.(map[string]any)
 		if !ok {
-			return ErrorResponse{}, NewInvalidJSONRPCFrameError("error.data must be a JSON object when present")
+			return ErrorResponse{}, NewInvalidJSONRPCFrameError(
+				"error.data must be a JSON object when present",
+			)
 		}
 		errObj.Data = dataObj
 	}
 
 	return ErrorResponse{
-		JSONRPC: DEFAULT_JSONRPC_VERSION,
+		JSONRPC: DefaultJSONRPCVersion,
 		ID:      parsedID,
 		Error:   errObj,
 	}, nil
@@ -225,4 +282,43 @@ func parseID(id any) (ID, bool) {
 
 func isValidNonNullID(id ID) bool {
 	return id.String != nil || id.Number != nil
+}
+
+func messageToJSON(msg Message) (JSONObject, error) {
+	switch m := msg.(type) {
+	case *Request:
+		return messageToJSON(*m)
+	case Request:
+		return JSONObject{
+			"jsonrpc": m.JSONRPC,
+			"id":      m.ID.JSONValue(),
+			"method":  m.Method,
+			"params":  m.Params,
+		}, nil
+	case *SuccessResponse:
+		return messageToJSON(*m)
+	case SuccessResponse:
+		return JSONObject{
+			"jsonrpc": m.JSONRPC,
+			"id":      m.ID.JSONValue(),
+			"result":  m.Result,
+		}, nil
+	case *ErrorResponse:
+		return messageToJSON(*m)
+	case ErrorResponse:
+		err := JSONObject{
+			"jsonrpc": m.JSONRPC,
+			"id":      m.ID.JSONValue(),
+			"error": map[string]any{
+				"code":    m.Error.Code,
+				"message": m.Error.Message,
+			},
+		}
+		if m.Error.Data != nil {
+			err["error"].(map[string]any)["data"] = m.Error.Data
+		}
+		return err, nil
+	default:
+		return nil, NewFramingError(fmt.Errorf("unknown message type: %T", msg))
+	}
 }

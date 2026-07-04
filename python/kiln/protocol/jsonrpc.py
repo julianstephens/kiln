@@ -12,7 +12,7 @@ class JsonRpcRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    jsonrpc: DEFAULT_JSONRPC_VERSION
+    jsonrpc: DEFAULT_JSONRPC_VERSION = get_args(DEFAULT_JSONRPC_VERSION)[0]
     id: str | int
     method: str
     params: dict[str, Any] | None = None
@@ -23,7 +23,7 @@ class JsonRpcSuccessResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    jsonrpc: DEFAULT_JSONRPC_VERSION
+    jsonrpc: DEFAULT_JSONRPC_VERSION = get_args(DEFAULT_JSONRPC_VERSION)[0]
     id: str | int
     result: dict[str, Any]
 
@@ -43,7 +43,7 @@ class JsonRpcErrorResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    jsonrpc: DEFAULT_JSONRPC_VERSION
+    jsonrpc: DEFAULT_JSONRPC_VERSION = get_args(DEFAULT_JSONRPC_VERSION)[0]
     id: str | int | None
     error: JsonRpcErrorObject
 
@@ -116,3 +116,14 @@ def parse_jsonrpc_message(raw: dict[str, Any]) -> JsonRpcMessage:
             "'result', or 'error' field"
         )
     )
+
+
+def new_request_id() -> str:
+    """Generate a new unique lexicographically sortable request ID.
+
+    Returns:
+        A new unique request ID as a string.
+    """
+    import ulid
+
+    return "req_" + ulid.new().str

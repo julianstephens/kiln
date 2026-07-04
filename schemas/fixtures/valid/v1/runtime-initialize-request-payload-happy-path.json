@@ -1,0 +1,9 @@
+{
+    "protocol_version": "1.0",
+    "schema_set_version": "1.0.0",
+    "compatibility_major": 1,
+    "client": {
+        "name": "kiln-cli",
+        "version": "0.1.0"
+    }
+}

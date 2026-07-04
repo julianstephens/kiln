@@ -61,19 +61,32 @@ const (
 	ActionReasonInvalidSource ActionReason = "invalid_source"
 )
 
+// Action a planned or applied context mutation such as admitting, evicting, pinning, unpinning, compressing, invalidating, or reordering context items.
 type Action struct {
-	ActionID              string                        `json:"action_id" validate:"required,min=1"`
-	ActionKind            ActionActionKind              `json:"action_kind" validate:"required"`
-	ArtifactReference     *artifact_reference.Reference `json:"artifact_reference,omitempty" validate:"omitempty"`
-	ContextID             string                        `json:"context_id" validate:"required,min=1"`
-	ContextPlanID         *string                       `json:"context_plan_id,omitempty" validate:"omitempty,min=1"`
-	EstimatedTokensAfter  *int                          `json:"estimated_tokens_after,omitempty" validate:"omitempty,gte=0"`
-	EstimatedTokensBefore *int                          `json:"estimated_tokens_before,omitempty" validate:"omitempty,gte=0"`
-	ItemID                string                        `json:"item_id" validate:"required,min=1"`
-	Order                 *int                          `json:"order,omitempty" validate:"omitempty,gte=0"`
-	PreviousOrder         *int                          `json:"previous_order,omitempty" validate:"omitempty,gte=0"`
-	Reason                *ActionReason                 `json:"reason,omitempty" validate:"omitempty"`
-	ReplacementItemID     *string                       `json:"replacement_item_id,omitempty" validate:"omitempty,min=1"`
+	// ActionID stable identity for this context action.
+	ActionID string `json:"action_id" validate:"required,min=1"`
+	// ActionKind kind of context mutation.
+	ActionKind ActionActionKind `json:"action_kind" validate:"required"`
+	// ArtifactReference artifact created or consumed by this action, when applicable.
+	ArtifactReference *artifact_reference.Reference `json:"artifact_reference,omitempty" validate:"omitempty"`
+	// ContextID context ledger this action applies to.
+	ContextID string `json:"context_id" validate:"required,min=1"`
+	// ContextPlanID context plan that produced this action, when applicable.
+	ContextPlanID *string `json:"context_plan_id,omitempty" validate:"omitempty,min=1"`
+	// EstimatedTokensAfter estimated token count for this item after the action.
+	EstimatedTokensAfter *int `json:"estimated_tokens_after,omitempty" validate:"omitempty,gte=0"`
+	// EstimatedTokensBefore estimated token count for this item before the action.
+	EstimatedTokensBefore *int `json:"estimated_tokens_before,omitempty" validate:"omitempty,gte=0"`
+	// ItemID context item affected by this action.
+	ItemID string `json:"item_id" validate:"required,min=1"`
+	// Order active context order after this action, when applicable.
+	Order *int `json:"order,omitempty" validate:"omitempty,gte=0"`
+	// PreviousOrder previous active context order before this action, when applicable.
+	PreviousOrder *int `json:"previous_order,omitempty" validate:"omitempty,gte=0"`
+	// Reason planner-visible reason for the action.
+	Reason *ActionReason `json:"reason,omitempty" validate:"omitempty"`
+	// ReplacementItemID replacement context item produced by this action, when applicable.
+	ReplacementItemID *string `json:"replacement_item_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value Action) Validate() error {

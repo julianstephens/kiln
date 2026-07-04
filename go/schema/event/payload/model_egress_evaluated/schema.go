@@ -21,13 +21,27 @@ const (
 	ModelEgressEvaluatedEgressDecisionRequiresApproval ModelEgressEvaluatedEgressDecision = "requires_approval"
 )
 
+// ModelEgressEvaluated payload for model.egress_evaluated events.
 type ModelEgressEvaluated struct {
-	EgressDecision           ModelEgressEvaluatedEgressDecision `json:"egress_decision" validate:"required"`
-	EvaluatedAt              time.Time                          `json:"evaluated_at" validate:"required"`
-	ModelInvocationID        string                             `json:"model_invocation_id" validate:"required,min=1"`
-	PolicyDecisionReference  *capability_decision.Decision      `json:"policy_decision_reference,omitempty" validate:"omitempty"`
-	RedactionSummary         map[string]any                     `json:"redaction_summary,omitempty" validate:"omitempty"`
-	RequestArtifactReference *artifact_reference.Reference      `json:"request_artifact_reference,omitempty" validate:"omitempty"`
+	// EgressDecision decision produced by egress policy evaluation.
+	EgressDecision ModelEgressEvaluatedEgressDecision `json:"egress_decision" validate:"required"`
+	// EvaluatedAt when egress was evaluated.
+	EvaluatedAt time.Time `json:"evaluated_at" validate:"required"`
+	// ModelInvocationID model invocation whose rendered request was evaluated for egress.
+	ModelInvocationID string `json:"model_invocation_id" validate:"required,min=1"`
+	// PolicyDecisionReference optional capability decision produced by the egress policy check.
+	PolicyDecisionReference *capability_decision.Decision `json:"policy_decision_reference,omitempty" validate:"omitempty"`
+	// RedactionSummary summary of request changes made before model egress.
+	RedactionSummary *ModelEgressEvaluatedRedactionSummary `json:"redaction_summary,omitempty" validate:"omitempty"`
+	// RequestArtifactReference optional artifact reference for the rendered request that was evaluated.
+	RequestArtifactReference *artifact_reference.Reference `json:"request_artifact_reference,omitempty" validate:"omitempty"`
+}
+
+// ModelEgressEvaluatedRedactionSummary summary of request changes made before model egress.
+type ModelEgressEvaluatedRedactionSummary struct {
+	Reason          *string  `json:"reason,omitempty" validate:"omitempty,min=1"`
+	RedactedItemIds []string `json:"redacted_item_ids,omitempty" validate:"omitempty"`
+	RedactionCount  *int     `json:"redaction_count,omitempty" validate:"omitempty,gte=0"`
 }
 
 func (value ModelEgressEvaluated) Validate() error {

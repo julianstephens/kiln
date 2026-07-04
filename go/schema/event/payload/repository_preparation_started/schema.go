@@ -5,14 +5,65 @@ package repository_preparation_started
 import (
 	repository_identifier "github.com/julianstephens/kiln/go/schema/repository/identifier"
 	"github.com/julianstephens/kiln/go/schema/shared"
+	"time"
 )
 
+// RepositoryPreparationStarted is generated from a nested JSON Schema object.
 type RepositoryPreparationStarted struct {
-	ExpectedDigest          string                           `json:"expected_digest" validate:"required,min=1"`
-	IndexingConfigurationID string                           `json:"indexing_configuration_id" validate:"required,min=1"`
-	Repository              repository_identifier.Identifier `json:"repository" validate:"required"`
-	RequestedRefreshPolicy  map[string]any                   `json:"requested_refresh_policy" validate:"required"`
-	RequestedRevision       string                           `json:"requested_revision" validate:"required,min=1"`
+	// ExpectedDigest the expected digest of the repository at the requested revision.
+	ExpectedDigest string `json:"expected_digest" validate:"required,min=1"`
+	// IndexingConfigurationID the identifier of the indexing configuration that is being used to prepare the repository.
+	IndexingConfigurationID string `json:"indexing_configuration_id" validate:"required,min=1"`
+	// Repository the repository that is being prepared.
+	Repository repository_identifier.Identifier `json:"repository" validate:"required"`
+	// RequestedRefreshPolicy policy describing when this runtime session readiness description should be refreshed.
+	RequestedRefreshPolicy RepositoryPreparationStartedRequestedRefreshPolicy `json:"requested_refresh_policy" validate:"required"`
+	// RequestedRevision the revision that is being prepared.
+	RequestedRevision string `json:"requested_revision" validate:"required,min=1"`
+}
+
+type RepositoryPreparationStartedRequestedRefreshPolicyMode string
+
+const (
+	RepositoryPreparationStartedRequestedRefreshPolicyModeStatic RepositoryPreparationStartedRequestedRefreshPolicyMode = "static"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyModeTimeBased RepositoryPreparationStartedRequestedRefreshPolicyMode = "time_based"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyModeEventDriven RepositoryPreparationStartedRequestedRefreshPolicyMode = "event_driven"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyModeManual RepositoryPreparationStartedRequestedRefreshPolicyMode = "manual"
+)
+
+type RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem string
+
+const (
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemAdapterRegistered RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "adapter_registered"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemAdapterRemoved RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "adapter_removed"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemAdapterHealthChanged RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "adapter_health_changed"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemProtocolCapabilityChanged RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "protocol_capability_changed"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemDatabaseSchemaChanged RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "database_schema_changed"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemConfigurationChanged RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "configuration_changed"
+
+	RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItemRuntimeUpgraded RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem = "runtime_upgraded"
+)
+
+// RepositoryPreparationStartedRequestedRefreshPolicy policy describing when this runtime session readiness description should be refreshed.
+type RepositoryPreparationStartedRequestedRefreshPolicy struct {
+	// LastRefreshedAt when this readiness metadata was last refreshed.
+	LastRefreshedAt *time.Time `json:"last_refreshed_at,omitempty" validate:"omitempty"`
+	// Mode how readiness metadata is refreshed.
+	Mode RepositoryPreparationStartedRequestedRefreshPolicyMode `json:"mode" validate:"required"`
+	// RefreshAfter absolute timestamp after which this readiness metadata should be refreshed.
+	RefreshAfter *time.Time `json:"refresh_after,omitempty" validate:"omitempty"`
+	// RefreshTriggers events or conditions that should cause this readiness metadata to be refreshed.
+	RefreshTriggers []RepositoryPreparationStartedRequestedRefreshPolicyRefreshTriggersItem `json:"refresh_triggers,omitempty" validate:"omitempty,min=1"`
+	// TtlSeconds how long this readiness metadata should be considered fresh. Required for time_based refresh.
+	TtlSeconds *int `json:"ttl_seconds,omitempty" validate:"omitempty,gte=1"`
 }
 
 func (value RepositoryPreparationStarted) Validate() error {

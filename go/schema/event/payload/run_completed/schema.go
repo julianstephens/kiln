@@ -10,10 +10,15 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// RunCompleted is generated from a nested JSON Schema object.
 type RunCompleted struct {
-	FinalResultReference      run_terminal_result_reference.TerminalResultReference           `json:"final_result_reference" validate:"required"`
-	FinalUsage                budget_usage.Usage                                              `json:"final_usage" validate:"required"`
-	StopReason                run_stop_reason.StopReason                                      `json:"stop_reason" validate:"required"`
+	// FinalResultReference the terminal result reference that was produced by this run.
+	FinalResultReference run_terminal_result_reference.TerminalResultReference `json:"final_result_reference" validate:"required"`
+	// FinalUsage the usage summary that was produced by this run.
+	FinalUsage budget_usage.Usage `json:"final_usage" validate:"required"`
+	// StopReason the reason that this run was stopped.
+	StopReason run_stop_reason.StopReason `json:"stop_reason" validate:"required"`
+	// ValidationReportReference the validation report reference that was produced by this run.
 	ValidationReportReference *artifact_validation_report_reference.ValidationReportReference `json:"validation_report_reference,omitempty" validate:"omitempty"`
 }
 

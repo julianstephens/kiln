@@ -6,6 +6,7 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// Identifier is generated from a nested JSON Schema object.
 type Identifier struct {
 	ID                 string  `json:"id" validate:"required,min=1"`
 	VersionID          string  `json:"version_id" validate:"required,min=1"`

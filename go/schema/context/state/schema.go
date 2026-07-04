@@ -6,16 +6,23 @@ import (
 	"github.com/julianstephens/kiln/go/schema/shared"
 )
 
+// State is generated from a nested JSON Schema object.
 type State struct {
-	ActiveItemIds        []map[string]any `json:"active_item_ids,omitempty" validate:"omitempty"`
-	AvailableItemIds     []string         `json:"available_item_ids,omitempty" validate:"omitempty"`
-	ContextID            string           `json:"context_id" validate:"required,min=1"`
-	ContextStateRevision int              `json:"context_state_revision" validate:"required,gte=0"`
-	CurrentTokenEstimate int              `json:"current_token_estimate" validate:"required,gte=0"`
-	ModelContextLimit    int              `json:"model_context_limit" validate:"required,gte=0"`
-	ObservedItemIds      []string         `json:"observed_item_ids,omitempty" validate:"omitempty"`
-	PinnedItemIds        []string         `json:"pinned_item_ids,omitempty" validate:"omitempty"`
-	StaleItemIds         []string         `json:"stale_item_ids,omitempty" validate:"omitempty"`
+	ActiveItemIds        []StateActiveItemIdsItem `json:"active_item_ids,omitempty" validate:"omitempty"`
+	AvailableItemIds     []string                 `json:"available_item_ids,omitempty" validate:"omitempty"`
+	ContextID            string                   `json:"context_id" validate:"required,min=1"`
+	ContextStateRevision int                      `json:"context_state_revision" validate:"required,gte=0"`
+	CurrentTokenEstimate int                      `json:"current_token_estimate" validate:"required,gte=0"`
+	ModelContextLimit    int                      `json:"model_context_limit" validate:"required,gte=0"`
+	ObservedItemIds      []string                 `json:"observed_item_ids,omitempty" validate:"omitempty"`
+	PinnedItemIds        []string                 `json:"pinned_item_ids,omitempty" validate:"omitempty"`
+	StaleItemIds         []string                 `json:"stale_item_ids,omitempty" validate:"omitempty"`
+}
+
+// StateActiveItemIdsItem is generated from a nested JSON Schema object.
+type StateActiveItemIdsItem struct {
+	ItemID string `json:"item_id" validate:"required,min=1"`
+	Order  int    `json:"order" validate:"required,gte=0"`
 }
 
 func (value State) Validate() error {

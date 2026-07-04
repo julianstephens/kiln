@@ -40,19 +40,32 @@ const (
 	ErrorCategoryUnknown ErrorCategory = "unknown"
 )
 
+// Error provider-neutral model failure body for model protocol responses and model invocation events.
 type Error struct {
-	Category                         ErrorCategory                                             `json:"category" validate:"required"`
-	Code                             string                                                    `json:"code" validate:"required,min=1"`
-	DiagnosticArtifactReference      *artifact_diagnostic_log_reference.DiagnosticLogReference `json:"diagnostic_artifact_reference,omitempty" validate:"omitempty"`
-	ErrorID                          string                                                    `json:"error_id" validate:"required,min=1"`
-	Message                          string                                                    `json:"message" validate:"required,min=1"`
-	ModelID                          *string                                                   `json:"model_id,omitempty" validate:"omitempty,min=1"`
-	ModelInvocationID                *string                                                   `json:"model_invocation_id,omitempty" validate:"omitempty,min=1"`
-	PartialResponseArtifactReference *artifact_reference.Reference                             `json:"partial_response_artifact_reference,omitempty" validate:"omitempty"`
-	ProviderCode                     *string                                                   `json:"provider_code,omitempty" validate:"omitempty,min=1"`
-	ProviderID                       *string                                                   `json:"provider_id,omitempty" validate:"omitempty,min=1"`
-	RetryAfterSeconds                *int                                                      `json:"retry_after_seconds,omitempty" validate:"omitempty,gte=0"`
-	Retryable                        bool                                                      `json:"retryable" validate:"required"`
+	// Category provider-neutral model error category.
+	Category ErrorCategory `json:"category" validate:"required"`
+	// Code provider-neutral or adapter-normalized error code.
+	Code string `json:"code" validate:"required,min=1"`
+	// DiagnosticArtifactReference artifact reference for model diagnostic details, when available.
+	DiagnosticArtifactReference *artifact_diagnostic_log_reference.DiagnosticLogReference `json:"diagnostic_artifact_reference,omitempty" validate:"omitempty"`
+	// ErrorID stable identity for this model error.
+	ErrorID string `json:"error_id" validate:"required,min=1"`
+	// Message human-readable provider-neutral error message.
+	Message string `json:"message" validate:"required,min=1"`
+	// ModelID model identifier associated with the failure, when known.
+	ModelID *string `json:"model_id,omitempty" validate:"omitempty,min=1"`
+	// ModelInvocationID model invocation associated with the failure, when known.
+	ModelInvocationID *string `json:"model_invocation_id,omitempty" validate:"omitempty,min=1"`
+	// PartialResponseArtifactReference artifact reference for partial model response content, when available.
+	PartialResponseArtifactReference *artifact_reference.Reference `json:"partial_response_artifact_reference,omitempty" validate:"omitempty"`
+	// ProviderCode provider-specific error code, when safe to expose.
+	ProviderCode *string `json:"provider_code,omitempty" validate:"omitempty,min=1"`
+	// ProviderID provider associated with the failure, when known.
+	ProviderID *string `json:"provider_id,omitempty" validate:"omitempty,min=1"`
+	// RetryAfterSeconds suggested retry delay in seconds, when available.
+	RetryAfterSeconds *int `json:"retry_after_seconds,omitempty" validate:"omitempty,gte=0"`
+	// Retryable whether the model invocation may be retried.
+	Retryable bool `json:"retryable"`
 }
 
 func (value Error) Validate() error {

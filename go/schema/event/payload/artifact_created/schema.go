@@ -54,14 +54,69 @@ const (
 	ArtifactCreatedCreationReasonOther ArtifactCreatedCreationReason = "other"
 )
 
+// ArtifactCreated payload for artifact.created events.
 type ArtifactCreated struct {
-	Artifact                 artifact_reference.Reference   `json:"artifact" validate:"required"`
-	ArtifactMetadata         map[string]any                 `json:"artifact_metadata,omitempty" validate:"omitempty"`
-	CreatedAt                time.Time                      `json:"created_at" validate:"required"`
-	CreatedBy                ArtifactCreatedCreatedBy       `json:"created_by" validate:"required"`
-	CreationReason           ArtifactCreatedCreationReason  `json:"creation_reason" validate:"required"`
-	ProducerOperationID      *string                        `json:"producer_operation_id,omitempty" validate:"omitempty,min=1"`
+	// Artifact reference to the artifact that was created.
+	Artifact artifact_reference.Reference `json:"artifact" validate:"required"`
+	// ArtifactMetadata kind-specific artifact creation metadata.
+	ArtifactMetadata *ArtifactCreatedArtifactMetadata `json:"artifact_metadata,omitempty" validate:"omitempty"`
+	// CreatedAt when the artifact was created.
+	CreatedAt time.Time `json:"created_at" validate:"required"`
+	// CreatedBy logical component that created the artifact.
+	CreatedBy ArtifactCreatedCreatedBy `json:"created_by" validate:"required"`
+	// CreationReason reason this artifact was created.
+	CreationReason ArtifactCreatedCreationReason `json:"creation_reason" validate:"required"`
+	// ProducerOperationID operation that produced the artifact, when applicable.
+	ProducerOperationID *string `json:"producer_operation_id,omitempty" validate:"omitempty,min=1"`
+	// SourceArtifactReferences artifacts used as inputs to create this artifact.
 	SourceArtifactReferences []artifact_reference.Reference `json:"source_artifact_references,omitempty" validate:"omitempty,min=1"`
+}
+
+type ArtifactCreatedArtifactMetadataBundleKind string
+
+const (
+	ArtifactCreatedArtifactMetadataBundleKindAnswer ArtifactCreatedArtifactMetadataBundleKind = "answer"
+
+	ArtifactCreatedArtifactMetadataBundleKindPatch ArtifactCreatedArtifactMetadataBundleKind = "patch"
+
+	ArtifactCreatedArtifactMetadataBundleKindAnswerWithPatch ArtifactCreatedArtifactMetadataBundleKind = "answer_with_patch"
+
+	ArtifactCreatedArtifactMetadataBundleKindReport ArtifactCreatedArtifactMetadataBundleKind = "report"
+
+	ArtifactCreatedArtifactMetadataBundleKindFailed ArtifactCreatedArtifactMetadataBundleKind = "failed"
+
+	ArtifactCreatedArtifactMetadataBundleKindCanceled ArtifactCreatedArtifactMetadataBundleKind = "canceled"
+
+	ArtifactCreatedArtifactMetadataBundleKindExhausted ArtifactCreatedArtifactMetadataBundleKind = "exhausted"
+)
+
+type ArtifactCreatedArtifactMetadataCandidateKind string
+
+const (
+	ArtifactCreatedArtifactMetadataCandidateKindAnswer ArtifactCreatedArtifactMetadataCandidateKind = "answer"
+
+	ArtifactCreatedArtifactMetadataCandidateKindPatch ArtifactCreatedArtifactMetadataCandidateKind = "patch"
+
+	ArtifactCreatedArtifactMetadataCandidateKindReport ArtifactCreatedArtifactMetadataCandidateKind = "report"
+
+	ArtifactCreatedArtifactMetadataCandidateKindToolCall ArtifactCreatedArtifactMetadataCandidateKind = "tool_call"
+
+	ArtifactCreatedArtifactMetadataCandidateKindValidationJudgment ArtifactCreatedArtifactMetadataCandidateKind = "validation_judgment"
+
+	ArtifactCreatedArtifactMetadataCandidateKindMixed ArtifactCreatedArtifactMetadataCandidateKind = "mixed"
+)
+
+// ArtifactCreatedArtifactMetadata kind-specific artifact creation metadata.
+type ArtifactCreatedArtifactMetadata struct {
+	BundleKind               *ArtifactCreatedArtifactMetadataBundleKind    `json:"bundle_kind,omitempty" validate:"omitempty"`
+	CandidateBatchID         *string                                       `json:"candidate_batch_id,omitempty" validate:"omitempty,min=1"`
+	CandidateCount           *int                                          `json:"candidate_count,omitempty" validate:"omitempty,gte=0"`
+	CandidateKind            *ArtifactCreatedArtifactMetadataCandidateKind `json:"candidate_kind,omitempty" validate:"omitempty"`
+	ContainsSensitiveContent *bool                                         `json:"contains_sensitive_content,omitempty" validate:"omitempty"`
+	FinalResultBundleID      *string                                       `json:"final_result_bundle_id,omitempty" validate:"omitempty,min=1"`
+	ModelInvocationID        *string                                       `json:"model_invocation_id,omitempty" validate:"omitempty,min=1"`
+	Redacted                 *bool                                         `json:"redacted,omitempty" validate:"omitempty"`
+	RenderID                 *string                                       `json:"render_id,omitempty" validate:"omitempty,min=1"`
 }
 
 func (value ArtifactCreated) Validate() error {
