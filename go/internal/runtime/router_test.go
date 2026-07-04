@@ -9,7 +9,6 @@ import (
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
-	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
 func TestRouterDispatch_TableDriven(t *testing.T) {
@@ -58,12 +57,13 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCMethodNotFound,
 					Message: "Method not found",
-					Data: runtime_error.Error{
-						KilnError: runtime_error.ErrorKilnError{
-							Code:     "runtime.method_not_found",
-							Category: "compatibility",
-							Message:  "Method not found",
-							Details: map[string]any{
+					Data: map[string]any{
+						"kiln_error": map[string]any{
+							"code":      "runtime.method_not_found",
+							"category":  "compatibility",
+							"message":   "Method not found",
+							"retryable": false,
+							"details": map[string]any{
 								"requested_method": "runtime.unknown",
 							},
 						},
@@ -92,12 +92,13 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCInternalError,
 					Message: "Handler returned nil",
-					Data: runtime_error.Error{
-						KilnError: runtime_error.ErrorKilnError{
-							Code:     "runtime.internal_error",
-							Category: "internal",
-							Message:  "Handler returned nil response",
-							Details: map[string]any{
+					Data: map[string]any{
+						"kiln_error": map[string]any{
+							"code":      "runtime.internal_error",
+							"category":  "internal",
+							"message":   "Handler returned nil response",
+							"retryable": false,
+							"details": map[string]any{
 								"requested_method": "runtime.health",
 								"request_params": map[string]any{
 									"probe": true,

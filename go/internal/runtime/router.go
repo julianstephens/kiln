@@ -6,6 +6,7 @@ import (
 
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
+	"github.com/julianstephens/kiln/go/internal/util"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
@@ -38,7 +39,7 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 		return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 			Code:    contract.JSONRPCMethodNotFound,
 			Message: "Method not found",
-			Data: runtime_error.Error{
+			Data: util.MustStructToMap(runtime_error.Error{
 				KilnError: runtime_error.ErrorKilnError{
 					Code:     "runtime.method_not_found",
 					Category: "compatibility",
@@ -47,7 +48,7 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 						"requested_method": req.Method,
 					},
 				},
-			},
+			}),
 		})
 	}
 
@@ -56,7 +57,7 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 		return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 			Code:    contract.JSONRPCInternalError,
 			Message: "Handler returned nil",
-			Data: runtime_error.Error{
+			Data: util.MustStructToMap(runtime_error.Error{
 				KilnError: runtime_error.ErrorKilnError{
 					Code:     "runtime.internal_error",
 					Category: "internal",
@@ -66,7 +67,7 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 						"request_params":   req.Params,
 					},
 				},
-			},
+			}),
 		})
 	}
 

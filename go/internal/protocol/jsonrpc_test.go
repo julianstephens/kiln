@@ -6,7 +6,6 @@ import (
 	utest "github.com/julianstephens/go-utils/tests"
 
 	"github.com/julianstephens/kiln/go/internal/protocol"
-	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
 func TestParseMessage_TableDriven(t *testing.T) {
@@ -91,16 +90,8 @@ func TestParseMessage_TableDriven(t *testing.T) {
 				Error: protocol.ErrorObject{
 					Code:    -32000,
 					Message: "something failed",
-					Data: runtime_error.Error{
-						KilnError: runtime_error.ErrorKilnError{
-							Code:      "-32000",
-							Category:  "",
-							Message:   "something failed",
-							Retryable: false,
-							Details: map[string]any{
-								"detail": "oops",
-							},
-						},
+					Data: map[string]any{
+						"detail": "oops",
 					},
 				},
 			},

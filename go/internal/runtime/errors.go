@@ -3,6 +3,7 @@ package runtime
 import (
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
+	"github.com/julianstephens/kiln/go/internal/util"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
@@ -52,6 +53,6 @@ var NewInvalidRequestError = func(message string, data runtime_error.Error) *pro
 	return &protocol.ErrorObject{
 		Code:    contract.JSONRPCInvalidRequest,
 		Message: message,
-		Data:    data,
+		Data:    util.MustStructToMap(data),
 	}
 }

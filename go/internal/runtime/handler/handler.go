@@ -3,6 +3,7 @@ package handler
 import (
 	"sync"
 
+	"github.com/julianstephens/kiln/go/internal/protocol"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/julianstephens/kiln/go/schema/runtime/initialize_request_payload"
 	"github.com/julianstephens/kiln/go/schema/runtime/initialize_result"
@@ -21,4 +22,9 @@ type HandlerState struct {
 	Shutdown bool
 
 	LastFatalStartupError *runtime_error.ErrorKilnError
+}
+
+type runtimeProtocolError struct {
+	response protocol.ErrorObject
+	inner    runtime_error.ErrorKilnError
 }

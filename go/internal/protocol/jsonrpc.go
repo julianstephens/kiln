@@ -3,8 +3,6 @@ package protocol
 import (
 	"fmt"
 	"math"
-
-	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
 const DefaultJSONRPCVersion = "2.0"
@@ -42,9 +40,9 @@ type SuccessResponse struct {
 }
 
 type ErrorObject struct {
-	Code    int                 `json:"code"`
-	Message string              `json:"message"`
-	Data    runtime_error.Error `json:"data"`
+	Code    int            `json:"code"`
+	Message string         `json:"message"`
+	Data    map[string]any `json:"data,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -251,36 +249,13 @@ func parseErrorResponse(raw map[string]any) (ErrorResponse, error) {
 	}
 
 	if data, ok := errorRaw["data"]; ok && data != nil {
-		dataMap, ok := data.(map[string]any)
+		dataObj, ok := data.(map[string]any)
 		if !ok {
-			return ErrorResponse{}, NewInvalidJSONRPCFrameError("error.data must be a JSON object when present")
+			return ErrorResponse{}, NewInvalidJSONRPCFrameError(
+				"error.data must be a JSON object when present",
+			)
 		}
-
-		category := ""
-		if cat, ok := dataMap["category"].(string); ok {
-			category = cat
-			if category == "" {
-				category = "internal"
-			}
-			if !isValidErrorCategory(category) {
-				category = "internal"
-			}
-		}
-
-		retryable := false
-		if r, ok := dataMap["retryable"].(bool); ok {
-			retryable = r
-		}
-
-		errObj.Data = runtime_error.Error{
-			KilnError: runtime_error.ErrorKilnError{
-				Code:      fmt.Sprintf("%d", int(codeFloat)),
-				Category:  runtime_error.ErrorKilnErrorCategory(category),
-				Message:   message,
-				Retryable: retryable,
-				Details:   dataMap,
-			},
-		}
+		errObj.Data = dataObj
 	}
 
 	return ErrorResponse{
@@ -342,14 +317,5 @@ func messageToJSON(msg Message) (JSONObject, error) {
 		}, nil
 	default:
 		return nil, NewFramingError(fmt.Errorf("unknown message type: %T", msg))
-	}
-}
-
-func isValidErrorCategory(category string) bool {
-	switch category {
-	case "compatibility", "validation", "lifecycle", "shutdown", "internal":
-		return true
-	default:
-		return false
 	}
 }

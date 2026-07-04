@@ -23,21 +23,26 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 		state.Mu.Unlock()
 
 		if req.Params != nil {
+			inner := runtime_error.ErrorKilnError{
+				Code:      "runtime.invalid_params",
+				Category:  "validation",
+				Message:   "Health endpoint does not accept parameters",
+				Retryable: false,
+				Details:   map[string]any{},
+			}
+			state.Mu.Lock()
+			state.LastFatalStartupError = &inner
+			state.Mu.Unlock()
 			return protocol.NewErrorResponse(req.ID, protocol.ErrorObject{
 				Code:    contract.JSONRPCInvalidParams,
 				Message: "Health endpoint does not accept parameters",
-				Data: runtime_error.Error{
-					KilnError: runtime_error.ErrorKilnError{
-						Code:     "runtime.invalid_params",
-						Category: "validation",
-						Message:  "Health endpoint does not accept parameters",
-						Details:  map[string]any{},
-					},
-				},
+				Data: util.MustStructToMap(runtime_error.Error{
+					KilnError: inner,
+				}),
 			})
 		}
 
-		return protocol.NewSuccessResponse(req.ID, util.StructToMap(health_result.HealthResult{
+		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(health_result.HealthResult{
 			Draining:              isDraining,
 			Initialized:           isInitialized,
 			LastFatalStartupError: lastFatalError,
