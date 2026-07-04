@@ -78,19 +78,20 @@ class RuntimeClient:
                 _raise_not_ready()
         except RuntimeConnectionClosedError as exc:
             connection.mark_failed()
-            await client.close()
 
             exit_status = process.exit_status
             if exit_status is not None and not exit_status.expected:
+                await client.close(mark_expected=False)
                 raise RuntimeProcessExitedError(
                     exit_status=exit_status,
                     in_flight=exc.in_flight
                     or connection.inflight_disposition("failed_process_exited"),
                 ) from exc
+            await client.close(mark_expected=False)
             raise
         except BaseException:
             connection.mark_failed()
-            await client.close()
+            await client.close(mark_expected=False)
             raise
         else:
             return client
@@ -103,14 +104,14 @@ class RuntimeClient:
     ) -> RunResult:
         raise NotImplementedError("create_run is not yet implemented")
 
-    async def close(self) -> None:
+    async def close(self, mark_expected: bool = True) -> None:
         """Close the connection to the runtime process."""
         if self._closed:
             return
         self._closed = True
 
         try:
-            await self._process.aclose()
+            await self._process.aclose(mark_expected=mark_expected)
         finally:
             if self._exit_stack is not None:
                 await self._exit_stack.aclose()
