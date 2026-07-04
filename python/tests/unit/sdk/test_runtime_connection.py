@@ -365,7 +365,7 @@ async def test_health_not_ready(mocker) -> None:
 
     assert result.root.ready is False
     assert result.root.initialized is True
-    assert conn.state == RuntimeConnectionState.EXITED
+    assert conn.state == RuntimeConnectionState.STARTING
 
 
 @pytest.mark.anyio
@@ -608,3 +608,96 @@ async def test_multiple_sequential_initialize_calls(mocker) -> None:
     result2 = await conn.initialize()
     assert result2.root.runtime.id == "runtime-1"
     assert call_count == 2
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_runtime_connection_closed_error(mocker) -> None:
+    """Test that RuntimeConnectionClosedError is raised when stream closes.
+
+    Verifies:
+    - RuntimeConnectionClosedError is raised on stream closure
+    - in_flight contains the current request id and method
+    """
+    from kiln.protocol.errors import RuntimeConnectionClosedError
+    from kiln.protocol.pending import InflightRequestDisposition
+
+    class StreamClosedPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            # Simulate stream closure during request
+            exc = RuntimeConnectionClosedError(
+                message="runtime connection closed",
+                in_flight=(
+                    InflightRequestDisposition(
+                        request_id=str(message.id),
+                        method=message.method,
+                        disposition="failed_connection_closed",
+                    ),
+                ),
+            )
+            raise exc
+
+    peer = StreamClosedPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeConnectionClosedError) as exc_info:
+        await conn.initialize()
+
+    # Verify in_flight contains the request info
+    error = exc_info.value
+    assert len(error.in_flight) == 1
+    assert error.in_flight[0].request_id == peer.last_request.id
+    assert error.in_flight[0].method == "runtime.initialize"
+    assert error.in_flight[0].disposition == "failed_connection_closed"
+
+
+@pytest.mark.anyio
+async def test_health_raises_runtime_connection_closed_error(mocker) -> None:
+    """Test that health() propagates RuntimeConnectionClosedError with in_flight."""
+    from kiln.protocol.errors import RuntimeConnectionClosedError
+    from kiln.protocol.pending import InflightRequestDisposition
+
+    class StreamClosedPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            # Simulate stream closure during health check
+            exc = RuntimeConnectionClosedError(
+                message="runtime connection closed during health",
+                in_flight=(
+                    InflightRequestDisposition(
+                        request_id=str(message.id),
+                        method=message.method,
+                        disposition="failed_connection_closed",
+                    ),
+                ),
+            )
+            raise exc
+
+    peer = StreamClosedPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeConnectionClosedError) as exc_info:
+        await conn.health()
+
+    # Verify in_flight contains the health request info
+    error = exc_info.value
+    assert len(error.in_flight) == 1
+    assert error.in_flight[0].request_id == peer.last_request.id
+    assert error.in_flight[0].method == "runtime.health"
+    assert error.in_flight[0].disposition == "failed_connection_closed"

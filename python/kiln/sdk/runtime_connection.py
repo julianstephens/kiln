@@ -190,9 +190,11 @@ class RuntimeStdioConnection:
                 self._state = RuntimeConnectionState.DRAINING
             elif health_res.root.ready:
                 self._state = RuntimeConnectionState.READY
-            else:
-                # got a response, so connection is up but not ready
+            elif health_res.root.shutdown:
                 self._state = RuntimeConnectionState.EXITED
+            else:
+                # Not ready, not draining, not shutdown: still initializing
+                self._state = RuntimeConnectionState.STARTING
 
             return health_res
 

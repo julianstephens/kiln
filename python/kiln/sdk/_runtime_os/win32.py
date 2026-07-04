@@ -7,7 +7,7 @@ import sys
 import weakref
 from contextlib import suppress
 from pathlib import Path
-from typing import BinaryIO, TextIO, TypeAlias, cast
+from typing import BinaryIO, TypeAlias, cast
 
 import anyio
 from anyio.abc import Process
@@ -128,7 +128,6 @@ async def create_windows_process(
     command: str,
     args: list[str],
     env: dict[str, str] | None = None,
-    errlog: TextIO | None = sys.stderr,
     cwd: Path | str | None = None,
 ) -> Process | FallbackProcess:
     """Creates a subprocess with Job Object support for tree termination.
