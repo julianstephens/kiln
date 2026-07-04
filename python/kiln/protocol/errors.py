@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .pending import InflightRequestDisposition
+
+
 class FramingError(RuntimeError):
     """Raised when a framing error occurs in the protocol."""
 
@@ -69,3 +75,21 @@ class JsonRpcResponseIdMismatchError(RuntimeError):
                 f"received {received_id}"
             )
         )
+
+
+class RuntimeConnectionClosedError(RuntimeError):
+    def __init__(
+        self,
+        message: str = "runtime connection closed",
+        in_flight: tuple["InflightRequestDisposition", ...] = (),
+    ) -> None:
+        self.in_flight = in_flight
+        super().__init__(message)
+
+
+class RuntimeProcessExitedError(RuntimeConnectionClosedError):
+    def __init__(self, returncode: int | None = None) -> None:
+        super().__init__(
+            f"runtime process exited unexpectedly: returncode={returncode}"
+        )
+        self.returncode = returncode

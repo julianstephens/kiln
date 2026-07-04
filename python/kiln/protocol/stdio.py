@@ -8,12 +8,13 @@ from anyio.streams.buffered import (
 from .errors import (
     JsonRpcFrameExceedsSizeLimitError,
     JsonRpcResponseIdMismatchError,
+    RuntimeConnectionClosedError,
     RuntimeStreamClosedError,
     UnexpectedJsonRpcMessageError,
 )
 from .framing import DEFAULT_MAX_MESSAGE_BYTES, decode_frame, encode_frame
 from .jsonrpc import JsonRpcMessage, JsonRpcRequest, parse_jsonrpc_message
-from .pending import PendingRequests
+from .pending import InflightRequestDisposition, PendingRequests
 
 
 class Peer:
@@ -127,6 +128,21 @@ class Peer:
                 )
 
             self._pending_requests.pop(res.id)
+        except RuntimeStreamClosedError as exc:
+            raise RuntimeConnectionClosedError(
+                message=(
+                    "runtime stream closed while waiting "
+                    f"for response to {message.method}"
+                ),
+                in_flight=(
+                    InflightRequestDisposition(
+                        request_id=str(message.id),
+                        method=message.method,
+                        disposition="failed_connection_closed",
+                    ),
+                ),
+            ) from exc
+        else:
             return res
         finally:
             if message.id in self._pending_requests:

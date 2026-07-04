@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from kiln.schemas.runtime import RuntimeError as KilnRuntimeError
+
+if TYPE_CHECKING:
+    from .runtime_exit import InflightRequestDisposition, RuntimeExitStatus
 
 
 class RepositoryError(Exception):
@@ -63,3 +68,21 @@ class MissingRuntimeBinaryError(RuntimeProcessError):
 
     def __init__(self) -> None:
         super().__init__("runtime binary is missing")
+
+
+class RuntimeProcessExitedError(RuntimeProcessError):
+    def __init__(
+        self,
+        *,
+        exit_status: "RuntimeExitStatus",
+        in_flight: tuple["InflightRequestDisposition", ...],
+    ) -> None:
+        self.exit_status = exit_status
+        self.in_flight = in_flight
+        super().__init__(
+            (
+                "runtime process exited unexpectedly "
+                f"returncode={exit_status.returncode}, "
+                f"signal={exit_status.signal}"
+            )
+        )

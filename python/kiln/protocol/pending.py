@@ -1,9 +1,28 @@
 from dataclasses import dataclass
+from typing import Generator, Literal
 
 from pydantic import BaseModel
 
 from .jsonrpc import JsonRpcErrorResponse, JsonRpcSuccessResponse
 from .method import validate_error_data, validate_success_result
+
+InflightDisposition = Literal[
+    "completed",
+    "failed_connection_closed",
+    "failed_process_exited",
+    "cancelled",
+    "unknown",
+]
+
+
+@dataclass(frozen=True)
+class InflightRequestDisposition:
+    """Represents the disposition of an in-flight request when a runtime connection is
+    closed."""
+
+    request_id: str
+    method: str
+    disposition: InflightDisposition
 
 
 @dataclass(frozen=True)
@@ -43,6 +62,27 @@ class PendingRequests:
         """
         return self._by_id.pop(request_id)
 
+    def inflight_disposition(
+        self, disposition: InflightDisposition = "unknown"
+    ) -> tuple[InflightRequestDisposition, ...]:
+        """Return a tuple of InflightRequestDisposition instances for all pending
+        requests.
+
+        Args:
+            disposition: The disposition to associate with each pending request.
+
+        Returns:
+            A tuple of InflightRequestDisposition instances.
+        """
+        res = []
+        for req in self._by_id.values():
+            res.append(
+                InflightRequestDisposition(
+                    request_id=str(req.id), method=req.method, disposition=disposition
+                )
+            )
+        return tuple(res)
+
     def __contains__(self, request_id: str | int) -> bool:
         """Check if a pending request with the given ID exists in the collection.
 
@@ -61,6 +101,15 @@ class PendingRequests:
             The number of pending requests.
         """
         return len(self._by_id)
+
+    def __iter__(self) -> Generator[PendingRequest, None, None]:
+        """Yield each pending request in the collection.
+
+        Returns:
+            Generator of PendingRequest instances.
+        """
+        for request in self._by_id.values():
+            yield request
 
 
 def validate_response_against_pending_method(

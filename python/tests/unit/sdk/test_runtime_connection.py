@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Any, get_args
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from kiln.protocol.jsonrpc import (
-    DEFAULT_JSONRPC_VERSION,
     JsonRpcErrorObject,
     JsonRpcErrorResponse,
     JsonRpcRequest,
@@ -16,7 +15,11 @@ from kiln.protocol.jsonrpc import (
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
 from kiln.sdk import PACKAGE_NAME, __version__
 from kiln.sdk.errors import RuntimeMethodError, RuntimeProcessError
-from kiln.sdk.runtime_connection import RUNTIME_PROTOCOL_VERSION, RuntimeStdioConnection
+from kiln.sdk.runtime_connection import (
+    RUNTIME_PROTOCOL_VERSION,
+    RuntimeConnectionState,
+    RuntimeStdioConnection,
+)
 
 
 class _FakePeer:
@@ -46,7 +49,7 @@ def _initialize_result_payload() -> dict[str, Any]:
             "name": "kiln-runtime",
             "version": "0.1.0",
         },
-        "protocol_version": get_args(DEFAULT_JSONRPC_VERSION)[0],
+        "protocol_version": RUNTIME_PROTOCOL_VERSION,
         "schema_set_version": SCHEMA_SET_VERSION,
         "compatibility_major": COMPATIBILITY_MAJOR,
         "supported_method_namespaces": ["runtime"],
@@ -70,12 +73,29 @@ def _health_result_payload() -> dict[str, Any]:
 
 def test_init_rejects_missing_stdin() -> None:
     with pytest.raises(RuntimeProcessError, match="stdin is unavailable"):
-        RuntimeStdioConnection(_process(stdin=None))
+        RuntimeStdioConnection(_process(stdin=None), RuntimeConnectionState.STARTING)
 
 
 def test_init_rejects_missing_stdout() -> None:
     with pytest.raises(RuntimeProcessError, match="stdout is unavailable"):
-        RuntimeStdioConnection(_process(stdout=None))
+        RuntimeStdioConnection(_process(stdout=None), RuntimeConnectionState.STARTING)
+
+
+@pytest.mark.parametrize(
+    ("initial_state", "expected_state"),
+    [
+        (RuntimeConnectionState.STARTING, RuntimeConnectionState.STARTING),
+        (RuntimeConnectionState.READY, RuntimeConnectionState.READY),
+        (RuntimeConnectionState.DRAINING, RuntimeConnectionState.DRAINING),
+        (RuntimeConnectionState.EXITED, RuntimeConnectionState.EXITED),
+    ],
+)
+def test_init_sets_connection_state(
+    initial_state: RuntimeConnectionState, expected_state: RuntimeConnectionState
+) -> None:
+    conn = RuntimeStdioConnection(_process(), initial_state)
+
+    assert conn.state == expected_state
 
 
 @pytest.mark.anyio
@@ -88,7 +108,7 @@ async def test_initialize_returns_runtime_initialize_result(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.initialize()
 
     assert result.root.runtime.id == "runtime-1"
@@ -129,7 +149,7 @@ async def test_initialize_raises_on_jsonrpc_error_response(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError, match=r"jsonrpc_code=-32000, message=boom"):
         await conn.initialize()
@@ -145,10 +165,11 @@ async def test_health_returns_runtime_health_result(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     assert result.root.ready is True
+    assert conn.state == RuntimeConnectionState.READY
     assert fake_peer.last_request is not None
     assert fake_peer.last_request.method == "runtime.health"
     assert fake_peer.last_request.params is None
@@ -162,7 +183,7 @@ async def test_health_raises_on_unexpected_request_response(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeProcessError, match="unexpected request"):
         await conn.health()
@@ -197,7 +218,7 @@ async def test_error_data_validation_and_preservation(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError) as exc_info:
         await conn.initialize()
@@ -235,7 +256,7 @@ async def test_initialize_raises_on_incompatible_protocol_version(mocker) -> Non
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError, match="incompatible protocol version"):
         await conn.initialize()
@@ -268,7 +289,7 @@ async def test_initialize_raises_on_incompatible_schema_set(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(RuntimeMethodError, match="incompatible schema-set"):
         await conn.initialize()
@@ -291,7 +312,7 @@ async def test_initialize_raises_on_malformed_success_result(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(ValidationError):  # ValidationError
         await conn.initialize()
@@ -322,7 +343,7 @@ async def test_initialize_raises_on_malformed_error_data(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     with pytest.raises(ValidationError):
         await conn.initialize()
@@ -339,11 +360,30 @@ async def test_health_not_ready(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     assert result.root.ready is False
     assert result.root.initialized is True
+    assert conn.state == RuntimeConnectionState.STARTING
+
+
+@pytest.mark.anyio
+async def test_health_sets_draining_state(mocker) -> None:
+    health_payload = _health_result_payload()
+    health_payload["ready"] = False
+    health_payload["draining"] = True
+    fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=health_payload))
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+    result = await conn.health()
+
+    assert result.root.draining is True
+    assert conn.state == RuntimeConnectionState.DRAINING
 
 
 @pytest.mark.anyio
@@ -352,17 +392,19 @@ async def test_health_after_shutdown(mocker) -> None:
     health_payload = _health_result_payload()
     health_payload["shutdown"] = True
     health_payload["ready"] = False
+    health_payload["initialized"] = False
     fake_peer = _FakePeer(JsonRpcSuccessResponse(id="1", result=health_payload))
     mocker.patch(
         "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     assert result.root.shutdown is True
     assert result.root.ready is False
+    assert conn.state == RuntimeConnectionState.EXITED
 
 
 @pytest.mark.anyio
@@ -394,7 +436,7 @@ async def test_initialize_and_health_ordering(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
 
     # Call initialize then health
     await conn.initialize()
@@ -465,7 +507,7 @@ async def test_health_sends_non_empty_request_id(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
 
-    conn = RuntimeStdioConnection(_process())
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
     result = await conn.health()
 
     # Verify the captured request has a non-empty ID
@@ -475,3 +517,187 @@ async def test_health_sends_non_empty_request_id(mocker) -> None:
     assert captured_request.method == "runtime.health"
     assert captured_request.params is None
     assert result.root.ready is True
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_on_process_exit_during_request(mocker) -> None:
+    """Test that process exit during request is detected and raised.
+
+    Simulates the case where the runtime process exits while an RPC request
+    is in flight, resulting in a broken pipe or connection error.
+    """
+
+    class ProcessExitDuringRequestPeer:
+        """Fake peer that simulates process exit mid-request."""
+
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            # Simulate process exit by raising connection error
+            raise RuntimeProcessError(message="runtime process exited during request")
+
+    peer = ProcessExitDuringRequestPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeProcessError, match="exited during request"):
+        await conn.initialize()
+
+
+@pytest.mark.anyio
+async def test_health_raises_on_process_exit_during_request(mocker) -> None:
+    """Test that health() detects process exit during request."""
+
+    class ProcessExitDuringRequestPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            raise RuntimeProcessError(message="runtime process exited unexpectedly")
+
+    peer = ProcessExitDuringRequestPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeProcessError, match="exited unexpectedly"):
+        await conn.health()
+
+
+@pytest.mark.anyio
+async def test_multiple_sequential_initialize_calls(mocker) -> None:
+    """Test that initialize can be called multiple times (returns same result)."""
+    call_count = 0
+
+    class CountingPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            nonlocal call_count
+            call_count += 1
+            self.last_request = message
+            return JsonRpcSuccessResponse(
+                id=message.id, result=_initialize_result_payload()
+            )
+
+    peer = CountingPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    # First initialize succeeds
+    result1 = await conn.initialize()
+    assert result1.root.runtime.id == "runtime-1"
+    assert call_count == 1
+
+    # Second initialize should also succeed (idempotent)
+    result2 = await conn.initialize()
+    assert result2.root.runtime.id == "runtime-1"
+    assert call_count == 2
+
+
+@pytest.mark.anyio
+async def test_initialize_raises_runtime_connection_closed_error(mocker) -> None:
+    """Test that RuntimeConnectionClosedError is raised when stream closes.
+
+    Verifies:
+    - RuntimeConnectionClosedError is raised on stream closure
+    - in_flight contains the current request id and method
+    """
+    from kiln.protocol.errors import RuntimeConnectionClosedError
+    from kiln.protocol.pending import InflightRequestDisposition
+
+    class StreamClosedPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            # Simulate stream closure during request
+            exc = RuntimeConnectionClosedError(
+                message="runtime connection closed",
+                in_flight=(
+                    InflightRequestDisposition(
+                        request_id=str(message.id),
+                        method=message.method,
+                        disposition="failed_connection_closed",
+                    ),
+                ),
+            )
+            raise exc
+
+    peer = StreamClosedPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeConnectionClosedError) as exc_info:
+        await conn.initialize()
+
+    # Verify in_flight contains the request info
+    error = exc_info.value
+    assert len(error.in_flight) == 1
+    assert error.in_flight[0].request_id == peer.last_request.id
+    assert error.in_flight[0].method == "runtime.initialize"
+    assert error.in_flight[0].disposition == "failed_connection_closed"
+
+
+@pytest.mark.anyio
+async def test_health_raises_runtime_connection_closed_error(mocker) -> None:
+    """Test that health() propagates RuntimeConnectionClosedError with in_flight."""
+    from kiln.protocol.errors import RuntimeConnectionClosedError
+    from kiln.protocol.pending import InflightRequestDisposition
+
+    class StreamClosedPeer:
+        def __init__(self):
+            self.last_request: JsonRpcRequest | None = None
+
+        async def request(self, message: JsonRpcRequest) -> Any:
+            self.last_request = message
+            # Simulate stream closure during health check
+            exc = RuntimeConnectionClosedError(
+                message="runtime connection closed during health",
+                in_flight=(
+                    InflightRequestDisposition(
+                        request_id=str(message.id),
+                        method=message.method,
+                        disposition="failed_connection_closed",
+                    ),
+                ),
+            )
+            raise exc
+
+    peer = StreamClosedPeer()
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeConnectionClosedError) as exc_info:
+        await conn.health()
+
+    # Verify in_flight contains the health request info
+    error = exc_info.value
+    assert len(error.in_flight) == 1
+    assert error.in_flight[0].request_id == peer.last_request.id
+    assert error.in_flight[0].method == "runtime.health"
+    assert error.in_flight[0].disposition == "failed_connection_closed"
