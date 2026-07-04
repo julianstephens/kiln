@@ -156,9 +156,7 @@ async def create_windows_process(
         )
     except NotImplementedError:
         # Windows event loops without async subprocess support (SelectorEventLoop)
-        process = await _create_windows_fallback_process(
-            command, args, env, errlog, cwd
-        )
+        process = await _create_windows_fallback_process(command, args, env, cwd)
 
     # Children spawned before the assignment completes land outside the job
     # (membership is inherited at CreateProcess, never acquired retroactively);
@@ -172,7 +170,6 @@ async def _create_windows_fallback_process(
     command: str,
     args: list[str],
     env: dict[str, str] | None = None,
-    errlog: TextIO | None = sys.stderr,
     cwd: Path | str | None = None,
 ) -> FallbackProcess:
     """Spawns via subprocess.Popen and wraps it in FallbackProcess."""
@@ -180,7 +177,7 @@ async def _create_windows_fallback_process(
         [command, *args],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=errlog,
+        stderr=subprocess.PIPE,
         env=env,
         cwd=cwd,
         bufsize=0,  # Unbuffered output
