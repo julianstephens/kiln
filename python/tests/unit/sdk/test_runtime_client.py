@@ -80,8 +80,6 @@ async def test_start_raises_runtime_process_exited_error_on_connection_closed(
                 ),
             )
 
-    ConnectionClosedPeer()
-
     # Mock RuntimeStdioConnection to use our connection closed peer
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
     mock_connection.process = fake_process
