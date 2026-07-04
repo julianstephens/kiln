@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from structlog import BoundLogger, get_logger
+
+from kiln.logger import DefaultLoggingConfig, LoggingConfig, configure_logging
 from kiln.models.budget import Budget
 from kiln.models.run import RunResult
 
@@ -12,11 +15,13 @@ from .errors import RepositoryNotFoundError, TaskEmptyError
 class AgentConfig:
     repository: Path
     budget: Budget
+    logging: LoggingConfig
 
 
 class Agent:
     _config: AgentConfig
     _client: RuntimeClient
+    _logger: BoundLogger
 
     def __init__(
         self,
@@ -25,6 +30,8 @@ class Agent:
     ) -> None:
         self._config = config
         self._client = client
+        configure_logging(config.logging)
+        self._logger = get_logger(__name__).bind(repository=str(config.repository))
 
     @classmethod
     async def open(
@@ -32,6 +39,7 @@ class Agent:
         repository: str | Path,
         *,
         budget: Budget,
+        logging: LoggingConfig = DefaultLoggingConfig,
     ) -> "Agent":
         repository_path = Path(repository).resolve()
 
@@ -42,8 +50,7 @@ class Agent:
 
         return cls(
             config=AgentConfig(
-                repository=repository_path,
-                budget=budget,
+                repository=repository_path, budget=budget, logging=logging
             ),
             client=client,
         )
