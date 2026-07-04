@@ -34,10 +34,10 @@ class RuntimeProcess:
 
     @property
     def exit_status(self) -> RuntimeExitStatus | None:
-        exit_code, signal = normalize_exit_status(self.process.returncode)
-
-        if exit_code is None or signal is None:
+        if self.process.returncode is None:
             return None
+
+        exit_code, signal = normalize_exit_status(self.process.returncode)
 
         status = RuntimeExitStatus(
             expected=self._expected_exit,
