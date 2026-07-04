@@ -13,12 +13,20 @@ from .runtime_client import RuntimeClient
 
 @dataclass(frozen=True)
 class AgentConfig:
+    """Represents the configuration for an Agent instance."""
+
+    # The path to the source control repository that the agent will interact with.
     repository: Path
+    # The budget configuration that defines the resource limits for the agent's
+    # operations.
     budget: Budget
+    # The logging configuration that defines how the agent will log its operations.
     logging: LoggingConfig
 
 
 class Agent:
+    """An agent that interacts with a source control repository and manages tasks."""
+
     _config: AgentConfig
     _client: RuntimeClient
     _logger: BoundLogger
@@ -28,6 +36,11 @@ class Agent:
         config: AgentConfig,
         client: RuntimeClient,
     ) -> None:
+        """Initialize an Agent instance with the given configuration and runtime client.
+
+        Agent instances are typically created using the `Agent.open` class method, which
+        handles the asynchronous initialization of the runtime client.
+        """
         self._config = config
         self._client = client
         configure_logging(config.logging)
@@ -41,6 +54,19 @@ class Agent:
         budget: Budget,
         logging: LoggingConfig = DefaultLoggingConfig,
     ) -> "Agent":
+        """Open an agent for the given repository with the specified budget and logging
+        configuration. Agent instance is created and initialized asynchronously,
+        establishing a connection to the runtime client.
+
+        Args:
+            repository: The path to the source control repository that the agent will
+                interact with. Can be a string or a Path object.
+            budget: The budget configuration that defines the resource limits for the
+                agent's operations.
+            logging: The logging configuration that defines how the agent will log its
+                operations. Defaults to stderr config
+
+        """
         repository_path = Path(repository).resolve()
 
         if not repository_path.is_dir():
