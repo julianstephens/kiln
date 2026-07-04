@@ -134,11 +134,12 @@ func ParseError(details map[string]any) protocol.ErrorResponse {
 		JSONRPCCode: contract.JSONRPCParseError,
 		Category:    runtime_error.ErrorKilnErrorCategoryValidation,
 		KilnCode:    "runtime.parse_error",
-		Message:     "parse error",
+		Message:     "unable to parse JSON-RPC request",
 		Retryable:   false,
 		Details:     util.If(details == nil, make(map[string]any), details),
 	}
 	return protocol.ErrorResponse{
+		ID:      protocol.ID{Null: true},
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		Error:   MustObject(spec),
 	}
