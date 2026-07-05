@@ -17,12 +17,6 @@ class Schema(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    grace_period_seconds: Annotated[
-        int,
-        Field(
-            description="The number of seconds to wait before shutting down the runtime. If not specified, the runtime will shut down immediately."
-        ),
-    ]
     cancel_in_flight_requests: Annotated[
         bool,
         Field(

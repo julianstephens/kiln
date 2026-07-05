@@ -1,5 +1,4 @@
 {
-    "grace_period_seconds": 5,
     "cancel_in_flight_requests": true,
     "reason": "Operator requested shutdown"
 }

@@ -115,7 +115,6 @@ func TestMakeShutdownHandler_AcceptsRequest(t *testing.T) {
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.shutdown",
 		Params: map[string]any{
-			"grace_period_seconds":      5,
 			"cancel_in_flight_requests": true,
 			"reason":                    "maintenance",
 		},
@@ -167,7 +166,6 @@ func TestMakeShutdownHandler_AlreadyDraining(t *testing.T) {
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.shutdown",
 		Params: map[string]any{
-			"grace_period_seconds":      10,
 			"cancel_in_flight_requests": false,
 			"reason":                    "retry",
 		},
@@ -216,7 +214,6 @@ func TestMakeShutdownHandler_AlreadyShutdown(t *testing.T) {
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.shutdown",
 		Params: map[string]any{
-			"grace_period_seconds":      1,
 			"cancel_in_flight_requests": true,
 			"reason":                    "complete",
 		},
@@ -267,7 +264,6 @@ func TestMakeShutdownHandler_CompletesWithCancelInFlightRequests(t *testing.T) {
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.shutdown",
 		Params: map[string]any{
-			"grace_period_seconds":      1,
 			"cancel_in_flight_requests": true,
 			"reason":                    "maintenance",
 		},
@@ -309,7 +305,6 @@ func TestMakeShutdownHandler_CompletesAfterInFlightRequestsDrain(t *testing.T) {
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.shutdown",
 		Params: map[string]any{
-			"grace_period_seconds":      1,
 			"cancel_in_flight_requests": false,
 			"reason":                    "drain",
 		},
@@ -335,46 +330,6 @@ func TestMakeShutdownHandler_CompletesAfterInFlightRequestsDrain(t *testing.T) {
 	state.Mu.Unlock()
 }
 
-// TestMakeShutdownHandler_ContextCanceledDuringGracePeriod tests that canceling the request context stops shutdown before completion.
-func TestMakeShutdownHandler_ContextCanceledDuringGracePeriod(t *testing.T) {
-	t.Parallel()
-
-	state := &handler.HandlerState{}
-	pendingRequests := protocol.NewPendingRequests()
-	pendingRequests.Add("request-1", "repository.search")
-	deps := &contract.RuntimeDeps{
-		Lifecycle:       contract.NewLifecycle(),
-		PendingRequests: pendingRequests,
-	}
-
-	shutdownHandler := handler.MakeShutdownHandler(state, deps)
-	requestID := int64(8)
-	ctx, cancel := context.WithCancel(context.Background())
-
-	req := protocol.Request{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      protocol.ID{Number: &requestID},
-		Method:  "runtime.shutdown",
-		Params: map[string]any{
-			"grace_period_seconds":      5,
-			"cancel_in_flight_requests": false,
-			"reason":                    "cancel-test",
-		},
-	}
-
-	resp := shutdownHandler(ctx, req)
-	utest.AssertTrue(t, resp.IsSuccessResponse(), "shutdown should return success response")
-
-	cancel()
-	time.Sleep(150 * time.Millisecond)
-
-	state.Mu.Lock()
-	utest.AssertEqual(t, state.Draining, true)
-	utest.AssertEqual(t, state.Shutdown, false)
-	state.Mu.Unlock()
-	utest.AssertEqual(t, pendingRequests.Count(), int64(1))
-}
-
 // TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight tests that timeout while draining still completes shutdown state.
 func TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight(t *testing.T) {
 	t.Parallel()
@@ -397,7 +352,6 @@ func TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight(t *testing.T)
 		ID:      protocol.ID{Number: &requestID},
 		Method:  "runtime.shutdown",
 		Params: map[string]any{
-			"grace_period_seconds":      1,
 			"cancel_in_flight_requests": false,
 			"reason":                    "timeout-test",
 		},

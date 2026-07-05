@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -31,11 +32,14 @@ RUNTIME_PROTOCOL_VERSION = "2026-07-01"
 @dataclass
 class ShutdownConfig:
     grace_period_seconds: int
+    process_exit_timeout_seconds: int
     cancel_in_flight_requests: bool
 
 
 DefaultShutdownConfig = ShutdownConfig(
-    grace_period_seconds=30, cancel_in_flight_requests=True
+    grace_period_seconds=30,
+    process_exit_timeout_seconds=30,
+    cancel_in_flight_requests=True,
 )
 
 
@@ -97,6 +101,11 @@ class RuntimeStdioConnection:
         if self._state == RuntimeConnectionState.FAILED:
             return
         self._state = value
+
+    @property
+    def shutdown_config(self) -> ShutdownConfig:
+        """The shutdown configuration for the connection to the runtime process."""
+        return self._shutdown_config
 
     def inflight_disposition(
         self, disposition: InflightDisposition = "unknown"
@@ -219,11 +228,13 @@ class RuntimeStdioConnection:
         cancel_in_flight = self._shutdown_config.cancel_in_flight_requests
         params = RuntimeShutdownRequestPayload.model_validate(
             {
-                "grace_period_seconds": self._shutdown_config.grace_period_seconds,
                 "cancel_in_flight_requests": cancel_in_flight,
                 "reason": "caller_requested",
             }
         )
+        if self._shutdown_config.grace_period_seconds > 0:
+            time.sleep(self._shutdown_config.grace_period_seconds)
+
         res = await self.peer.request(
             JsonRpcRequest(
                 id=new_request_id(),

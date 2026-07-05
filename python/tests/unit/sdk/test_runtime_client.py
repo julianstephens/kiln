@@ -121,3 +121,111 @@ async def test_start_raises_runtime_process_exited_error_on_connection_closed(
     assert len(error.in_flight) == 1
     assert error.in_flight[0].method == "runtime.initialize"
     assert error.in_flight[0].disposition == "failed_connection_closed"
+
+
+@pytest.mark.anyio
+async def test_close_uses_configured_process_exit_timeout(mocker) -> None:
+    """Test that close() uses process_exit_timeout_seconds from ShutdownConfig.
+
+    Verifies:
+    - _poll_until is called with the configured timeout value
+    - The timeout is passed from ShutdownConfig to the polling operation
+    """
+    from kiln.sdk.runtime_connection import ShutdownConfig
+
+    # Create fake process and connection mocks
+    fake_runtime_process = MagicMock()
+    fake_runtime_process.is_alive = True
+    fake_runtime_process.aclose = AsyncMock()
+
+    # Create mock connection with configured timeout
+    mock_connection = MagicMock(spec=RuntimeStdioConnection)
+    mock_connection.state = "ready"
+    mock_connection._shutdown_config = ShutdownConfig(
+        grace_period_seconds=1,
+        process_exit_timeout_seconds=5,  # Custom timeout for test
+        cancel_in_flight_requests=True,
+    )
+    mock_connection.shutdown = AsyncMock(
+        return_value=MagicMock(
+            root=MagicMock(accepted=True, draining=True, shutdown=False)
+        )
+    )
+    mock_connection.drain_stderr = AsyncMock()
+
+    mocker.patch(
+        "kiln.sdk.runtime_client.RuntimeStdioConnection",
+        return_value=mock_connection,
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_client.RuntimeProcess.start",
+        new_callable=AsyncMock,
+        return_value=fake_runtime_process,
+    )
+
+    # Create client and mock _poll_until
+    client = RuntimeClient(fake_runtime_process, mock_connection)
+    mock_poll_until = mocker.patch.object(client, "_poll_until", new_callable=AsyncMock)
+
+    # Call close
+    await client.close()
+
+    # Verify _poll_until was called with the configured timeout
+    mock_poll_until.assert_called_once()
+    call_args = mock_poll_until.call_args
+    assert call_args.kwargs["timeout_seconds"] == 5
+
+
+@pytest.mark.anyio
+async def test_close_uses_default_process_exit_timeout_when_not_configured(
+    mocker,
+) -> None:
+    """Test that close() uses default process_exit_timeout_seconds if not
+    explicitly set.
+
+    Verifies:
+    - DefaultShutdownConfig has a sensible default timeout
+    - The default is used when ShutdownConfig is created without explicit timeout
+    """
+    from kiln.sdk.runtime_connection import DefaultShutdownConfig
+
+    # Verify default timeout is set
+    assert DefaultShutdownConfig.process_exit_timeout_seconds == 30
+
+    # Create fake process and connection mocks
+    fake_runtime_process = MagicMock()
+    fake_runtime_process.is_alive = True
+    fake_runtime_process.aclose = AsyncMock()
+
+    # Create mock connection with default timeout
+    mock_connection = MagicMock(spec=RuntimeStdioConnection)
+    mock_connection.state = "ready"
+    mock_connection._shutdown_config = DefaultShutdownConfig
+    mock_connection.shutdown = AsyncMock(
+        return_value=MagicMock(
+            root=MagicMock(accepted=True, draining=True, shutdown=False)
+        )
+    )
+    mock_connection.drain_stderr = AsyncMock()
+
+    mocker.patch(
+        "kiln.sdk.runtime_client.RuntimeStdioConnection",
+        return_value=mock_connection,
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_client.RuntimeProcess.start",
+        new_callable=AsyncMock,
+        return_value=fake_runtime_process,
+    )
+
+    # Create client and mock _poll_until
+    client = RuntimeClient(fake_runtime_process, mock_connection)
+    mock_poll_until = mocker.patch.object(client, "_poll_until", new_callable=AsyncMock)
+
+    # Call close
+    await client.close()
+
+    # Verify _poll_until was called with the default timeout
+    mock_poll_until.assert_called_once()
+    call_args = mock_poll_until.call_args
+    assert call_args.kwargs["timeout_seconds"] == 30

@@ -103,7 +103,7 @@ func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
 		)
 		_, _ = writer.Write(
 			[]byte(
-				`{"jsonrpc":"2.0","id":"2","method":"runtime.shutdown","params":{"grace_period_seconds":5,"cancel_in_flight_requests":true,"reason":"test"}}` + "\n",
+				`{"jsonrpc":"2.0","id":"2","method":"runtime.shutdown","params":{"cancel_in_flight_requests":true,"reason":"test"}}` + "\n",
 			),
 		)
 		_, _ = writer.Write([]byte(`{"jsonrpc":"2.0","id":"3","method":"runtime.health"}` + "\n"))

@@ -10,8 +10,6 @@ import (
 type ShutdownRequestPayload struct {
 	// CancelInFlightRequests if true, the runtime will cancel any in-flight requests before shutting down. If false, the runtime will wait for in-flight requests to complete before shutting down.
 	CancelInFlightRequests bool `json:"cancel_in_flight_requests"`
-	// GracePeriodSeconds the number of seconds to wait before shutting down the runtime. If not specified, the runtime will shut down immediately.
-	GracePeriodSeconds int `json:"grace_period_seconds" validate:"required"`
 	// Reason a human-readable reason for the shutdown request.
 	Reason string `json:"reason" validate:"required"`
 }

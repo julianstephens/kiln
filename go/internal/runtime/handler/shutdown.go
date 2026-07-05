@@ -102,7 +102,6 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			deps.Logger.Debug("shutdown request validated",
 				"request_id", req.ID.JSONValue(),
 				"cancel_in_flight_requests", validatedParams.CancelInFlightRequests,
-				"grace_period_seconds", validatedParams.GracePeriodSeconds,
 				"reason", validatedParams.Reason,
 			)
 		}
@@ -111,7 +110,6 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			deps.Logger.Debug("shutdown request processing",
 				"request_id", req.ID.JSONValue(),
 				"cancel_in_flight_requests", validatedParams.CancelInFlightRequests,
-				"grace_period_seconds", validatedParams.GracePeriodSeconds,
 				"reason", validatedParams.Reason,
 			)
 		}
@@ -121,7 +119,6 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			ctx,
 			state,
 			deps,
-			validatedParams.GracePeriodSeconds,
 			validatedParams.CancelInFlightRequests,
 		)
 
@@ -134,43 +131,17 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 	}
 }
 
-// startShutdownWorker starts a goroutine that handles the shutdown process, including waiting for the grace period and canceling in-flight requests if specified.
+// startShutdownWorker starts a goroutine that handles the shutdown process, including canceling in-flight requests if specified.
 // It updates the HandlerState to indicate that the shutdown process has started and completed.
 func startShutdownWorker(
 	ctx context.Context,
 	state *HandlerState,
 	deps *contract.RuntimeDeps,
-	gracePeriodSeconds int,
 	cancelInFlightRequests bool,
 ) {
 	deps.Lifecycle.Wg.Go(func() {
 		if deps != nil && deps.Logger != nil {
-			deps.Logger.Debug("shutdown worker started",
-				"grace_period_seconds", gracePeriodSeconds,
-			)
-		}
-
-		if gracePeriodSeconds > 0 {
-			if deps != nil && deps.Logger != nil {
-				deps.Logger.Debug("shutdown worker sleeping for grace period",
-					"grace_period_seconds", gracePeriodSeconds,
-				)
-			}
-			select {
-			case <-time.After(time.Duration(gracePeriodSeconds) * time.Second):
-				if deps != nil && deps.Logger != nil {
-					deps.Logger.Debug("shutdown worker finished sleeping for grace period",
-						"grace_period_seconds", gracePeriodSeconds,
-					)
-				}
-			case <-ctx.Done():
-				if deps != nil && deps.Logger != nil {
-					deps.Logger.Debug("shutdown worker context canceled during grace period sleep",
-						"grace_period_seconds", gracePeriodSeconds,
-					)
-				}
-				return
-			}
+			deps.Logger.Debug("shutdown worker started")
 		}
 
 		cancelCtx, cancel := context.WithTimeout(ctx, ShutdownTimeoutSeconds*time.Second)

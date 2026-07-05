@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from pydantic import ValidationError
@@ -765,7 +766,11 @@ async def test_shutdown_returns_runtime_shutdown_result_and_sets_draining_state(
     conn = RuntimeStdioConnection(
         _process(),
         RuntimeConnectionState.STARTING,
-        ShutdownConfig(grace_period_seconds=45, cancel_in_flight_requests=False),
+        ShutdownConfig(
+            grace_period_seconds=1,
+            process_exit_timeout_seconds=1,
+            cancel_in_flight_requests=False,
+        ),
     )
     result = await conn.shutdown()
 
@@ -776,11 +781,83 @@ async def test_shutdown_returns_runtime_shutdown_result_and_sets_draining_state(
     assert conn.state == RuntimeConnectionState.DRAINING
     assert fake_peer.last_request is not None
     assert fake_peer.last_request.method == "runtime.shutdown"
+    # Note: grace_period_seconds is handled on the Python side via sleep,
+    # not sent to the runtime. Only cancel_in_flight_requests and reason are sent.
     assert fake_peer.last_request.params == {
-        "grace_period_seconds": 45,
         "cancel_in_flight_requests": False,
         "reason": "caller_requested",
     }
+
+
+@pytest.mark.anyio
+async def test_shutdown_respects_grace_period(mocker) -> None:
+    """Test that shutdown() sleeps for grace_period_seconds before sending request.
+
+    Verifies:
+    - time.sleep is called with the grace_period_seconds value
+    - sleep occurs before the shutdown request is sent to the runtime
+    """
+    fake_peer = _FakePeer(
+        JsonRpcSuccessResponse(id="1", result=_shutdown_result_payload())
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.time.sleep")
+
+    grace_period = 1
+    conn = RuntimeStdioConnection(
+        _process(),
+        RuntimeConnectionState.STARTING,
+        ShutdownConfig(
+            grace_period_seconds=grace_period,
+            process_exit_timeout_seconds=1,
+            cancel_in_flight_requests=True,
+        ),
+    )
+    result = await conn.shutdown()
+
+    # Verify the grace period sleep was called
+    mock_sleep.assert_called_once_with(grace_period)
+    # Verify shutdown was successful
+    assert result.root.accepted is True
+    assert result.root.draining is True
+
+
+@pytest.mark.anyio
+async def test_shutdown_skips_sleep_with_zero_grace_period(mocker) -> None:
+    """Test that shutdown() skips sleep when grace_period_seconds is 0.
+
+    Verifies:
+    - time.sleep is not called when grace_period_seconds is 0
+    - shutdown request is sent immediately
+    """
+    fake_peer = _FakePeer(
+        JsonRpcSuccessResponse(id="1", result=_shutdown_result_payload())
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.time.sleep")
+
+    conn = RuntimeStdioConnection(
+        _process(),
+        RuntimeConnectionState.STARTING,
+        ShutdownConfig(
+            grace_period_seconds=0,
+            process_exit_timeout_seconds=1,
+            cancel_in_flight_requests=True,
+        ),
+    )
+    result = await conn.shutdown()
+
+    # Verify sleep was NOT called when grace_period is 0
+    mock_sleep.assert_not_called()
+    # Verify shutdown was successful
+    assert result.root.accepted is True
+    assert result.root.draining is True
 
 
 @pytest.mark.anyio
@@ -808,12 +885,22 @@ async def test_shutdown_raises_on_jsonrpc_error_response(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+    mock_connection = MagicMock(spec=RuntimeStdioConnection)
+    mock_connection.state = RuntimeConnectionState.STARTING
+    mock_connection._shutdown_config = ShutdownConfig(
+        grace_period_seconds=0,
+        process_exit_timeout_seconds=1,
+        cancel_in_flight_requests=True,
+    )
+    mock_connection.peer = fake_peer
+
+    real_shutdown = _RuntimeStdioConnection.shutdown
+    mock_connection.shutdown = lambda: real_shutdown(mock_connection)
 
     with pytest.raises(
         RuntimeMethodError, match=r"jsonrpc_code=-32000, message=shutdown denied"
     ) as exc_info:
-        await conn.shutdown()
+        await mock_connection.shutdown()
 
     exc = exc_info.value
     assert exc.method == "runtime.shutdown"
@@ -829,10 +916,20 @@ async def test_shutdown_raises_on_unexpected_request_response(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+    mock_connection = MagicMock(spec=RuntimeStdioConnection)
+    mock_connection.state = RuntimeConnectionState.STARTING
+    mock_connection._shutdown_config = ShutdownConfig(
+        grace_period_seconds=0,
+        process_exit_timeout_seconds=1,
+        cancel_in_flight_requests=True,
+    )
+    mock_connection.peer = fake_peer
+
+    real_shutdown = _RuntimeStdioConnection.shutdown
+    mock_connection.shutdown = lambda: real_shutdown(mock_connection)
 
     with pytest.raises(RuntimeProcessError, match="unexpected request"):
-        await conn.shutdown()
+        await mock_connection.shutdown()
 
 
 @pytest.mark.anyio
@@ -843,7 +940,17 @@ async def test_shutdown_raises_on_unexpected_response_type(mocker) -> None:
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
 
-    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+    mock_connection = MagicMock(spec=RuntimeStdioConnection)
+    mock_connection.state = RuntimeConnectionState.STARTING
+    mock_connection._shutdown_config = ShutdownConfig(
+        grace_period_seconds=0,
+        process_exit_timeout_seconds=1,
+        cancel_in_flight_requests=True,
+    )
+    mock_connection.peer = fake_peer
+
+    real_shutdown = _RuntimeStdioConnection.shutdown
+    mock_connection.shutdown = lambda: real_shutdown(mock_connection)
 
     with pytest.raises(RuntimeProcessError, match="unexpected response type"):
-        await conn.shutdown()
+        await mock_connection.shutdown()
