@@ -92,6 +92,13 @@ func Run(ctx context.Context, cfg Config) error {
 			})
 		}
 
+		if state.Draining || state.Shutdown {
+			deps.Logger.Debug("runtime is shutting down",
+				"request", req.ToJSON(),
+			)
+			msg, _ = rpcerror.Shutdown(protocolReq.ID, protocolReq.Method)
+		}
+
 		if msg == nil {
 			deps.Logger.Debug("dispatching runtime request",
 				"method", protocolReq.Method,

@@ -31,6 +31,34 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			)
 		}
 
+		if state.Draining {
+			if deps != nil && deps.Logger != nil {
+				deps.Logger.Debug("shutdown request ignored, already draining",
+					"request_id", req.ID.JSONValue(),
+				)
+			}
+			return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
+				Accepted:             false,
+				Draining:             true,
+				Shutdown:             false,
+				InFlightRequestCount: int(deps.PendingRequests.Count()),
+			}))
+		}
+
+		if state.Shutdown {
+			if deps != nil && deps.Logger != nil {
+				deps.Logger.Debug("shutdown request ignored, already shut down",
+					"request_id", req.ID.JSONValue(),
+				)
+			}
+			return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
+				Accepted:             false,
+				Draining:             false,
+				Shutdown:             true,
+				InFlightRequestCount: 0,
+			}))
+		}
+
 		shutdownMethod := protocol.KilnMethods["runtime.shutdown"]
 		res, err := shutdownMethod.ValidateParams(req.Params)
 		if err != nil {
@@ -88,24 +116,6 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			)
 		}
 
-		if state.Draining {
-			return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
-				Accepted:             false,
-				Draining:             true,
-				Shutdown:             false,
-				InFlightRequestCount: int(deps.PendingRequests.Count()),
-			}))
-		}
-
-		if state.Shutdown {
-			return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
-				Accepted:             false,
-				Draining:             false,
-				Shutdown:             true,
-				InFlightRequestCount: 0,
-			}))
-		}
-
 		state.Draining = true
 		startShutdownWorker(
 			ctx,
@@ -114,6 +124,7 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			validatedParams.GracePeriodSeconds,
 			validatedParams.CancelInFlightRequests,
 		)
+
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
 			Accepted:             true,
 			Draining:             true,
