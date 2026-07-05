@@ -211,7 +211,11 @@ class RuntimeStdioConnection:
         )
 
     async def shutdown(self) -> RuntimeShutdownResult:
-        """"""
+        """Shutdown the runtime process gracefully.
+
+        Returns:
+            The result of the shutdown request as a `RuntimeShutdownResult` instance.
+        """
         cancel_in_flight = self._shutdown_config.cancel_in_flight_requests
         params = RuntimeShutdownRequestPayload.model_validate(
             {
@@ -228,7 +232,6 @@ class RuntimeStdioConnection:
             )
         )
         if isinstance(res, JsonRpcRequest):
-            self._state = RuntimeConnectionState.FAILED
             raise RuntimeProcessError(
                 message=(
                     "runtime process returned an unexpected request "
@@ -236,13 +239,11 @@ class RuntimeStdioConnection:
                 )
             )
         if isinstance(res, JsonRpcErrorResponse):
-            self._state = RuntimeConnectionState.FAILED
             raise _runtime_method_error(method="runtime.shutdown", response=res)
         if isinstance(res, JsonRpcSuccessResponse):
             self._state = RuntimeConnectionState.DRAINING
-            return RuntimeShutdownResult.model_validate(res)
+            return RuntimeShutdownResult.model_validate(res.result)
 
-        self._state = RuntimeConnectionState.FAILED
         raise RuntimeProcessError(
             message="runtime process returned an unexpected response type"
         )

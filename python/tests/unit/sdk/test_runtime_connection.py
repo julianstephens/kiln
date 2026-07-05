@@ -17,9 +17,25 @@ from kiln.sdk import PACKAGE_NAME, __version__
 from kiln.sdk.errors import RuntimeMethodError, RuntimeProcessError
 from kiln.sdk.runtime_connection import (
     RUNTIME_PROTOCOL_VERSION,
+    DefaultShutdownConfig,
     RuntimeConnectionState,
-    RuntimeStdioConnection,
+    ShutdownConfig,
 )
+from kiln.sdk.runtime_connection import (
+    RuntimeStdioConnection as _RuntimeStdioConnection,
+)
+
+
+def RuntimeStdioConnection(  # noqa: N802
+    process: Any,
+    state: RuntimeConnectionState = RuntimeConnectionState.EXITED,
+    shutdown_config: ShutdownConfig = DefaultShutdownConfig,
+) -> _RuntimeStdioConnection:
+    return _RuntimeStdioConnection(
+        process=process,
+        shutdown_config=shutdown_config,
+        state=state,
+    )
 
 
 class _FakePeer:
@@ -68,6 +84,21 @@ def _health_result_payload() -> dict[str, Any]:
         "draining": False,
         "shutdown": False,
         "last_fatal_startup_error": None,
+    }
+
+
+def _shutdown_result_payload(
+    *,
+    accepted: bool = True,
+    draining: bool = True,
+    shutdown: bool = False,
+    in_flight_request_count: int = 0,
+) -> dict[str, Any]:
+    return {
+        "accepted": accepted,
+        "draining": draining,
+        "shutdown": shutdown,
+        "in_flight_request_count": in_flight_request_count,
     }
 
 
@@ -717,3 +748,102 @@ async def test_health_raises_runtime_connection_closed_error(mocker) -> None:
     assert error.in_flight[0].request_id == peer.last_request.id
     assert error.in_flight[0].method == "runtime.health"
     assert error.in_flight[0].disposition == "failed_connection_closed"
+
+
+@pytest.mark.anyio
+async def test_shutdown_returns_runtime_shutdown_result_and_sets_draining_state(
+    mocker,
+) -> None:
+    fake_peer = _FakePeer(
+        JsonRpcSuccessResponse(id="1", result=_shutdown_result_payload())
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(
+        _process(),
+        RuntimeConnectionState.STARTING,
+        ShutdownConfig(grace_period_seconds=45, cancel_in_flight_requests=False),
+    )
+    result = await conn.shutdown()
+
+    assert result.root.accepted is True
+    assert result.root.draining is True
+    assert result.root.shutdown is False
+    assert result.root.in_flight_request_count == 0
+    assert conn.state == RuntimeConnectionState.DRAINING
+    assert fake_peer.last_request is not None
+    assert fake_peer.last_request.method == "runtime.shutdown"
+    assert fake_peer.last_request.params == {
+        "grace_period_seconds": 45,
+        "cancel_in_flight_requests": False,
+        "reason": "caller_requested",
+    }
+
+
+@pytest.mark.anyio
+async def test_shutdown_raises_on_jsonrpc_error_response(mocker) -> None:
+    fake_peer = _FakePeer(
+        JsonRpcErrorResponse(
+            id="1",
+            error=JsonRpcErrorObject(
+                code=-32000,
+                message="shutdown denied",
+                data={
+                    "kiln_error": {
+                        "code": "runtime.shutdown",
+                        "category": "shutdown",
+                        "message": "shutdown denied",
+                        "retryable": True,
+                        "details": {},
+                    }
+                },
+            ),
+        )
+    )
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(
+        RuntimeMethodError, match=r"jsonrpc_code=-32000, message=shutdown denied"
+    ) as exc_info:
+        await conn.shutdown()
+
+    exc = exc_info.value
+    assert exc.method == "runtime.shutdown"
+    assert exc.response is fake_peer._response
+    assert exc.kiln_error.root.kiln_error.category == "shutdown"
+
+
+@pytest.mark.anyio
+async def test_shutdown_raises_on_unexpected_request_response(mocker) -> None:
+    fake_peer = _FakePeer(JsonRpcRequest(id="1", method="runtime.health"))
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeProcessError, match="unexpected request"):
+        await conn.shutdown()
+
+
+@pytest.mark.anyio
+async def test_shutdown_raises_on_unexpected_response_type(mocker) -> None:
+    fake_peer = _FakePeer("not-a-jsonrpc-response")
+    mocker.patch(
+        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
+    )
+    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
+
+    conn = RuntimeStdioConnection(_process(), RuntimeConnectionState.STARTING)
+
+    with pytest.raises(RuntimeProcessError, match="unexpected response type"):
+        await conn.shutdown()

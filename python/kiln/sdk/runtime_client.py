@@ -123,6 +123,7 @@ class RuntimeClient:
         self._closed = True
 
         try:
+            await self._connection.shutdown()
             await self._process.aclose(mark_expected=mark_expected)
         finally:
             if self._exit_stack is not None:
