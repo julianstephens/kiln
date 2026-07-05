@@ -159,9 +159,9 @@ async def test_initialize_raises_on_jsonrpc_error_response(mocker) -> None:
     exc = exc_info.value
     assert exc.method == "runtime.initialize"
     assert exc.response is fake_peer._response
-    assert exc.response.error.code == -32000
-    assert exc.response.error.message == "boom"
-    assert exc.response.error.data == fake_peer._response.error.data
+    assert exc.jsonrpc_code == -32000
+    assert exc.message == "boom"
+    assert exc.error_data == fake_peer._response.error.data
     assert exc.kiln_error.root.kiln_error.code == "runtime.internal"
 
 
