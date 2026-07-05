@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
@@ -10,6 +11,11 @@ import (
 	"github.com/julianstephens/kiln/go/internal/util"
 	"github.com/julianstephens/kiln/go/schema/runtime/shutdown_request_payload"
 	"github.com/julianstephens/kiln/go/schema/runtime/shutdown_result"
+)
+
+const (
+	// ShutdownTimeoutSeconds is the maximum time to wait for in-flight requests to complete before forcing shutdown.
+	ShutdownTimeoutSeconds = 30
 )
 
 // MakeShutdownHandler returns a Handler closure that captures state and deps.
@@ -73,6 +79,15 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			)
 		}
 
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("shutdown request processing",
+				"request_id", req.ID.JSONValue(),
+				"cancel_in_flight_requests", validatedParams.CancelInFlightRequests,
+				"grace_period_seconds", validatedParams.GracePeriodSeconds,
+				"reason", validatedParams.Reason,
+			)
+		}
+
 		if state.Draining {
 			return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
 				Accepted:             false,
@@ -92,6 +107,13 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 		}
 
 		state.Draining = true
+		startShutdownWorker(
+			ctx,
+			state,
+			deps,
+			validatedParams.GracePeriodSeconds,
+			validatedParams.CancelInFlightRequests,
+		)
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(shutdown_result.ShutdownResult{
 			Accepted:             true,
 			Draining:             true,
@@ -99,4 +121,98 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			InFlightRequestCount: int(deps.PendingRequests.Count()),
 		}))
 	}
+}
+
+// startShutdownWorker starts a goroutine that handles the shutdown process, including waiting for the grace period and canceling in-flight requests if specified.
+// It updates the HandlerState to indicate that the shutdown process has started and completed.
+func startShutdownWorker(
+	ctx context.Context,
+	state *HandlerState,
+	deps *contract.RuntimeDeps,
+	gracePeriodSeconds int,
+	cancelInFlightRequests bool,
+) {
+	go func() {
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("shutdown worker started",
+				"grace_period_seconds", gracePeriodSeconds,
+			)
+		}
+
+		if gracePeriodSeconds > 0 {
+			if deps != nil && deps.Logger != nil {
+				deps.Logger.Debug("shutdown worker sleeping for grace period",
+					"grace_period_seconds", gracePeriodSeconds,
+				)
+			}
+			select {
+			case <-time.After(time.Duration(gracePeriodSeconds) * time.Second):
+				if deps != nil && deps.Logger != nil {
+					deps.Logger.Debug("shutdown worker finished sleeping for grace period",
+						"grace_period_seconds", gracePeriodSeconds,
+					)
+				}
+			case <-ctx.Done():
+				if deps != nil && deps.Logger != nil {
+					deps.Logger.Debug("shutdown worker context canceled during grace period sleep",
+						"grace_period_seconds", gracePeriodSeconds,
+					)
+				}
+				return
+			}
+		}
+
+		cancelCtx, cancel := context.WithTimeout(ctx, ShutdownTimeoutSeconds*time.Second)
+		defer cancel()
+
+		doShutdown(cancelCtx, deps, cancelInFlightRequests)
+
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("shutdown worker completed, setting state.Shutdown to true")
+		}
+
+		state.Mu.Lock()
+		defer state.Mu.Unlock()
+		state.Shutdown = true
+	}()
+}
+
+// doShutdown performs the actual shutdown logic, including canceling in-flight requests if specified.
+func doShutdown(ctx context.Context, deps *contract.RuntimeDeps, cancelInFlightRequests bool) {
+	if cancelInFlightRequests {
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("shutdown worker canceling all in-flight requests")
+		}
+		deps.PendingRequests.CancelAll()
+	} else {
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Debug("shutdown worker waiting for in-flight requests to complete")
+		}
+		// Wait for in-flight requests to complete or context to be done
+		for {
+			if deps.PendingRequests.Count() == 0 {
+				if deps != nil && deps.Logger != nil {
+					deps.Logger.Debug("shutdown worker all in-flight requests completed")
+				}
+				break
+			}
+			select {
+			case <-ctx.Done():
+				if deps != nil && deps.Logger != nil {
+					deps.Logger.Debug(
+						"shutdown worker context canceled while waiting for in-flight requests to complete",
+					)
+				}
+				return
+			case <-time.After(1 * time.Second):
+				if deps != nil && deps.Logger != nil {
+					deps.Logger.Debug("shutdown worker still waiting for in-flight requests to complete",
+						"in_flight_request_count", deps.PendingRequests.Count(),
+					)
+				}
+			}
+		}
+	}
+
+	// later we can add more shutdown logic here, such as closing connections, cleaning up resources, etc.
 }

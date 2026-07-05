@@ -57,6 +57,13 @@ func (p *PendingRequests) Count() int64 {
 	return p.count
 }
 
+func (p *PendingRequests) CancelAll() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.byID = make(map[string]PendingRequest)
+	p.count = 0
+}
+
 // ValidateResponseAgainstPendingRequest validates a JSON-RPC response against a pending request.
 // It checks that the response corresponds to the pending request's method and validates the result or error data against the expected schema.
 // If the response is invalid or does not match the pending request, it returns an error.

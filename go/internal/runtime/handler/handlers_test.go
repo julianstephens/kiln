@@ -3,6 +3,7 @@ package handler_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	utest "github.com/julianstephens/go-utils/tests"
 
@@ -11,6 +12,20 @@ import (
 	"github.com/julianstephens/kiln/go/internal/runtime/handler"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
+
+func waitForCondition(t *testing.T, timeout time.Duration, condition func() bool) {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if condition() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatalf("condition not met within %s", timeout)
+}
 
 // TestMakeInitializeHandler_InvalidParams tests that initialize handler returns error for invalid params
 func TestMakeInitializeHandler_InvalidParams(t *testing.T) {
@@ -225,6 +240,175 @@ func TestMakeShutdownHandler_AlreadyShutdown(t *testing.T) {
 	utest.AssertTrue(t, ok, "in_flight_request_count should be number")
 	utest.AssertEqual(t, countVal, float64(0))
 	utest.AssertEqual(t, state.Shutdown, true)
+}
+
+// TestMakeShutdownHandler_CompletesWithCancelInFlightRequests tests that shutdown worker cancels pending requests and marks runtime as shut down.
+func TestMakeShutdownHandler_CompletesWithCancelInFlightRequests(t *testing.T) {
+	t.Parallel()
+
+	state := &handler.HandlerState{}
+	pendingRequests := protocol.NewPendingRequests()
+	pendingRequests.Add("request-1", "repository.search")
+	pendingRequests.Add("request-2", "repository.get_source")
+	deps := &contract.RuntimeDeps{
+		PendingRequests: pendingRequests,
+	}
+
+	shutdownHandler := handler.MakeShutdownHandler(state, deps)
+	requestID := int64(6)
+
+	req := protocol.Request{
+		JSONRPC: protocol.DefaultJSONRPCVersion,
+		ID:      protocol.ID{Number: &requestID},
+		Method:  "runtime.shutdown",
+		Params: map[string]any{
+			"grace_period_seconds":      1,
+			"cancel_in_flight_requests": true,
+			"reason":                    "maintenance",
+		},
+	}
+
+	resp := shutdownHandler(context.Background(), req)
+	utest.AssertTrue(t, resp.IsSuccessResponse(), "shutdown should return success response")
+
+	waitForCondition(t, 4*time.Second, func() bool {
+		state.Mu.Lock()
+		defer state.Mu.Unlock()
+		return state.Shutdown
+	})
+
+	utest.AssertEqual(t, pendingRequests.Count(), int64(0))
+	state.Mu.Lock()
+	utest.AssertEqual(t, state.Draining, true)
+	utest.AssertEqual(t, state.Shutdown, true)
+	state.Mu.Unlock()
+}
+
+// TestMakeShutdownHandler_CompletesAfterInFlightRequestsDrain tests that shutdown worker waits for in-flight requests and only then marks runtime as shut down.
+func TestMakeShutdownHandler_CompletesAfterInFlightRequestsDrain(t *testing.T) {
+	t.Parallel()
+
+	state := &handler.HandlerState{}
+	pendingRequests := protocol.NewPendingRequests()
+	pendingRequests.Add("request-1", "repository.search")
+	deps := &contract.RuntimeDeps{
+		PendingRequests: pendingRequests,
+	}
+
+	shutdownHandler := handler.MakeShutdownHandler(state, deps)
+	requestID := int64(7)
+
+	req := protocol.Request{
+		JSONRPC: protocol.DefaultJSONRPCVersion,
+		ID:      protocol.ID{Number: &requestID},
+		Method:  "runtime.shutdown",
+		Params: map[string]any{
+			"grace_period_seconds":      1,
+			"cancel_in_flight_requests": false,
+			"reason":                    "drain",
+		},
+	}
+
+	resp := shutdownHandler(context.Background(), req)
+	utest.AssertTrue(t, resp.IsSuccessResponse(), "shutdown should return success response")
+
+	time.AfterFunc(50*time.Millisecond, func() {
+		pendingRequests.Pop("request-1")
+	})
+
+	waitForCondition(t, 5*time.Second, func() bool {
+		state.Mu.Lock()
+		defer state.Mu.Unlock()
+		return state.Shutdown
+	})
+
+	utest.AssertEqual(t, pendingRequests.Count(), int64(0))
+	state.Mu.Lock()
+	utest.AssertEqual(t, state.Draining, true)
+	utest.AssertEqual(t, state.Shutdown, true)
+	state.Mu.Unlock()
+}
+
+// TestMakeShutdownHandler_ContextCanceledDuringGracePeriod tests that canceling the request context stops shutdown before completion.
+func TestMakeShutdownHandler_ContextCanceledDuringGracePeriod(t *testing.T) {
+	t.Parallel()
+
+	state := &handler.HandlerState{}
+	pendingRequests := protocol.NewPendingRequests()
+	pendingRequests.Add("request-1", "repository.search")
+	deps := &contract.RuntimeDeps{
+		PendingRequests: pendingRequests,
+	}
+
+	shutdownHandler := handler.MakeShutdownHandler(state, deps)
+	requestID := int64(8)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	req := protocol.Request{
+		JSONRPC: protocol.DefaultJSONRPCVersion,
+		ID:      protocol.ID{Number: &requestID},
+		Method:  "runtime.shutdown",
+		Params: map[string]any{
+			"grace_period_seconds":      5,
+			"cancel_in_flight_requests": false,
+			"reason":                    "cancel-test",
+		},
+	}
+
+	resp := shutdownHandler(ctx, req)
+	utest.AssertTrue(t, resp.IsSuccessResponse(), "shutdown should return success response")
+
+	cancel()
+	time.Sleep(150 * time.Millisecond)
+
+	state.Mu.Lock()
+	utest.AssertEqual(t, state.Draining, true)
+	utest.AssertEqual(t, state.Shutdown, false)
+	state.Mu.Unlock()
+	utest.AssertEqual(t, pendingRequests.Count(), int64(1))
+}
+
+// TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight tests that timeout while draining still completes shutdown state.
+func TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight(t *testing.T) {
+	t.Parallel()
+
+	state := &handler.HandlerState{}
+	pendingRequests := protocol.NewPendingRequests()
+	pendingRequests.Add("request-1", "repository.search")
+	deps := &contract.RuntimeDeps{
+		PendingRequests: pendingRequests,
+	}
+
+	shutdownHandler := handler.MakeShutdownHandler(state, deps)
+	requestID := int64(9)
+	ctx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
+
+	req := protocol.Request{
+		JSONRPC: protocol.DefaultJSONRPCVersion,
+		ID:      protocol.ID{Number: &requestID},
+		Method:  "runtime.shutdown",
+		Params: map[string]any{
+			"grace_period_seconds":      1,
+			"cancel_in_flight_requests": false,
+			"reason":                    "timeout-test",
+		},
+	}
+
+	resp := shutdownHandler(ctx, req)
+	utest.AssertTrue(t, resp.IsSuccessResponse(), "shutdown should return success response")
+
+	waitForCondition(t, 5*time.Second, func() bool {
+		state.Mu.Lock()
+		defer state.Mu.Unlock()
+		return state.Shutdown
+	})
+
+	utest.AssertEqual(t, pendingRequests.Count(), int64(1))
+	state.Mu.Lock()
+	utest.AssertEqual(t, state.Draining, true)
+	utest.AssertEqual(t, state.Shutdown, true)
+	state.Mu.Unlock()
 }
 
 // TestMakeHealthHandler_Ready tests health handler when runtime is ready
