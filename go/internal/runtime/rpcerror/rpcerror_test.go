@@ -51,7 +51,8 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.MethodNotFound(protocol.ID{}, "runtime.unknown")
+				err, _ := rpcerror.MethodNotFound(protocol.ID{}, "runtime.unknown")
+				return err
 			},
 		},
 		{
@@ -68,9 +69,10 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.InvalidParams(protocol.ID{}, method, map[string]any{
+				err, _ := rpcerror.InvalidParams(protocol.ID{}, method, map[string]any{
 					"missing": "query",
 				})
+				return err
 			},
 		},
 		{
@@ -87,9 +89,10 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.Internal(protocol.ID{}, methodPtr, "runtime exploded", map[string]any{
+				err, _ := rpcerror.Internal(protocol.ID{}, methodPtr, "runtime exploded", map[string]any{
 					"reason": "unexpected",
 				})
+				return err
 			},
 		},
 		{
@@ -99,16 +102,17 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				KilnCode:    "runtime.parse_error",
 				Method:      "unknown",
 				Category:    runtime_error.ErrorKilnErrorCategoryValidation,
-				Message:     "parse error",
+				Message:     "unable to parse JSON-RPC request",
 				Retryable:   false,
 				Details: map[string]any{
 					"offset": 12,
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.ParseError(map[string]any{
+				err, _ := rpcerror.ParseError(map[string]any{
 					"offset": 12,
 				})
+				return err
 			},
 		},
 		{
@@ -125,9 +129,10 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.InvalidRequest(protocol.ID{}, method, map[string]any{
+				err, _ := rpcerror.InvalidRequest(protocol.ID{}, method, map[string]any{
 					"received": "bad",
 				})
+				return err
 			},
 		},
 		{
@@ -144,7 +149,8 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.Draining(protocol.ID{}, method)
+				err, _ := rpcerror.Draining(protocol.ID{}, method)
+				return err
 			},
 		},
 		{
@@ -161,7 +167,8 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				},
 			},
 			response: func() protocol.ErrorResponse {
-				return rpcerror.Shutdown(protocol.ID{}, method)
+				err, _ := rpcerror.Shutdown(protocol.ID{}, method)
+				return err
 			},
 		},
 	}
@@ -172,14 +179,14 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 			t.Parallel()
 
 			response := tc.response()
-			object, kilnErr := rpcerror.NewObject(tc.spec)
+			object, kilnErr := rpcerror.MustObject(tc.spec)
 
 			utest.AssertNotNil(t, response.Error.Data)
 			utest.AssertEqual(t, response.Error.Code, tc.spec.JSONRPCCode)
 			utest.AssertEqual(t, response.Error.Message, tc.spec.Message)
 			if !reflect.DeepEqual(response.Error.Data, object.Data) {
 				t.Fatalf(
-					"response error data does not match NewObject data\nresponse: %#v\nobject: %#v",
+					"response error data does not match MustObject data\nresponse: %#v\nobject: %#v",
 					response.Error.Data,
 					object.Data,
 				)

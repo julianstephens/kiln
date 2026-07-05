@@ -82,7 +82,7 @@ func Run(ctx context.Context, cfg Config) error {
 			deps.Logger.Debug("runtime request had unexpected type",
 				"request", req.ToJSON(),
 			)
-			msg = rpcerror.ParseError(map[string]any{
+			msg, _ = rpcerror.ParseError(map[string]any{
 				"request": req.ToJSON(),
 			})
 		}

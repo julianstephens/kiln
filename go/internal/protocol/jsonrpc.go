@@ -3,8 +3,6 @@ package protocol
 import (
 	"fmt"
 	"math"
-
-	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
 
 const DefaultJSONRPCVersion = "2.0"
@@ -103,10 +101,6 @@ func (e ErrorResponse) ToJSON() map[string]any {
 		return nil
 	}
 	return obj
-}
-
-func (e ErrorResponse) Unwrap() runtime_error.Error {
-	return runtime_error.Error{}
 }
 
 func NewErrorResponse(id ID, err ErrorObject) *ErrorResponse {

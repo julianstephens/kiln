@@ -18,19 +18,8 @@ type Spec struct {
 	Details     map[string]any
 }
 
-// NewObject creates a new protocol.ErrorObject and runtime_error.ErrorKilnError based on the provided Spec.
-func NewObject(spec Spec) (protocol.ErrorObject, runtime_error.ErrorKilnError) {
-	return MustObject(spec), runtime_error.ErrorKilnError{
-		Code:      spec.KilnCode,
-		Category:  spec.Category,
-		Message:   spec.Message,
-		Retryable: spec.Retryable,
-		Details:   util.If(spec.Details == nil, make(map[string]any), spec.Details),
-	}
-}
-
 // MustObject creates a new protocol.ErrorObject based on the provided Spec.
-func MustObject(spec Spec) protocol.ErrorObject {
+func MustObject(spec Spec) (protocol.ErrorObject, runtime_error.ErrorKilnError) {
 	kilnErr := runtime_error.Error{
 		KilnError: runtime_error.ErrorKilnError{
 			Code:      spec.KilnCode,
@@ -47,7 +36,7 @@ func MustObject(spec Spec) protocol.ErrorObject {
 			Code:    spec.JSONRPCCode,
 			Message: spec.Message,
 			Data:    errMap,
-		}
+		}, kilnErr.KilnError
 	}
 	validated, err := methodSpec.ValidateErrorData(errMap)
 	if err != nil {
@@ -57,20 +46,21 @@ func MustObject(spec Spec) protocol.ErrorObject {
 		Code:    spec.JSONRPCCode,
 		Message: spec.Message,
 		Data:    util.MustStructToMap(validated),
-	}
+	}, kilnErr.KilnError
 }
 
 // Response creates a new protocol.ErrorResponse based on the provided Spec and ID.
-func Response(id protocol.ID, spec Spec) protocol.ErrorResponse {
+func Response(id protocol.ID, spec Spec) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // MethodNotFound creates a new protocol.ErrorResponse for a method not found error.
-func MethodNotFound(id protocol.ID, method string) protocol.ErrorResponse {
+func MethodNotFound(id protocol.ID, method string) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      method,
 		JSONRPCCode: contract.JSONRPCMethodNotFound,
@@ -84,15 +74,20 @@ func MethodNotFound(id protocol.ID, method string) protocol.ErrorResponse {
 			"supported_method_namespaces": protocol.SupportedMethodNamespaces(),
 		},
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // InvalidParams creates a new protocol.ErrorResponse for an invalid params error.
-func InvalidParams(id protocol.ID, method string, details map[string]any) protocol.ErrorResponse {
+func InvalidParams(
+	id protocol.ID,
+	method string,
+	details map[string]any,
+) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      method,
 		JSONRPCCode: contract.JSONRPCInvalidParams,
@@ -102,15 +97,21 @@ func InvalidParams(id protocol.ID, method string, details map[string]any) protoc
 		Retryable:   false,
 		Details:     util.If(details == nil, make(map[string]any), details),
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // Internal creates a new protocol.ErrorResponse for an internal error.
-func Internal(id protocol.ID, method *string, message string, details map[string]any) protocol.ErrorResponse {
+func Internal(
+	id protocol.ID,
+	method *string,
+	message string,
+	details map[string]any,
+) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      util.If(method == nil, "unknown", *method),
 		JSONRPCCode: contract.JSONRPCInternalError,
@@ -120,15 +121,16 @@ func Internal(id protocol.ID, method *string, message string, details map[string
 		Retryable:   false,
 		Details:     util.If(details == nil, make(map[string]any), details),
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // ParseError creates a new protocol.ErrorResponse for a parse error.
-func ParseError(details map[string]any) protocol.ErrorResponse {
+func ParseError(details map[string]any) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      "unknown",
 		JSONRPCCode: contract.JSONRPCParseError,
@@ -138,15 +140,20 @@ func ParseError(details map[string]any) protocol.ErrorResponse {
 		Retryable:   false,
 		Details:     util.If(details == nil, make(map[string]any), details),
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		ID:      protocol.ID{Null: true},
 		JSONRPC: protocol.DefaultJSONRPCVersion,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // InvalidRequest creates a new protocol.ErrorResponse for an invalid request error.
-func InvalidRequest(id protocol.ID, method string, details map[string]any) protocol.ErrorResponse {
+func InvalidRequest(
+	id protocol.ID,
+	method string,
+	details map[string]any,
+) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      method,
 		JSONRPCCode: contract.JSONRPCInvalidRequest,
@@ -156,15 +163,16 @@ func InvalidRequest(id protocol.ID, method string, details map[string]any) proto
 		Retryable:   false,
 		Details:     util.If(details == nil, make(map[string]any), details),
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // Draining creates a new protocol.ErrorResponse for a server draining error.
-func Draining(id protocol.ID, method string) protocol.ErrorResponse {
+func Draining(id protocol.ID, method string) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      method,
 		JSONRPCCode: contract.JSONRPCInvalidRequest,
@@ -176,15 +184,16 @@ func Draining(id protocol.ID, method string) protocol.ErrorResponse {
 			"received_method": method,
 		},
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }
 
 // Shutdown creates a new protocol.ErrorResponse for a server shutdown error.
-func Shutdown(id protocol.ID, method string) protocol.ErrorResponse {
+func Shutdown(id protocol.ID, method string) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
 	spec := Spec{
 		Method:      method,
 		JSONRPCCode: contract.JSONRPCInvalidRequest,
@@ -195,9 +204,10 @@ func Shutdown(id protocol.ID, method string) protocol.ErrorResponse {
 			"received_method": method,
 		},
 	}
+	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
 		JSONRPC: protocol.DefaultJSONRPCVersion,
 		ID:      id,
-		Error:   MustObject(spec),
-	}
+		Error:   obj,
+	}, kilnErr
 }

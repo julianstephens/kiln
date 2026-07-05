@@ -36,15 +36,17 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 	r.mu.RUnlock()
 
 	if !ok {
-		return rpcerror.MethodNotFound(req.ID, req.Method)
+		err, _ := rpcerror.MethodNotFound(req.ID, req.Method)
+		return err
 	}
 
 	msg := handler(ctx, req)
 	if msg == nil {
-		return rpcerror.Internal(req.ID, util.Ptr(req.Method), "Handler returned nil response", map[string]any{
+		err, _ := rpcerror.Internal(req.ID, util.Ptr(req.Method), "Handler returned nil response", map[string]any{
 			"requested_method": req.Method,
 			"request_params":   req.Params,
 		})
+		return err
 	}
 
 	return msg

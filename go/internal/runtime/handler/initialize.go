@@ -39,11 +39,10 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 					"error", err.Error(),
 				)
 			}
-			errRes := rpcerror.InvalidRequest(req.ID, req.Method, map[string]any{
+			errRes, kilnErr := rpcerror.InvalidRequest(req.ID, req.Method, map[string]any{
 				"params": req.Params,
 			})
-			kilnErr := errRes.Unwrap()
-			state.LastFatalStartupError = &kilnErr.KilnError
+			state.LastFatalStartupError = &kilnErr
 			return errRes
 		}
 
@@ -56,11 +55,10 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 					"validated_type", fmt.Sprintf("%T", res),
 				)
 			}
-			errRes := rpcerror.InvalidRequest(req.ID, req.Method, map[string]any{
+			errRes, kilnErr := rpcerror.InvalidRequest(req.ID, req.Method, map[string]any{
 				"params": req.Params,
 			})
-			kilnErr := errRes.Unwrap()
-			state.LastFatalStartupError = &kilnErr.KilnError
+			state.LastFatalStartupError = &kilnErr
 			return errRes
 		}
 
@@ -79,22 +77,69 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			if sameInitializeParams(state.InitialParams, *validatedParams) {
 				return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(state.InitialResult))
 			}
-			return alreadyInitializedWithDifferentParams(req.ID, util.MustStructToMap(state.InitialParams), req.Params)
+			spec := rpcerror.Spec{
+				JSONRPCCode: contract.KilnRuntimeAlreadyInitializedWithDifferentParams,
+				KilnCode:    "runtime.already_initialized_with_different_params",
+				Method:      "runtime.initialize",
+				Category:    runtime_error.ErrorKilnErrorCategoryValidation,
+				Message:     "Runtime already initialized with different params",
+				Retryable:   false,
+				Details: map[string]any{
+					"original_params":  util.MustStructToMap(state.InitialParams),
+					"requested_params": util.MustStructToMap(validatedParams),
+				},
+			}
+			errRes, _ := rpcerror.Response(req.ID, spec)
+			return errRes
 		}
 
 		switch {
 		case validatedParams.ProtocolVersion != contract.RuntimeProtocolVersion:
-			spec, kilnErr := unsupportedProtocolVersionError(validatedParams.ProtocolVersion)
+			spec := rpcerror.Spec{
+				JSONRPCCode: contract.KilnRuntimeUnsupportedProtocolVersion,
+				KilnCode:    "runtime.unsupported_protocol_version",
+				Method:      "runtime.initialize",
+				Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
+				Message:     "unsupported runtime protocol version",
+				Retryable:   false,
+				Details: map[string]any{
+					"requested_protocol_version":  validatedParams.ProtocolVersion,
+					"supported_protocol_versions": []string{contract.RuntimeProtocolVersion},
+				},
+			}
+			errRes, kilnErr := rpcerror.Response(req.ID, spec)
 			state.LastFatalStartupError = &kilnErr
-			return rpcerror.Response(req.ID, spec)
+			return errRes
 		case validatedParams.SchemaSetVersion != schema.SchemaSetVersion:
-			spec, kilnErr := incompatibleSchemaSetVersionError(validatedParams.SchemaSetVersion)
+			spec := rpcerror.Spec{
+				JSONRPCCode: contract.KilnRuntimeIncompatibleSchemaSetVersion,
+				KilnCode:    "runtime.incompatible_schema_set_version",
+				Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
+				Message:     "Incompatible schema set version",
+				Retryable:   false,
+				Details: map[string]any{
+					"requested_schema_set_version":  validatedParams.SchemaSetVersion,
+					"supported_schema_set_versions": []string{schema.SchemaSetVersion},
+				},
+			}
+			errRes, kilnErr := rpcerror.Response(req.ID, spec)
 			state.LastFatalStartupError = &kilnErr
-			return rpcerror.Response(req.ID, spec)
+			return errRes
 		case validatedParams.CompatibilityMajor != schema.CompatibilityMajor:
-			spec, kilnErr := incompatibleCompatibilityMajor(validatedParams.CompatibilityMajor)
+			spec := rpcerror.Spec{
+				JSONRPCCode: contract.KilnRuntimeIncompatibleCompatibilityMajor,
+				KilnCode:    "runtime.incompatible_compatibility_major",
+				Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
+				Message:     "Incompatible compatibility major",
+				Retryable:   false,
+				Details: map[string]any{
+					"requested_compatibility_major":  validatedParams.CompatibilityMajor,
+					"supported_compatibility_majors": []int{schema.CompatibilityMajor},
+				},
+			}
+			errRes, kilnErr := rpcerror.Response(req.ID, spec)
 			state.LastFatalStartupError = &kilnErr
-			return rpcerror.Response(req.ID, spec)
+			return errRes
 		}
 
 		result := initialize_result.InitializeResult{
@@ -136,73 +181,4 @@ func sameInitializeParams(
 		a.CompatibilityMajor == b.CompatibilityMajor &&
 		a.Client.Name == b.Client.Name &&
 		a.Client.Version == b.Client.Version
-}
-
-func unsupportedProtocolVersionError(requested string) (rpcerror.Spec, runtime_error.ErrorKilnError) {
-	spec := rpcerror.Spec{
-		JSONRPCCode: contract.KilnRuntimeUnsupportedProtocolVersion,
-		KilnCode:    "runtime.unsupported_protocol_version",
-		Method:      "runtime.initialize",
-		Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
-		Message:     "unsupported runtime protocol version",
-		Retryable:   false,
-		Details: map[string]any{
-			"requested_protocol_version":  requested,
-			"supported_protocol_versions": []string{contract.RuntimeProtocolVersion},
-		},
-	}
-	_, kilnErr := rpcerror.NewObject(spec)
-	return spec, kilnErr
-}
-
-func incompatibleSchemaSetVersionError(requested string) (rpcerror.Spec, runtime_error.ErrorKilnError) {
-	spec := rpcerror.Spec{
-		JSONRPCCode: contract.KilnRuntimeIncompatibleSchemaSetVersion,
-		KilnCode:    "runtime.incompatible_schema_set_version",
-		Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
-		Message:     "Incompatible schema set version",
-		Retryable:   false,
-		Details: map[string]any{
-			"requested_schema_set_version":  requested,
-			"supported_schema_set_versions": []string{schema.SchemaSetVersion},
-		},
-	}
-	_, kilnErr := rpcerror.NewObject(spec)
-	return spec, kilnErr
-}
-
-func incompatibleCompatibilityMajor(requested int) (rpcerror.Spec, runtime_error.ErrorKilnError) {
-	spec := rpcerror.Spec{
-		JSONRPCCode: contract.KilnRuntimeIncompatibleCompatibilityMajor,
-		KilnCode:    "runtime.incompatible_compatibility_major",
-		Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
-		Message:     "Incompatible compatibility major",
-		Retryable:   false,
-		Details: map[string]any{
-			"requested_compatibility_major":  requested,
-			"supported_compatibility_majors": []int{schema.CompatibilityMajor},
-		},
-	}
-	_, kilnErr := rpcerror.NewObject(spec)
-	return spec, kilnErr
-}
-
-func alreadyInitializedWithDifferentParams(
-	reqID protocol.ID,
-	originalParams map[string]any,
-	requestedParams map[string]any,
-) protocol.ErrorResponse {
-	spec := rpcerror.Spec{
-		JSONRPCCode: contract.KilnRuntimeAlreadyInitializedWithDifferentParams,
-		KilnCode:    "runtime.already_initialized_with_different_params",
-		Method:      "runtime.initialize",
-		Category:    runtime_error.ErrorKilnErrorCategoryValidation,
-		Message:     "Runtime already initialized with different params",
-		Retryable:   false,
-		Details: map[string]any{
-			"original_params":  originalParams,
-			"requested_params": requestedParams,
-		},
-	}
-	return rpcerror.Response(reqID, spec)
 }
