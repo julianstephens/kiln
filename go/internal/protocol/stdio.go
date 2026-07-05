@@ -13,6 +13,11 @@ type Peer struct {
 	maxBytes int
 }
 
+type ReceiveResult struct {
+	Msg Message
+	Err error
+}
+
 // NewPeer creates a new Peer with the given input and output streams and maximum message size in bytes.
 // The Peer can be used to send and receive JSON-RPC messages over the provided streams.
 func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
@@ -67,6 +72,17 @@ func (p *Peer) Send(msg Message) error {
 	}
 
 	return p.out.Flush()
+}
+
+// ReceiveCh starts a goroutine to receive a message from the Peer and returns a channel that will receive the result (message or error).
+func (p *Peer) ReceiveCh(ctx context.Context) <-chan ReceiveResult {
+	ch := make(chan ReceiveResult)
+	go func() {
+		msg, err := p.Receive(ctx)
+		ch <- ReceiveResult{Msg: msg, Err: err}
+		close(ch)
+	}()
+	return ch
 }
 
 func readLineBounded(r *bufio.Reader, maxBytes int) ([]byte, error) {

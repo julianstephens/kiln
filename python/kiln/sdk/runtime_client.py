@@ -28,6 +28,7 @@ class RuntimeClient:
 
     _exit_stack: AsyncExitStack | None
     _task_group: TaskGroup | None
+    _runtime_exit_status: int
     _closed: bool
 
     def __init__(
@@ -122,8 +123,15 @@ class RuntimeClient:
             return
         self._closed = True
 
+        if not self._process.is_alive or self._connection.state.FAILED:
+            return
+
         try:
-            await self._connection.shutdown()
+            res = await self._connection.shutdown()
+            if not res.root.accepted and not (res.root.draining or res.root.shutdown):
+                raise RuntimeProcessError(
+                    message="runtime process refused to shutdown gracefully"
+                )
             await self._process.aclose(mark_expected=mark_expected)
         finally:
             if self._exit_stack is not None:

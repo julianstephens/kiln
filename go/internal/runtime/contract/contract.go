@@ -11,9 +11,9 @@ type Handler func(context.Context, protocol.Request) protocol.Message
 
 type RuntimeDeps struct {
 	Build           BuildInfo
+	Lifecycle       *Lifecycle
 	Logger          *slog.Logger
 	PendingRequests *protocol.PendingRequests
-	// Add other shared deps here
 }
 
 const (

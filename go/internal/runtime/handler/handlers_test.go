@@ -68,6 +68,7 @@ func TestMakeShutdownHandler_InvalidParams(t *testing.T) {
 
 	state := &handler.HandlerState{}
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: protocol.NewPendingRequests(),
 	}
 
@@ -102,6 +103,7 @@ func TestMakeShutdownHandler_AcceptsRequest(t *testing.T) {
 	pendingRequests := protocol.NewPendingRequests()
 	pendingRequests.Add("request-1", "repository.search")
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
 	}
 
@@ -153,6 +155,7 @@ func TestMakeShutdownHandler_AlreadyDraining(t *testing.T) {
 	pendingRequests.Add("request-1", "repository.search")
 	pendingRequests.Add("request-2", "repository.get_source")
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
 	}
 
@@ -201,6 +204,7 @@ func TestMakeShutdownHandler_AlreadyShutdown(t *testing.T) {
 	state := &handler.HandlerState{}
 	state.Shutdown = true
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: protocol.NewPendingRequests(),
 	}
 
@@ -251,6 +255,7 @@ func TestMakeShutdownHandler_CompletesWithCancelInFlightRequests(t *testing.T) {
 	pendingRequests.Add("request-1", "repository.search")
 	pendingRequests.Add("request-2", "repository.get_source")
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
 	}
 
@@ -292,6 +297,7 @@ func TestMakeShutdownHandler_CompletesAfterInFlightRequestsDrain(t *testing.T) {
 	pendingRequests := protocol.NewPendingRequests()
 	pendingRequests.Add("request-1", "repository.search")
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
 	}
 
@@ -337,6 +343,7 @@ func TestMakeShutdownHandler_ContextCanceledDuringGracePeriod(t *testing.T) {
 	pendingRequests := protocol.NewPendingRequests()
 	pendingRequests.Add("request-1", "repository.search")
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
 	}
 
@@ -376,6 +383,7 @@ func TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight(t *testing.T)
 	pendingRequests := protocol.NewPendingRequests()
 	pendingRequests.Add("request-1", "repository.search")
 	deps := &contract.RuntimeDeps{
+		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
 	}
 

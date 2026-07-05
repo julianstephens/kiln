@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/julianstephens/kiln/go/internal/logger"
@@ -42,6 +43,7 @@ func Run(ctx context.Context, cfg Config) error {
 	// Later: - open persistence
 	deps := &contract.RuntimeDeps{
 		Build:           *build,
+		Lifecycle:       contract.NewLifecycle(),
 		Logger:          appLogger.With("component", "runtime"),
 		PendingRequests: protocol.NewPendingRequests(),
 	}
@@ -67,53 +69,91 @@ func Run(ctx context.Context, cfg Config) error {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+RequestLoop:
 	for {
-		req, err := peer.Receive(cancelCtx)
-		if err != nil {
-			return err
-		}
-		if req == nil {
-			continue
-		}
-		if !req.IsRequest() {
-			continue
-		}
+		select {
+		case <-deps.Lifecycle.ShutdownCh:
+			deps.Logger.Debug("runtime shutdown signal received, exiting request loop")
+			break RequestLoop
+		case res := <-peer.ReceiveCh(cancelCtx):
+			if res.Err != nil {
+				if errors.Is(res.Err, context.Canceled) {
+					deps.Logger.Debug("runtime request loop canceled, exiting")
+					break RequestLoop
+				}
+				return res.Err
+			}
 
-		deps.Logger.Debug("runtime request received", "request", req.ToJSON())
+			req := res.Msg
+			if req == nil {
+				continue
+			}
+			if !req.IsRequest() {
+				continue
+			}
 
-		var msg protocol.Message
-		protocolReq, ok := req.(protocol.Request)
-		if !ok {
-			deps.Logger.Debug("runtime request had unexpected type",
-				"request", req.ToJSON(),
+			deps.Logger.Debug("runtime request received", "request", req.ToJSON())
+
+			var msg protocol.Message
+			protocolReq, ok := req.(protocol.Request)
+			if !ok {
+				deps.Logger.Debug("runtime request had unexpected type",
+					"request", req.ToJSON(),
+				)
+				msg, _ = rpcerror.ParseError(map[string]any{
+					"request": req.ToJSON(),
+				})
+			}
+
+			if msg == nil && protocolReq.ID.Null {
+				deps.Logger.Debug("runtime request missing ID", "request", req.ToJSON())
+				msg, _ = rpcerror.InvalidRequest(protocolReq.ID, protocolReq.Method, map[string]any{
+					"request": req.ToJSON(),
+				})
+			}
+
+			if msg == nil && (state.Draining || state.Shutdown) && protocolReq.Method != "runtime.shutdown" {
+				deps.Logger.Debug("runtime is shutting down",
+					"request", req.ToJSON(),
+				)
+				msg, _ = rpcerror.Shutdown(protocolReq.ID, protocolReq.Method)
+			}
+
+			if msg == nil {
+				deps.Logger.Debug("dispatching runtime request",
+					"method", protocolReq.Method,
+					"id", protocolReq.ID.JSONValue(),
+				)
+
+				id := protocolReq.ID.JSONValue()
+				idStr, ok := id.(string)
+				if id == nil || !ok {
+					deps.Logger.Debug("runtime request had invalid ID",
+						"request", req.ToJSON(),
+					)
+					msg, _ = rpcerror.InvalidRequest(protocolReq.ID, protocolReq.Method, map[string]any{"request": req.ToJSON()})
+				} else {
+
+					deps.PendingRequests.Add(idStr, protocolReq.Method)
+					defer deps.PendingRequests.Pop(idStr)
+					msg = router.Dispatch(cancelCtx, protocolReq)
+				}
+			}
+
+			deps.Logger.Debug("runtime response ready",
+				"request_id", protocolReq.ID.JSONValue(),
+				"response_type", fmt.Sprintf("%T", msg),
 			)
-			msg, _ = rpcerror.ParseError(map[string]any{
-				"request": req.ToJSON(),
-			})
-		}
 
-		if state.Draining || state.Shutdown {
-			deps.Logger.Debug("runtime is shutting down",
-				"request", req.ToJSON(),
-			)
-			msg, _ = rpcerror.Shutdown(protocolReq.ID, protocolReq.Method)
-		}
-
-		if msg == nil {
-			deps.Logger.Debug("dispatching runtime request",
-				"method", protocolReq.Method,
-				"id", protocolReq.ID.JSONValue(),
-			)
-			msg = router.Dispatch(cancelCtx, protocolReq)
-		}
-
-		deps.Logger.Debug("runtime response ready",
-			"request_id", protocolReq.ID.JSONValue(),
-			"response_type", fmt.Sprintf("%T", msg),
-		)
-
-		if err := peer.Send(msg); err != nil {
-			return err
+			if err := peer.Send(msg); err != nil {
+				return err
+			}
 		}
 	}
+
+	deps.Logger.Debug("runtime loop exited, waiting for background workers")
+	deps.Lifecycle.Wg.Wait()
+	deps.Logger.Debug("all background workers finished, runtime exiting")
+
+	return nil
 }

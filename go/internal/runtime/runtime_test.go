@@ -98,10 +98,15 @@ func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
 	go func() {
 		_, _ = writer.Write(
 			[]byte(
-				`{"jsonrpc":"2.0","id":1,"method":"runtime.shutdown","params":{"grace_period_seconds":5,"cancel_in_flight_requests":true,"reason":"test"}}` + "\n",
+				`{"jsonrpc":"2.0","id":"1","method":"runtime.initialize","params":{"protocol_version":"2026-07-01","schema_set_version":"1.0.0","compatibility_major":1,"client":{"name":"test-client","version":"1.0.0"}}}` + "\n",
 			),
 		)
-		_, _ = writer.Write([]byte(`{"jsonrpc":"2.0","id":2,"method":"runtime.health"}` + "\n"))
+		_, _ = writer.Write(
+			[]byte(
+				`{"jsonrpc":"2.0","id":"2","method":"runtime.shutdown","params":{"grace_period_seconds":5,"cancel_in_flight_requests":true,"reason":"test"}}` + "\n",
+			),
+		)
+		_, _ = writer.Write([]byte(`{"jsonrpc":"2.0","id":"3","method":"runtime.health"}` + "\n"))
 		_ = writer.Close()
 	}()
 
@@ -126,18 +131,22 @@ func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
 
 	firstMsg, receiveErr := peer.Receive(context.Background())
 	utest.RequireNoError(t, receiveErr)
-	utest.AssertTrue(t, firstMsg.IsSuccessResponse(), "shutdown request should be accepted")
+	utest.AssertTrue(t, firstMsg.IsSuccessResponse(), "initialize request should be accepted")
 
 	secondMsg, receiveErr := peer.Receive(context.Background())
 	utest.RequireNoError(t, receiveErr)
-	utest.AssertTrue(t, secondMsg.IsErrorResponse(), "new request should be rejected after shutdown begins")
+	utest.AssertTrue(t, secondMsg.IsSuccessResponse(), "shutdown request should be accepted")
 
-	secondErrResp, ok := secondMsg.(protocol.ErrorResponse)
+	thirdMsg, receiveErr := peer.Receive(context.Background())
+	utest.RequireNoError(t, receiveErr)
+	utest.AssertTrue(t, thirdMsg.IsErrorResponse(), "new request should be rejected after shutdown begins")
+
+	thirdErrResp, ok := thirdMsg.(protocol.ErrorResponse)
 	utest.AssertTrue(t, ok, "expected protocol.ErrorResponse")
 	if ok {
-		utest.AssertEqual(t, secondErrResp.Error.Code, contract.JSONRPCInvalidRequest)
+		utest.AssertEqual(t, thirdErrResp.Error.Code, contract.JSONRPCInvalidRequest)
 
-		kilnError, hasKilnError := secondErrResp.Error.Data["kiln_error"].(map[string]any)
+		kilnError, hasKilnError := thirdErrResp.Error.Data["kiln_error"].(map[string]any)
 		utest.AssertTrue(t, hasKilnError, "kiln_error should be object")
 		if hasKilnError {
 			code, hasCode := kilnError["code"].(string)

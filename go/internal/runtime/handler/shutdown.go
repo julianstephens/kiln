@@ -143,7 +143,7 @@ func startShutdownWorker(
 	gracePeriodSeconds int,
 	cancelInFlightRequests bool,
 ) {
-	go func() {
+	deps.Lifecycle.Wg.Go(func() {
 		if deps != nil && deps.Logger != nil {
 			deps.Logger.Debug("shutdown worker started",
 				"grace_period_seconds", gracePeriodSeconds,
@@ -182,10 +182,13 @@ func startShutdownWorker(
 			deps.Logger.Debug("shutdown worker completed, setting state.Shutdown to true")
 		}
 
+		// signal the main loop to exit
+		close(deps.Lifecycle.ShutdownCh)
+
 		state.Mu.Lock()
 		defer state.Mu.Unlock()
 		state.Shutdown = true
-	}()
+	})
 }
 
 // doShutdown performs the actual shutdown logic, including canceling in-flight requests if specified.
