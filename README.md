@@ -12,23 +12,23 @@ The runtime—not the model—owns execution state, repository access, context s
 
 A Kiln run accepts:
 
-* a repository
-* a software-engineering task
-* an approved model configuration
-* a context policy
-* a security profile
-* resource budgets
-* optional validation requirements
+- a repository
+- a software-engineering task
+- an approved model configuration
+- a context policy
+- a security profile
+- resource budgets
+- optional validation requirements
 
 It is intended to produce:
 
-* a grounded final answer
-* an optional patch
-* test and validation results
-* an auditable execution trace
-* resource-usage information
-* an explicit terminal stop reason
-* optional publication artifacts
+- a grounded final answer
+- an optional patch
+- test and validation results
+- an auditable execution trace
+- resource-usage information
+- an explicit terminal stop reason
+- optional publication artifacts
 
 The first implementation milestone is intentionally narrower: answer one read-only question about one local repository using structured repository evidence and explicit context and token budgets.
 
@@ -59,13 +59,13 @@ The public product is designed to behave like an embedded Python library. The au
 
 ### Core principles
 
-* **The runtime is authoritative.** The model cannot grant itself permissions, spend unapproved budget, or declare a run complete.
-* **Repository evidence is structured.** Files, symbols, source ranges, provenance, representations, and relevance are represented explicitly.
-* **Retrieval and context admission are separate.** Retrieving evidence does not imply that the model will see it.
-* **Capabilities are explicit.** Repository writes, command execution, network access, model calls, and publication are independently authorized.
-* **Model and repository content are untrusted.**
-* **Important decisions are observable and replayable.**
-* **Repository state is versioned.** Evidence is tied to repository and workspace versions and may be invalidated after mutations.
+- **The runtime is authoritative.** The model cannot grant itself permissions, spend unapproved budget, or declare a run complete.
+- **Repository evidence is structured.** Files, symbols, source ranges, provenance, representations, and relevance are represented explicitly.
+- **Retrieval and context admission are separate.** Retrieving evidence does not imply that the model will see it.
+- **Capabilities are explicit.** Repository writes, command execution, network access, model calls, and publication are independently authorized.
+- **Model and repository content are untrusted.**
+- **Important decisions are observable and replayable.**
+- **Repository state is versioned.** Evidence is tied to repository and workspace versions and may be invalidated after mutations.
 
 ## Repository layout
 
@@ -101,11 +101,11 @@ The public product is designed to behave like an embedded Python library. The au
 
 Development currently expects:
 
-* Python 3.13 or later
-* [`uv`](https://docs.astral.sh/uv/)
-* Go 1.25.5 or later
-* `golangci-lint`
-* GNU Make or a compatible implementation
+- Python 3.13 or later
+- [`uv`](https://docs.astral.sh/uv/)
+- Go 1.25.5 or later
+- `golangci-lint`
+- GNU Make or a compatible implementation
 
 ## Development setup
 
@@ -147,12 +147,12 @@ Language-neutral contracts live under `schemas/`.
 
 Each schema uses:
 
-* JSON Schema draft 2020-12
-* a stable `$id`
-* an explicit schema-set release
-* a major compatibility version
-* explicit required and optional fields
-* explicit unknown-property behavior
+- JSON Schema draft 2020-12
+- a stable `$id`
+- an explicit schema-set release
+- a major compatibility version
+- explicit required and optional fields
+- explicit unknown-property behavior
 
 Schema IDs follow this form:
 
@@ -181,17 +181,17 @@ schemas/
 
 Start with:
 
-* [`ARCHITECTURE.md`](ARCHITECTURE.md) — architectural boundaries and component responsibilities
-* [`docs/vertical-slice.md`](docs/vertical-slice.md) — the first end-to-end milestone
-* [`docs/contracts.md`](docs/contracts.md) — contract ownership and compatibility rules
-* [`docs/run-lifecycle.md`](docs/run-lifecycle.md) — lifecycle states and transitions
-* [`docs/security.md`](docs/security.md) — trust and capability model
-* [`docs/persistence.md`](docs/persistence.md) — state, event, and artifact persistence
-* [`schemas/README.md`](schemas/README.md) — schema-specific conventions
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — architectural boundaries and component responsibilities
+- [`docs/vertical-slice.md`](docs/vertical-slice.md) — the first end-to-end milestone
+- [`docs/contracts.md`](docs/contracts.md) — contract ownership and compatibility rules
+- [`docs/run-lifecycle.md`](docs/run-lifecycle.md) — lifecycle states and transitions
+- [`docs/security.md`](docs/security.md) — trust and capability model
+- [`docs/persistence.md`](docs/persistence.md) — state, event, and artifact persistence
+- [`schemas/README.md`](schemas/README.md) — schema-specific conventions
 
 ## Near-term roadmap
 
-1. Complete the shared first-slice schema domains.
+1. ~~Complete the shared first-slice schema domains.~~
 2. Implement the runtime and repository protocol handlers.
 3. Implement repository preparation, search, source retrieval, and one graph relation.
 4. Add deterministic context admission and budget enforcement.
