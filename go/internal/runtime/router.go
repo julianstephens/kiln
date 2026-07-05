@@ -7,7 +7,6 @@ import (
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
 	"github.com/julianstephens/kiln/go/internal/runtime/rpcerror"
-	"github.com/julianstephens/kiln/go/internal/util"
 )
 
 // Router manages method-to-handler routing with dependency injection.
@@ -42,7 +41,7 @@ func (r *Router) Dispatch(ctx context.Context, req protocol.Request) protocol.Me
 
 	msg := handler(ctx, req)
 	if msg == nil {
-		err, _ := rpcerror.Internal(req.ID, util.Ptr(req.Method), "Handler returned nil response", map[string]any{
+		err, _ := rpcerror.Internal(req.ID, &req.Method, "Handler returned nil response", map[string]any{
 			"requested_method": req.Method,
 			"request_params":   req.Params,
 		})

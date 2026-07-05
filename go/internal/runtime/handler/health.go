@@ -23,7 +23,9 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 		state.Mu.Unlock()
 
 		if req.Params != nil {
-			err, _ := rpcerror.InvalidParams(req.ID, "Health endpoint does not accept parameters", nil)
+			err, _ := rpcerror.InvalidParams(req.ID, req.Method, map[string]any{
+				"reason": "runtime.health does not accept parameters",
+			})
 			return err
 		}
 

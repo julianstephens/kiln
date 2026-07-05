@@ -39,7 +39,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 					"error", err.Error(),
 				)
 			}
-			errRes, kilnErr := rpcerror.InvalidRequest(req.ID, req.Method, map[string]any{
+			errRes, kilnErr := rpcerror.InvalidParams(req.ID, req.Method, map[string]any{
 				"params": req.Params,
 			})
 			state.LastFatalStartupError = &kilnErr

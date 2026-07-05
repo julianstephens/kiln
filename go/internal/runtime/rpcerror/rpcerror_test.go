@@ -41,7 +41,7 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				JSONRPCCode: contract.JSONRPCMethodNotFound,
 				KilnCode:    "runtime.method_not_found",
 				Method:      "runtime.unknown",
-				Category:    runtime_error.ErrorKilnErrorCategoryValidation,
+				Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
 				Message:     "method_not_found: runtime.unknown",
 				Retryable:   false,
 				Details: map[string]any{

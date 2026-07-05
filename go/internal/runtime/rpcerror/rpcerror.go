@@ -26,26 +26,16 @@ func MustObject(spec Spec) (protocol.ErrorObject, runtime_error.ErrorKilnError) 
 			Category:  spec.Category,
 			Message:   spec.Message,
 			Retryable: spec.Retryable,
-			Details:   util.If(spec.Details == nil, make(map[string]any), spec.Details),
+			Details:   normalizeDetails(spec.Details),
 		},
 	}
-	errMap := util.MustStructToMap(kilnErr)
-	methodSpec, ok := protocol.KilnMethods[spec.Method]
-	if !ok {
-		return protocol.ErrorObject{
-			Code:    spec.JSONRPCCode,
-			Message: spec.Message,
-			Data:    errMap,
-		}, kilnErr.KilnError
-	}
-	validated, err := methodSpec.ValidateErrorData(errMap)
-	if err != nil {
+	if err := kilnErr.Validate(); err != nil {
 		panic("failed to validate error data for method " + spec.Method + ": " + err.Error())
 	}
 	return protocol.ErrorObject{
 		Code:    spec.JSONRPCCode,
 		Message: spec.Message,
-		Data:    util.MustStructToMap(validated),
+		Data:    util.MustStructToMap(kilnErr),
 	}, kilnErr.KilnError
 }
 
@@ -64,7 +54,7 @@ func MethodNotFound(id protocol.ID, method string) (protocol.ErrorResponse, runt
 	spec := Spec{
 		Method:      method,
 		JSONRPCCode: contract.JSONRPCMethodNotFound,
-		Category:    runtime_error.ErrorKilnErrorCategoryValidation,
+		Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
 		KilnCode:    "runtime.method_not_found",
 		Message:     "method_not_found: " + method,
 		Retryable:   false,
@@ -95,7 +85,7 @@ func InvalidParams(
 		KilnCode:    "runtime.invalid_params",
 		Message:     "invalid params for method: " + method,
 		Retryable:   false,
-		Details:     util.If(details == nil, make(map[string]any), details),
+		Details:     normalizeDetails(details),
 	}
 	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
@@ -112,14 +102,20 @@ func Internal(
 	message string,
 	details map[string]any,
 ) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
+	var specMethod string
+	if method == nil {
+		specMethod = "unknown"
+	} else {
+		specMethod = *method
+	}
 	spec := Spec{
-		Method:      util.If(method == nil, "unknown", *method),
+		Method:      specMethod,
 		JSONRPCCode: contract.JSONRPCInternalError,
 		Category:    runtime_error.ErrorKilnErrorCategoryInternal,
 		KilnCode:    "runtime.internal_error",
 		Message:     message,
 		Retryable:   false,
-		Details:     util.If(details == nil, make(map[string]any), details),
+		Details:     normalizeDetails(details),
 	}
 	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
@@ -138,7 +134,7 @@ func ParseError(details map[string]any) (protocol.ErrorResponse, runtime_error.E
 		KilnCode:    "runtime.parse_error",
 		Message:     "unable to parse JSON-RPC request",
 		Retryable:   false,
-		Details:     util.If(details == nil, make(map[string]any), details),
+		Details:     normalizeDetails(details),
 	}
 	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
@@ -161,7 +157,7 @@ func InvalidRequest(
 		KilnCode:    "runtime.invalid_request",
 		Message:     "invalid request for method: " + method,
 		Retryable:   false,
-		Details:     util.If(details == nil, make(map[string]any), details),
+		Details:     normalizeDetails(details),
 	}
 	obj, kilnErr := MustObject(spec)
 	return protocol.ErrorResponse{
@@ -200,6 +196,7 @@ func Shutdown(id protocol.ID, method string) (protocol.ErrorResponse, runtime_er
 		Category:    runtime_error.ErrorKilnErrorCategoryShutdown,
 		KilnCode:    "runtime.server_shutting_down",
 		Message:     "server is shutting down and cannot accept new requests",
+		Retryable:   false,
 		Details: map[string]any{
 			"received_method": method,
 		},
@@ -210,4 +207,11 @@ func Shutdown(id protocol.ID, method string) (protocol.ErrorResponse, runtime_er
 		ID:      id,
 		Error:   obj,
 	}, kilnErr
+}
+
+func normalizeDetails(details map[string]any) map[string]any {
+	if details == nil {
+		return map[string]any{}
+	}
+	return details
 }

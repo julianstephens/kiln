@@ -69,7 +69,7 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 					Data: map[string]any{
 						"kiln_error": map[string]any{
 							"code":      "runtime.method_not_found",
-							"category":  "validation",
+							"category":  "compatibility",
 							"message":   "method_not_found: runtime.unknown",
 							"retryable": false,
 							"details": map[string]any{
