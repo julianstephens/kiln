@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from kiln.protocol.jsonrpc import JsonRpcErrorResponse
 from kiln.schemas.runtime import RuntimeError as KilnRuntimeError
 
 if TYPE_CHECKING:
@@ -37,15 +38,18 @@ class RuntimeMethodError(RuntimeProcessError):
     """Raised when a runtime method call fails."""
 
     def __init__(
-        self, method: str, jsonrpc_code: int, message: str, kiln_error: KilnRuntimeError
+        self, method: str, response: JsonRpcErrorResponse, kiln_error: KilnRuntimeError
     ) -> None:
         self.method = method
-        self.jsonrpc_code = jsonrpc_code
-        self.message = message
+        self.response = response
+        self.jsonrpc_code = response.error.code
+        self.message = response.error.message
+        self.error_data = response.error.data
         self.kiln_error = kiln_error
         super().__init__(
             f"runtime method error: method={method}, "
-            f"jsonrpc_code={jsonrpc_code}, message={message}"
+            f"jsonrpc_code={response.error.code}, "
+            f"message={response.error.message}"
         )
 
 

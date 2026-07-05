@@ -8,8 +8,7 @@ import (
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
 	"github.com/julianstephens/kiln/go/internal/runtime/handler"
-	"github.com/julianstephens/kiln/go/internal/util"
-	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
+	"github.com/julianstephens/kiln/go/internal/runtime/rpcerror"
 )
 
 func Run(ctx context.Context, cfg Config) error {
@@ -83,20 +82,8 @@ func Run(ctx context.Context, cfg Config) error {
 			deps.Logger.Debug("runtime request had unexpected type",
 				"request", req.ToJSON(),
 			)
-			inner := runtime_error.ErrorKilnError{
-				Code:     "runtime.invalid_request_format",
-				Category: "validation",
-				Message:  "Request is not a valid JSON-RPC request object",
-				Details: map[string]any{
-					"request": req.ToJSON(),
-				},
-			}
-			msg = protocol.NewErrorResponse(protocol.ID{Null: true}, protocol.ErrorObject{
-				Code:    contract.JSONRPCInvalidRequest,
-				Message: "Invalid request format",
-				Data: util.MustStructToMap(runtime_error.Error{
-					KilnError: inner,
-				}),
+			msg, _ = rpcerror.ParseError(map[string]any{
+				"request": req.ToJSON(),
 			})
 		}
 

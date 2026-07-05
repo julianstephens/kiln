@@ -146,12 +146,7 @@ class RuntimeStdioConnection:
                 )
             )
         if isinstance(res, JsonRpcErrorResponse):
-            raise RuntimeMethodError(
-                method="runtime.initialize",
-                jsonrpc_code=res.error.code,
-                message=res.error.message,
-                kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
-            )
+            raise _runtime_method_error(method="runtime.initialize", response=res)
         if isinstance(res, JsonRpcSuccessResponse):
             return RuntimeInitializeResult.model_validate(res.result)
 
@@ -177,12 +172,7 @@ class RuntimeStdioConnection:
                 )
             )
         if isinstance(res, JsonRpcErrorResponse):
-            raise RuntimeMethodError(
-                method="runtime.health",
-                jsonrpc_code=res.error.code,
-                message=res.error.message,
-                kiln_error=KilnRuntimeError.model_validate(res.error.data or {}),
-            )
+            raise _runtime_method_error(method="runtime.health", response=res)
         if isinstance(res, JsonRpcSuccessResponse):
             health_res = RuntimeHealthResult.model_validate(res.result)
 
@@ -201,3 +191,13 @@ class RuntimeStdioConnection:
         raise RuntimeProcessError(
             message="runtime process returned an unexpected response type"
         )
+
+
+def _runtime_method_error(
+    method: str, response: JsonRpcErrorResponse
+) -> RuntimeMethodError:
+    return RuntimeMethodError(
+        method=method,
+        response=response,
+        kiln_error=KilnRuntimeError.model_validate(response.error.data or {}),
+    )
