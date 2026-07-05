@@ -17,6 +17,8 @@ from kiln.schemas.runtime import (
     RuntimeHealthResult,
     RuntimeInitializeRequestPayload,
     RuntimeInitializeResult,
+    RuntimeShutdownRequestPayload,
+    RuntimeShutdownResult,
 )
 
 from .errors import KilnPayloadValidationError, UnsupportedMethodError
@@ -46,6 +48,12 @@ KILN_METHODS = {
         method="runtime.health",
         params_model=None,
         result_model=RuntimeHealthResult,
+        error_data_model=RuntimeError,
+    ),
+    "runtime.shutdown": KilnMethodSpec(
+        method="runtime.shutdown",
+        params_model=RuntimeShutdownRequestPayload,
+        result_model=RuntimeShutdownResult,
         error_data_model=RuntimeError,
     ),
     "repository.open_session": KilnMethodSpec(
