@@ -16,6 +16,8 @@ from ._internal import (
     RuntimeHealthResult,
     RuntimeInitializeRequestPayload,
     RuntimeInitializeResult,
+    RuntimeShutdownRequestPayload,
+    RuntimeShutdownResult,
 )
 
 __all__ = [
@@ -26,4 +28,6 @@ __all__ = [
     "RuntimeHealthResult",
     "RuntimeInitializeRequestPayload",
     "RuntimeInitializeResult",
+    "RuntimeShutdownRequestPayload",
+    "RuntimeShutdownResult",
 ]

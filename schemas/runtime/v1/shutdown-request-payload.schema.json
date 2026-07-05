@@ -1,0 +1,27 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/shutdown-request-payload.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln runtime shutdown request payload",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "grace_period_seconds",
+        "cancel_in_flight_requests",
+        "reason"
+    ],
+    "properties": {
+        "grace_period_seconds": {
+            "type": "integer",
+            "description": "The number of seconds to wait before shutting down the runtime. If not specified, the runtime will shut down immediately."
+        },
+        "cancel_in_flight_requests": {
+            "type": "boolean",
+            "description": "If true, the runtime will cancel any in-flight requests before shutting down. If false, the runtime will wait for in-flight requests to complete before shutting down."
+        },
+        "reason": {
+            "type": "string",
+            "description": "A human-readable reason for the shutdown request."
+        }
+    }
+}
