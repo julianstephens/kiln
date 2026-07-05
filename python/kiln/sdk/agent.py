@@ -9,6 +9,7 @@ from kiln.models.run import RunResult
 
 from .errors import RepositoryNotFoundError, TaskEmptyError
 from .runtime_client import RuntimeClient
+from .runtime_connection import DefaultShutdownConfig, ShutdownConfig
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,9 @@ class AgentConfig:
     budget: Budget
     # The logging configuration that defines how the agent will log its operations.
     logging: LoggingConfig
+    # The shutdown configuration that defines how the agent will shutdown the
+    # Go runtime.
+    shutdown: ShutdownConfig
 
 
 class Agent:
@@ -53,6 +57,7 @@ class Agent:
         *,
         budget: Budget,
         logging: LoggingConfig = DefaultLoggingConfig,
+        shutdown: ShutdownConfig = DefaultShutdownConfig,
     ) -> "Agent":
         """Open an agent for the given repository with the specified budget and logging
         configuration. Agent instance is created and initialized asynchronously,
@@ -65,6 +70,8 @@ class Agent:
                 agent's operations.
             logging: The logging configuration that defines how the agent will log its
                 operations. Defaults to stderr config
+            shutdown: The shutdown configuration that defines how the agent will
+                shutdown the Go runtime. Defaults to DefaultShutdownConfig.
 
         """
         repository_path = Path(repository).resolve()
@@ -72,11 +79,14 @@ class Agent:
         if not repository_path.is_dir():
             raise RepositoryNotFoundError(str(repository_path))
 
-        client = await RuntimeClient.start()
+        client = await RuntimeClient.start(shutdown=shutdown)
 
         return cls(
             config=AgentConfig(
-                repository=repository_path, budget=budget, logging=logging
+                repository=repository_path,
+                budget=budget,
+                logging=logging,
+                shutdown=shutdown,
             ),
             client=client,
         )

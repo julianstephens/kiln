@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import StrEnum
 
 from kiln.protocol.jsonrpc import (
@@ -14,6 +15,8 @@ from kiln.schemas.runtime import (
     RuntimeHealthResult,
     RuntimeInitializeRequestPayload,
     RuntimeInitializeResult,
+    RuntimeShutdownRequestPayload,
+    RuntimeShutdownResult,
 )
 from kiln.schemas.runtime.initialize_request_payload import Client as RuntimeClient
 
@@ -23,6 +26,17 @@ from .errors import RuntimeMethodError, RuntimeProcessError
 from .runtime_exit import StderrTailBuffer
 
 RUNTIME_PROTOCOL_VERSION = "2026-07-01"
+
+
+@dataclass
+class ShutdownConfig:
+    grace_period_seconds: int
+    cancel_in_flight_requests: bool
+
+
+DefaultShutdownConfig = ShutdownConfig(
+    grace_period_seconds=30, cancel_in_flight_requests=True
+)
 
 
 class RuntimeConnectionState(StrEnum):
@@ -42,6 +56,8 @@ class RuntimeStdioConnection:
     peer: Peer
     process: ServerProcess
 
+    _shutdown_config: ShutdownConfig
+
     _state: RuntimeConnectionState
 
     _stderr_tail: StderrTailBuffer
@@ -49,6 +65,7 @@ class RuntimeStdioConnection:
     def __init__(
         self,
         process: ServerProcess,
+        shutdown_config: ShutdownConfig,
         state: RuntimeConnectionState = RuntimeConnectionState.EXITED,
         stderr_tail: StderrTailBuffer | None = None,
     ) -> None:
@@ -61,6 +78,7 @@ class RuntimeStdioConnection:
             stdin=process.stdin,
             stdout=BufferedByteReceiveStream(process.stdout),
         )
+        self._shutdown_config = shutdown_config
         self._state = state
         self._stderr_tail = stderr_tail or StderrTailBuffer()
 
@@ -188,6 +206,43 @@ class RuntimeStdioConnection:
 
             return health_res
 
+        raise RuntimeProcessError(
+            message="runtime process returned an unexpected response type"
+        )
+
+    async def shutdown(self) -> RuntimeShutdownResult:
+        """"""
+        cancel_in_flight = self._shutdown_config.cancel_in_flight_requests
+        params = RuntimeShutdownRequestPayload.model_validate(
+            {
+                "grace_period_seconds": self._shutdown_config.grace_period_seconds,
+                "cancel_in_flight_requests": cancel_in_flight,
+                "reason": "caller_requested",
+            }
+        )
+        res = await self.peer.request(
+            JsonRpcRequest(
+                id=new_request_id(),
+                method="runtime.shutdown",
+                params=params.root.model_dump(),
+            )
+        )
+        if isinstance(res, JsonRpcRequest):
+            self._state = RuntimeConnectionState.FAILED
+            raise RuntimeProcessError(
+                message=(
+                    "runtime process returned an unexpected request "
+                    "instead of a response"
+                )
+            )
+        if isinstance(res, JsonRpcErrorResponse):
+            self._state = RuntimeConnectionState.FAILED
+            raise _runtime_method_error(method="runtime.shutdown", response=res)
+        if isinstance(res, JsonRpcSuccessResponse):
+            self._state = RuntimeConnectionState.DRAINING
+            return RuntimeShutdownResult.model_validate(res)
+
+        self._state = RuntimeConnectionState.FAILED
         raise RuntimeProcessError(
             message="runtime process returned an unexpected response type"
         )

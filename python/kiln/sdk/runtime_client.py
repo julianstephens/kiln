@@ -10,7 +10,12 @@ from kiln.models.run import RunResult
 from kiln.protocol.errors import RuntimeConnectionClosedError
 
 from .errors import RuntimeProcessError, RuntimeProcessExitedError
-from .runtime_connection import RuntimeConnectionState, RuntimeStdioConnection
+from .runtime_connection import (
+    DefaultShutdownConfig,
+    RuntimeConnectionState,
+    RuntimeStdioConnection,
+    ShutdownConfig,
+)
 from .runtime_process import RuntimeProcess
 
 
@@ -44,12 +49,18 @@ class RuntimeClient:
         self._task_group = tg
 
     @classmethod
-    async def start(cls, binary: Path | None = None) -> "RuntimeClient":
+    async def start(
+        cls,
+        binary: Path | None = None,
+        shutdown: ShutdownConfig = DefaultShutdownConfig,
+    ) -> "RuntimeClient":
         """Start a new runtime process and establish a connection to it.
 
         Args:
             binary: Optional path to the runtime binary. If not provided, the default
                 binary will be used.
+            shutdown: The shutdown configuration that defines how the runtime process
+                should be shut down. Defaults to DefaultShutdownConfig.
 
         Returns:
             An instance of `RuntimeClient` representing the connection to the runtime
@@ -63,6 +74,7 @@ class RuntimeClient:
             process=process.process,
             state=RuntimeConnectionState.STARTING,
             stderr_tail=process.stderr_tail,
+            shutdown_config=shutdown,
         )
         client = cls(process, connection)
 
