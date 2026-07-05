@@ -56,20 +56,15 @@ func MethodNotFound(id protocol.ID, method string) (protocol.ErrorResponse, runt
 		JSONRPCCode: contract.JSONRPCMethodNotFound,
 		Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
 		KilnCode:    "runtime.method_not_found",
-		Message:     "method_not_found: " + method,
+		Message:     "method not found",
 		Retryable:   false,
 		Details: map[string]any{
-			"received_method":             method,
+			"requested_method":            method,
 			"supported_methods":           protocol.SupportedMethods(),
 			"supported_method_namespaces": protocol.SupportedMethodNamespaces(),
 		},
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      id,
-		Error:   obj,
-	}, kilnErr
+	return Response(id, spec)
 }
 
 // InvalidParams creates a new protocol.ErrorResponse for an invalid params error.
@@ -87,12 +82,7 @@ func InvalidParams(
 		Retryable:   false,
 		Details:     normalizeDetails(details),
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      id,
-		Error:   obj,
-	}, kilnErr
+	return Response(id, spec)
 }
 
 // Internal creates a new protocol.ErrorResponse for an internal error.
@@ -117,12 +107,7 @@ func Internal(
 		Retryable:   false,
 		Details:     normalizeDetails(details),
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      id,
-		Error:   obj,
-	}, kilnErr
+	return Response(id, spec)
 }
 
 // ParseError creates a new protocol.ErrorResponse for a parse error.
@@ -136,12 +121,7 @@ func ParseError(details map[string]any) (protocol.ErrorResponse, runtime_error.E
 		Retryable:   false,
 		Details:     normalizeDetails(details),
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		ID:      protocol.ID{Null: true},
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		Error:   obj,
-	}, kilnErr
+	return Response(protocol.ID{Null: true}, spec)
 }
 
 // InvalidRequest creates a new protocol.ErrorResponse for an invalid request error.
@@ -159,12 +139,7 @@ func InvalidRequest(
 		Retryable:   false,
 		Details:     normalizeDetails(details),
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      id,
-		Error:   obj,
-	}, kilnErr
+	return Response(id, spec)
 }
 
 // Draining creates a new protocol.ErrorResponse for a server draining error.
@@ -180,12 +155,7 @@ func Draining(id protocol.ID, method string) (protocol.ErrorResponse, runtime_er
 			"received_method": method,
 		},
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      id,
-		Error:   obj,
-	}, kilnErr
+	return Response(id, spec)
 }
 
 // Shutdown creates a new protocol.ErrorResponse for a server shutdown error.
@@ -201,12 +171,7 @@ func Shutdown(id protocol.ID, method string) (protocol.ErrorResponse, runtime_er
 			"received_method": method,
 		},
 	}
-	obj, kilnErr := MustObject(spec)
-	return protocol.ErrorResponse{
-		JSONRPC: protocol.DefaultJSONRPCVersion,
-		ID:      id,
-		Error:   obj,
-	}, kilnErr
+	return Response(id, spec)
 }
 
 func normalizeDetails(details map[string]any) map[string]any {

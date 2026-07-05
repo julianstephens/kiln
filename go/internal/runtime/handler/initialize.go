@@ -55,9 +55,15 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 					"validated_type", fmt.Sprintf("%T", res),
 				)
 			}
-			errRes, kilnErr := rpcerror.InvalidRequest(req.ID, req.Method, map[string]any{
-				"params": req.Params,
-			})
+			errRes, kilnErr := rpcerror.Internal(
+				req.ID,
+				&req.Method,
+				"initialize params validator returned unexpected type",
+				map[string]any{
+					"params":         req.Params,
+					"validated_type": fmt.Sprintf("%T", res),
+				},
+			)
 			state.LastFatalStartupError = &kilnErr
 			return errRes
 		}

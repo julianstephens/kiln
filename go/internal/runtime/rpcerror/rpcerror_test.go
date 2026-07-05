@@ -42,10 +42,10 @@ func TestNamedConstructorsProduceSchemaValidErrorData(t *testing.T) {
 				KilnCode:    "runtime.method_not_found",
 				Method:      "runtime.unknown",
 				Category:    runtime_error.ErrorKilnErrorCategoryCompatibility,
-				Message:     "method_not_found: runtime.unknown",
+				Message:     "method not found",
 				Retryable:   false,
 				Details: map[string]any{
-					"received_method":             "runtime.unknown",
+					"requested_method":            "runtime.unknown",
 					"supported_methods":           protocol.SupportedMethods(),
 					"supported_method_namespaces": protocol.SupportedMethodNamespaces(),
 				},

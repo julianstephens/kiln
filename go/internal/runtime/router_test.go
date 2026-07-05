@@ -65,15 +65,15 @@ func TestRouterDispatch_TableDriven(t *testing.T) {
 				ID:      protocol.ID{Number: &unknownID},
 				Error: protocol.ErrorObject{
 					Code:    contract.JSONRPCMethodNotFound,
-					Message: "method_not_found: runtime.unknown",
+					Message: "method not found",
 					Data: map[string]any{
 						"kiln_error": map[string]any{
 							"code":      "runtime.method_not_found",
 							"category":  "compatibility",
-							"message":   "method_not_found: runtime.unknown",
+							"message":   "method not found",
 							"retryable": false,
 							"details": map[string]any{
-								"received_method":             "runtime.unknown",
+								"requested_method":            "runtime.unknown",
 								"supported_methods":           anyStrings(protocol.SupportedMethods()),
 								"supported_method_namespaces": anyStrings(protocol.SupportedMethodNamespaces()),
 							},

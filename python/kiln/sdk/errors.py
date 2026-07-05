@@ -42,6 +42,8 @@ class RuntimeMethodError(RuntimeProcessError):
     ) -> None:
         self.method = method
         self.response = response
+        self.jsonrpc_code = response.error.code
+        self.error_data = response.error.data
         self.kiln_error = kiln_error
         super().__init__(
             f"runtime method error: method={method}, "
