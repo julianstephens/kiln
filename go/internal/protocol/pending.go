@@ -1,12 +1,16 @@
 package protocol
 
+import "sync"
+
 type PendingRequest struct {
 	ID     string
 	Method string
 }
 
 type PendingRequests struct {
-	byID map[string]PendingRequest
+	mu    sync.Mutex
+	byID  map[string]PendingRequest
+	count int64
 }
 
 // IDKey returns the string representation of the ID, or an error if the ID is not a string.
@@ -24,6 +28,12 @@ func NewPendingRequests() *PendingRequests {
 }
 
 func (p *PendingRequests) Add(id string, method string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if _, ok := p.byID[id]; !ok {
+		p.count++
+	}
+
 	p.byID[id] = PendingRequest{
 		ID:     id,
 		Method: method,
@@ -31,11 +41,20 @@ func (p *PendingRequests) Add(id string, method string) {
 }
 
 func (p *PendingRequests) Pop(id string) (PendingRequest, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	req, ok := p.byID[id]
 	if ok {
 		delete(p.byID, id)
+		p.count--
 	}
 	return req, ok
+}
+
+func (p *PendingRequests) Count() int64 {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.count
 }
 
 // ValidateResponseAgainstPendingRequest validates a JSON-RPC response against a pending request.

@@ -40,7 +40,11 @@ func Run(ctx context.Context, cfg Config) error {
 		_ = logCloser.Close()
 	}()
 	// Later: - open persistence
-	deps := &contract.RuntimeDeps{Build: *build, Logger: appLogger.With("component", "runtime")}
+	deps := &contract.RuntimeDeps{
+		Build:           *build,
+		Logger:          appLogger.With("component", "runtime"),
+		PendingRequests: protocol.NewPendingRequests(),
+	}
 	state := &handler.HandlerState{}
 	deps.Logger.Debug("runtime starting",
 		"build_version", build.Version,
@@ -52,8 +56,9 @@ func Run(ctx context.Context, cfg Config) error {
 	router := NewRouter()
 	router.Register("runtime.initialize", handler.MakeInitializeHandler(state, deps))
 	router.Register("runtime.health", handler.MakeHealthHandler(state))
+	router.Register("runtime.shutdown", handler.MakeShutdownHandler(state, deps))
 	deps.Logger.Debug("runtime handlers registered",
-		"handlers", []string{"runtime.initialize", "runtime.health"},
+		"handlers", []string{"runtime.initialize", "runtime.health", "runtime.shutdown"},
 	)
 
 	// - emit runtime.session_started

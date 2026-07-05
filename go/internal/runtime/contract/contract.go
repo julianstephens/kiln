@@ -10,8 +10,9 @@ import (
 type Handler func(context.Context, protocol.Request) protocol.Message
 
 type RuntimeDeps struct {
-	Build  BuildInfo
-	Logger *slog.Logger
+	Build           BuildInfo
+	Logger          *slog.Logger
+	PendingRequests *protocol.PendingRequests
 	// Add other shared deps here
 }
 

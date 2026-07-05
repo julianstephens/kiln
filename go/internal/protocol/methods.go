@@ -19,6 +19,8 @@ import (
 	"github.com/julianstephens/kiln/go/schema/runtime/health_result"
 	"github.com/julianstephens/kiln/go/schema/runtime/initialize_request_payload"
 	"github.com/julianstephens/kiln/go/schema/runtime/initialize_result"
+	"github.com/julianstephens/kiln/go/schema/runtime/shutdown_request_payload"
+	"github.com/julianstephens/kiln/go/schema/runtime/shutdown_result"
 )
 
 type MethodSpec struct {
@@ -46,6 +48,18 @@ var KilnMethods = map[string]MethodSpec{
 		Method: "runtime.health",
 		ValidateResult: func(v map[string]any) (any, error) {
 			return validateAs[health_result.HealthResult](v)
+		},
+		ValidateErrorData: func(v map[string]any) (any, error) {
+			return validateAs[runtime_error.Error](v)
+		},
+	},
+	"runtime.shutdown": {
+		Method: "runtime.shutdown",
+		ValidateParams: func(v map[string]any) (any, error) {
+			return validateAs[shutdown_request_payload.ShutdownRequestPayload](v)
+		},
+		ValidateResult: func(v map[string]any) (any, error) {
+			return validateAs[shutdown_result.ShutdownResult](v)
 		},
 		ValidateErrorData: func(v map[string]any) (any, error) {
 			return validateAs[runtime_error.Error](v)
