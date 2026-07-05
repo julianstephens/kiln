@@ -123,10 +123,12 @@ class RuntimeClient:
             return
         self._closed = True
 
-        if not self._process.is_alive or self._connection.state.FAILED:
-            return
-
         try:
+            if (
+                not self._process.is_alive
+                or self._connection.state == RuntimeConnectionState.FAILED
+            ):
+                return
             res = await self._connection.shutdown()
             if not res.root.accepted and not (res.root.draining or res.root.shutdown):
                 raise RuntimeProcessError(

@@ -31,7 +31,7 @@ func NewPeer(in io.Reader, out io.Writer, maxBytes int) *Peer {
 // Receive reads a JSON-RPC message from the input stream, decodes it, and parses it into a strongly typed Message (Request, SuccessResponse, or ErrorResponse).
 // It returns an error if the message cannot be read, decoded, or parsed.
 func (p *Peer) Receive(ctx context.Context) (Message, error) {
-	line, err := readLineBounded(p.in, p.maxBytes)
+	line, err := readLineBounded(ctx, p.in, p.maxBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -76,19 +76,27 @@ func (p *Peer) Send(msg Message) error {
 
 // ReceiveCh starts a goroutine to receive a message from the Peer and returns a channel that will receive the result (message or error).
 func (p *Peer) ReceiveCh(ctx context.Context) <-chan ReceiveResult {
-	ch := make(chan ReceiveResult)
+	ch := make(chan ReceiveResult, 1)
 	go func() {
+		defer close(ch)
 		msg, err := p.Receive(ctx)
-		ch <- ReceiveResult{Msg: msg, Err: err}
-		close(ch)
+		select {
+		case ch <- ReceiveResult{Msg: msg, Err: err}:
+		case <-ctx.Done():
+		}
 	}()
 	return ch
 }
 
-func readLineBounded(r *bufio.Reader, maxBytes int) ([]byte, error) {
+func readLineBounded(ctx context.Context, r *bufio.Reader, maxBytes int) ([]byte, error) {
 	var frame []byte
 
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
 		chunk, err := r.ReadSlice('\n')
 		frame = append(frame, chunk...)
 

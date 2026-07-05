@@ -135,8 +135,8 @@ RequestLoop:
 				} else {
 
 					deps.PendingRequests.Add(idStr, protocolReq.Method)
-					defer deps.PendingRequests.Pop(idStr)
 					msg = router.Dispatch(cancelCtx, protocolReq)
+					deps.PendingRequests.Pop(idStr)
 				}
 			}
 
@@ -152,6 +152,7 @@ RequestLoop:
 	}
 
 	deps.Logger.Debug("runtime loop exited, waiting for background workers")
+	cancel()
 	deps.Lifecycle.Wg.Wait()
 	deps.Logger.Debug("all background workers finished, runtime exiting")
 
