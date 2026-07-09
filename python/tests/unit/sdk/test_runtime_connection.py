@@ -794,7 +794,7 @@ async def test_shutdown_respects_grace_period(mocker) -> None:
     """Test that shutdown() sleeps for grace_period_seconds before sending request.
 
     Verifies:
-    - time.sleep is called with the grace_period_seconds value
+    - anyio.sleep is called with the grace_period_seconds value
     - sleep occurs before the shutdown request is sent to the runtime
     """
     fake_peer = _FakePeer(
@@ -804,7 +804,7 @@ async def test_shutdown_respects_grace_period(mocker) -> None:
         "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
-    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.time.sleep")
+    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.anyio.sleep")
 
     grace_period = 1
     conn = RuntimeStdioConnection(
@@ -830,7 +830,7 @@ async def test_shutdown_skips_sleep_with_zero_grace_period(mocker) -> None:
     """Test that shutdown() skips sleep when grace_period_seconds is 0.
 
     Verifies:
-    - time.sleep is not called when grace_period_seconds is 0
+    - anyio.sleep is not called when grace_period_seconds is 0
     - shutdown request is sent immediately
     """
     fake_peer = _FakePeer(
@@ -840,7 +840,7 @@ async def test_shutdown_skips_sleep_with_zero_grace_period(mocker) -> None:
         "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
     )
     mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
-    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.time.sleep")
+    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.anyio.sleep")
 
     conn = RuntimeStdioConnection(
         _process(),

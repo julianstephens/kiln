@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from kiln import Agent
 from kiln.sdk.errors import RepositoryNotFoundError, TaskEmptyError
+from kiln.sdk.runtime_connection import ShutdownConfig
 
 from .base import BaseScenario
 
@@ -19,7 +20,15 @@ class InitializeAgentScenario(BaseScenario):
     """
 
     async def run(self, repo: Path) -> None:
-        async with await Agent.open(repository=repo, budget=self.budget()) as agent:
+        async with await Agent.open(
+            repository=repo,
+            budget=self.budget(),
+            shutdown=ShutdownConfig(
+                grace_period_seconds=0,
+                process_exit_timeout_seconds=15,
+                cancel_in_flight_requests=True,
+            ),
+        ) as agent:
             # If we get here without exception, initialization succeeded
             assert agent._client._process.is_alive, (
                 "Runtime process should be alive after open()"
@@ -35,7 +44,15 @@ class AgentCloseScenario(BaseScenario):
     """
 
     async def run(self, repo: Path) -> None:
-        async with await Agent.open(repository=repo, budget=self.budget()) as agent:
+        async with await Agent.open(
+            repository=repo,
+            budget=self.budget(),
+            shutdown=ShutdownConfig(
+                grace_period_seconds=0,
+                process_exit_timeout_seconds=15,
+                cancel_in_flight_requests=True,
+            ),
+        ) as agent:
             assert agent._client._process.is_alive, (
                 "Process should be alive after open()"
             )
@@ -52,7 +69,15 @@ class MultipleAgentLifecyclesScenario(BaseScenario):
 
     async def run(self, repo: Path) -> None:
         for i in range(3):
-            async with await Agent.open(repository=repo, budget=self.budget()) as agent:
+            async with await Agent.open(
+                repository=repo,
+                budget=self.budget(),
+                shutdown=ShutdownConfig(
+                    grace_period_seconds=0,
+                    process_exit_timeout_seconds=15,
+                    cancel_in_flight_requests=True,
+                ),
+            ) as agent:
                 assert agent._client._process.is_alive, (
                     f"Process should be alive (iteration {i})"
                 )
@@ -71,7 +96,15 @@ class InvalidRepositoryErrorScenario(BaseScenario):
         nonexistent = repo.parent / "nonexistent-repo"
 
         with pytest.raises(RepositoryNotFoundError):
-            async with await Agent.open(repository=nonexistent, budget=self.budget()):
+            async with await Agent.open(
+                repository=nonexistent,
+                budget=self.budget(),
+                shutdown=ShutdownConfig(
+                    grace_period_seconds=0,
+                    process_exit_timeout_seconds=15,
+                    cancel_in_flight_requests=True,
+                ),
+            ):
                 pass  # Should not reach here
 
 
@@ -84,6 +117,14 @@ class EmptyTaskErrorScenario(BaseScenario):
     """
 
     async def run(self, repo: Path) -> None:
-        async with await Agent.open(repository=repo, budget=self.budget()) as agent:
+        async with await Agent.open(
+            repository=repo,
+            budget=self.budget(),
+            shutdown=ShutdownConfig(
+                grace_period_seconds=0,
+                process_exit_timeout_seconds=15,
+                cancel_in_flight_requests=True,
+            ),
+        ) as agent:
             with pytest.raises(TaskEmptyError):
                 await agent.run("")

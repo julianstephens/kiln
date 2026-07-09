@@ -1,6 +1,7 @@
-import time
 from dataclasses import dataclass
 from enum import StrEnum
+
+import anyio
 
 from kiln.protocol.jsonrpc import (
     JsonRpcErrorResponse,
@@ -233,7 +234,7 @@ class RuntimeStdioConnection:
             }
         )
         if self._shutdown_config.grace_period_seconds > 0:
-            time.sleep(self._shutdown_config.grace_period_seconds)
+            await anyio.sleep(self._shutdown_config.grace_period_seconds)
 
         res = await self.peer.request(
             JsonRpcRequest(
