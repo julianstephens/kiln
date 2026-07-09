@@ -136,10 +136,22 @@ class RuntimeClient:
                 )
             if not self._process.write_closed:
                 await self._process.close_stdin()
-            with anyio.fail_after(
-                self._connection.shutdown_config.process_exit_timeout_seconds
-            ):
+            try:
+                with anyio.fail_after(
+                    self._connection.shutdown_config.process_exit_timeout_seconds
+                ):
+                    await self._process.wait()
+            except TimeoutError:
                 await self._process.aclose(mark_expected=mark_expected)
+            finally:
+                if (
+                    self._process.exit_status is None
+                    or self._process.exit_status.returncode is None
+                ):
+                    raise RuntimeProcessError(
+                        message="runtime process did not exit gracefully"
+                    )
+                self._runtime_exit_status = self._process.exit_status.returncode
         finally:
             if self._exit_stack is not None:
                 await self._exit_stack.aclose()
