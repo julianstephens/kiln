@@ -162,6 +162,7 @@ func startShutdownWorker(
 
 		// signal the main loop to exit
 		state.SetShutdown(true)
+		deps.Lifecycle.SignalShutdown()
 	})
 }
 
