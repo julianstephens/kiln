@@ -22,3 +22,93 @@ type HandlerState struct {
 
 	LastFatalStartupError *runtime_error.ErrorKilnError
 }
+
+func (hs *HandlerState) IsInitialized() bool {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.Initialized
+}
+
+func (hs *HandlerState) SetInitialized(initialized bool) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.Initialized = initialized
+}
+
+func (hs *HandlerState) IsReady() bool {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.Ready
+}
+
+func (hs *HandlerState) SetReady(ready bool) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.Ready = ready
+}
+
+func (hs *HandlerState) IsDraining() bool {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.Draining
+}
+
+func (hs *HandlerState) SetDraining(draining bool) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.Draining = draining
+}
+
+func (hs *HandlerState) IsShutdown() bool {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.Shutdown
+}
+
+func (hs *HandlerState) SetShutdown(shutdown bool) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.Shutdown = shutdown
+}
+
+func (hs *HandlerState) ShutdownStatus() (draining, shutdown bool) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.Draining, hs.Shutdown
+}
+
+func (hs *HandlerState) GetLastFatalStartupError() *runtime_error.ErrorKilnError {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.LastFatalStartupError
+}
+
+func (hs *HandlerState) SetLastFatalStartupError(err *runtime_error.ErrorKilnError) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.LastFatalStartupError = err
+}
+
+func (hs *HandlerState) GetInitialParams() initialize_request_payload.InitializeRequestPayload {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.InitialParams
+}
+
+func (hs *HandlerState) SetInitialParams(params initialize_request_payload.InitializeRequestPayload) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.InitialParams = params
+}
+
+func (hs *HandlerState) GetInitialResult() initialize_result.InitializeResult {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	return hs.InitialResult
+}
+
+func (hs *HandlerState) SetInitialResult(result initialize_result.InitializeResult) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+	hs.InitialResult = result
+}

@@ -80,8 +80,6 @@ func TestRun_Preconditions_TableDriven(t *testing.T) {
 }
 
 func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
-	t.Parallel()
-
 	previousBuildDate := contract.BuildDate
 	previousBuildVersion := contract.BuildVersion
 	previousBuildCommit := contract.BuildCommit

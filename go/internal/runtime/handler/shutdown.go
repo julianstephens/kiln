@@ -21,9 +21,6 @@ const (
 // MakeShutdownHandler returns a Handler closure that captures state and deps.
 func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contract.Handler {
 	return func(ctx context.Context, req protocol.Request) protocol.Message {
-		state.Mu.Lock()
-		defer state.Mu.Unlock()
-
 		if deps != nil && deps.Logger != nil {
 			deps.Logger.Debug("shutdown request received",
 				"request_id", req.ID.JSONValue(),
@@ -31,7 +28,9 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			)
 		}
 
-		if state.Draining {
+		isDraining, isShutdown := state.ShutdownStatus()
+
+		if isDraining {
 			if deps != nil && deps.Logger != nil {
 				deps.Logger.Debug("shutdown request ignored, already draining",
 					"request_id", req.ID.JSONValue(),
@@ -45,7 +44,7 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			}))
 		}
 
-		if state.Shutdown {
+		if isShutdown {
 			if deps != nil && deps.Logger != nil {
 				deps.Logger.Debug("shutdown request ignored, already shut down",
 					"request_id", req.ID.JSONValue(),
@@ -72,7 +71,7 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			errRes, kilnErr := rpcerror.InvalidParams(req.ID, req.Method, map[string]any{
 				"params": req.Params,
 			})
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		}
 
@@ -94,7 +93,7 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 					"validated_type": fmt.Sprintf("%T", res),
 				},
 			)
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		}
 
@@ -114,7 +113,7 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			)
 		}
 
-		state.Draining = true
+		state.SetDraining(true)
 		startShutdownWorker(
 			ctx,
 			state,
@@ -140,6 +139,14 @@ func startShutdownWorker(
 	cancelInFlightRequests bool,
 ) {
 	deps.Lifecycle.Wg.Go(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if deps != nil && deps.Logger != nil {
+					deps.Logger.Error("shutdown worker panicked", "panic", r)
+				}
+			}
+		}()
+
 		if deps != nil && deps.Logger != nil {
 			deps.Logger.Debug("shutdown worker started")
 		}
@@ -154,11 +161,7 @@ func startShutdownWorker(
 		}
 
 		// signal the main loop to exit
-		close(deps.Lifecycle.ShutdownCh)
-
-		state.Mu.Lock()
-		defer state.Mu.Unlock()
-		state.Shutdown = true
+		state.SetShutdown(true)
 	})
 }
 

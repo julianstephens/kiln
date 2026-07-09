@@ -112,7 +112,8 @@ RequestLoop:
 				})
 			}
 
-			if msg == nil && (state.Draining || state.Shutdown) && protocolReq.Method != "runtime.shutdown" {
+			draining, shutdown := state.ShutdownStatus()
+			if msg == nil && (draining || shutdown) && protocolReq.Method != "runtime.shutdown" {
 				deps.Logger.Debug("runtime is shutting down",
 					"request", req.ToJSON(),
 				)

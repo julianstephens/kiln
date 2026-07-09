@@ -14,14 +14,6 @@ import (
 // and returns a response containing the current health status of the runtime.
 func MakeHealthHandler(state *HandlerState) contract.Handler {
 	return func(ctx context.Context, req protocol.Request) protocol.Message {
-		state.Mu.Lock()
-		isReady := state.Ready
-		isShutdown := state.Shutdown
-		isDraining := state.Draining
-		isInitialized := state.Initialized
-		lastFatalError := state.LastFatalStartupError
-		state.Mu.Unlock()
-
 		if req.Params != nil {
 			err, _ := rpcerror.InvalidParams(req.ID, req.Method, map[string]any{
 				"reason": "runtime.health does not accept parameters",
@@ -30,11 +22,11 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 		}
 
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(health_result.HealthResult{
-			Draining:              isDraining,
-			Initialized:           isInitialized,
-			LastFatalStartupError: lastFatalError,
-			Ready:                 isReady,
-			Shutdown:              isShutdown,
+			Draining:              state.IsDraining(),
+			Initialized:           state.IsInitialized(),
+			LastFatalStartupError: state.GetLastFatalStartupError(),
+			Ready:                 state.IsReady(),
+			Shutdown:              state.IsShutdown(),
 		}))
 	}
 }
