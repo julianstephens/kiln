@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import pytest
+
 from kiln.protocol.errors import RuntimeConnectionClosedError
 from kiln.protocol.pending import InflightRequestDisposition
 from kiln.sdk.errors import RuntimeProcessExitedError
