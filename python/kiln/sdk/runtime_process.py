@@ -26,6 +26,7 @@ class RuntimeProcess:
     """Represents a runtime process that can be started and monitored."""
 
     process: ServerProcess
+    _write_closed: bool = False
     _stderr_tail: StderrTailBuffer = field(default_factory=StderrTailBuffer)
     _expected_exit: bool = False
     _last_exit_status: RuntimeExitStatus | None = None
@@ -34,6 +35,11 @@ class RuntimeProcess:
     def is_alive(self) -> bool:
         """Whether the runtime process is still alive (i.e., has not exited)."""
         return self.process.returncode is None
+
+    @property
+    def write_closed(self) -> bool:
+        """Whether the standard input of the runtime process has been closed."""
+        return self._write_closed
 
     @property
     def exit_status(self) -> RuntimeExitStatus | None:
@@ -87,6 +93,12 @@ class RuntimeProcess:
             )
 
         return cls(process=process)
+
+    async def close_stdin(self) -> None:
+        """Close the standard input of the runtime process, signaling that no more input
+        will be sent."""
+        if self.process.stdin is not None:
+            await self.process.stdin.aclose()
 
     async def aclose(self, mark_expected: bool = True) -> None:
         """Close the runtime process, terminating it if it is still running."""

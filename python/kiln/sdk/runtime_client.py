@@ -1,10 +1,8 @@
-import contextlib
 from contextlib import AsyncExitStack
 from pathlib import Path
 from typing import NoReturn
 
 import anyio
-from anyio import fail_after, sleep
 from anyio.abc import TaskGroup
 
 from kiln.models.budget import Budget
@@ -136,42 +134,14 @@ class RuntimeClient:
                 raise RuntimeProcessError(
                     message="runtime process refused to shutdown gracefully"
                 )
-            await self._poll_until(
-                (
-                    RuntimeConnectionState.EXITED,
-                    RuntimeConnectionState.FAILED,
-                ),
-                timeout_seconds=self._connection._shutdown_config.process_exit_timeout_seconds,
-                poll_interval_seconds=3,
-            )
-            await self._process.aclose(mark_expected=mark_expected)
+            if not self._process.write_closed:
+                await self._process.close_stdin()
+            with anyio.fail_after(
+                self._connection.shutdown_config.process_exit_timeout_seconds
+            ):
+                await self._process.aclose(mark_expected=mark_expected)
         finally:
             if self._exit_stack is not None:
                 await self._exit_stack.aclose()
             if self._connection.state != RuntimeConnectionState.FAILED:
                 self._connection.state = RuntimeConnectionState.EXITED
-
-    async def _poll_until(
-        self,
-        terminal_states: tuple[RuntimeConnectionState, ...],
-        timeout_seconds: int = 30,
-        poll_interval_seconds: int = 1,
-    ):
-        """Poll the runtime process until it reaches one of the specified terminal
-        states or the timeout is reached.
-
-        Args:
-            terminal_states: A tuple of `RuntimeConnectionState` values that represent
-                the terminal states to wait for.
-            timeout_seconds: The maximum number of seconds to wait for a terminal state.
-                Defaults to 30 seconds.
-            poll_interval_seconds: The number of seconds to wait between polling
-                attempts. Defaults to 1 second.
-        """
-        with (
-            fail_after(timeout_seconds),
-            contextlib.suppress(RuntimeProcessError),
-        ):
-            await self._connection.health()
-            if self._connection.state not in terminal_states:
-                await sleep(poll_interval_seconds)
