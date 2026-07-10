@@ -12,7 +12,7 @@ import (
 	"github.com/julianstephens/kiln/go/internal/runtime/rpcerror"
 )
 
-func Run(ctx context.Context, cfg Config) error {
+func Run(ctx context.Context, cfg Config) (err error) {
 	if cfg.Input == nil {
 		return ErrInputStreamMissing
 	}
@@ -66,8 +66,17 @@ func Run(ctx context.Context, cfg Config) error {
 	// - emit runtime.session_started
 	// - enter request loop
 	peer := protocol.NewPeer(cfg.Input, cfg.Output, protocol.DefaultMaxMessageBytes)
+	defer func() {
+		if closeErr := peer.Close(); closeErr != nil {
+			deps.Logger.Error("failed to close protocol peer", "error", err.Error())
+			err = closeErr
+		}
+	}()
+
 	cancelCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	inCh := peer.InChan()
 
 RequestLoop:
 	for {
@@ -75,7 +84,17 @@ RequestLoop:
 		case <-deps.Lifecycle.ShutdownCh:
 			deps.Logger.Debug("runtime shutdown signal received, exiting request loop")
 			break RequestLoop
-		case res := <-peer.ReceiveCh(cancelCtx):
+		case <-cancelCtx.Done():
+			deps.Logger.Debug("runtime context canceled, exiting request loop")
+			break RequestLoop
+		case res, ok := <-inCh:
+			if !ok {
+				if _, err := peer.Receive(context.Background()); err != nil {
+					return err
+				}
+				deps.Logger.Debug("runtime input channel closed, exiting request loop")
+				break RequestLoop
+			}
 			if res.Err != nil {
 				if errors.Is(res.Err, context.Canceled) {
 					deps.Logger.Debug("runtime request loop canceled, exiting")
