@@ -24,8 +24,8 @@ class InitializeAgentScenario(BaseScenario):
             repository=repo,
             budget=self.budget(),
             shutdown=ShutdownConfig(
-                grace_period_seconds=0,
                 process_exit_timeout_seconds=15,
+                kill_timeout_seconds=5,
                 cancel_in_flight_requests=True,
             ),
         ) as agent:
@@ -48,8 +48,8 @@ class AgentCloseScenario(BaseScenario):
             repository=repo,
             budget=self.budget(),
             shutdown=ShutdownConfig(
-                grace_period_seconds=0,
                 process_exit_timeout_seconds=15,
+                kill_timeout_seconds=5,
                 cancel_in_flight_requests=True,
             ),
         ) as agent:
@@ -73,8 +73,8 @@ class MultipleAgentLifecyclesScenario(BaseScenario):
                 repository=repo,
                 budget=self.budget(),
                 shutdown=ShutdownConfig(
-                    grace_period_seconds=0,
                     process_exit_timeout_seconds=15,
+                    kill_timeout_seconds=5,
                     cancel_in_flight_requests=True,
                 ),
             ) as agent:
@@ -100,8 +100,8 @@ class InvalidRepositoryErrorScenario(BaseScenario):
                 repository=nonexistent,
                 budget=self.budget(),
                 shutdown=ShutdownConfig(
-                    grace_period_seconds=0,
                     process_exit_timeout_seconds=15,
+                    kill_timeout_seconds=5,
                     cancel_in_flight_requests=True,
                 ),
             ):
@@ -121,8 +121,8 @@ class EmptyTaskErrorScenario(BaseScenario):
             repository=repo,
             budget=self.budget(),
             shutdown=ShutdownConfig(
-                grace_period_seconds=0,
                 process_exit_timeout_seconds=15,
+                kill_timeout_seconds=5,
                 cancel_in_flight_requests=True,
             ),
         ) as agent:

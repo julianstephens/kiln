@@ -560,8 +560,9 @@ async def test_health_sends_non_empty_request_id(mocker) -> None:
 
     # Verify the captured request has a non-empty ID
     assert captured_request is not None
-    assert captured_request.id != ""
-    assert len(captured_request.id) > 0
+    assert captured_request.id
+    if isinstance(captured_request.id, int):
+        assert captured_request.id > 0
     assert captured_request.method == "runtime.health"
     assert captured_request.params is None
     assert result.root.ready is True
@@ -702,6 +703,7 @@ async def test_initialize_raises_runtime_connection_closed_error(mocker) -> None
     # Verify in_flight contains the request info
     error = exc_info.value
     assert len(error.in_flight) == 1
+    assert peer.last_request is not None
     assert error.in_flight[0].request_id == peer.last_request.id
     assert error.in_flight[0].method == "runtime.initialize"
     assert error.in_flight[0].disposition == "failed_connection_closed"
@@ -746,6 +748,7 @@ async def test_health_raises_runtime_connection_closed_error(mocker) -> None:
     # Verify in_flight contains the health request info
     error = exc_info.value
     assert len(error.in_flight) == 1
+    assert peer.last_request is not None
     assert error.in_flight[0].request_id == peer.last_request.id
     assert error.in_flight[0].method == "runtime.health"
     assert error.in_flight[0].disposition == "failed_connection_closed"
@@ -767,7 +770,7 @@ async def test_shutdown_returns_runtime_shutdown_result_and_sets_draining_state(
         _process(),
         RuntimeConnectionState.STARTING,
         ShutdownConfig(
-            grace_period_seconds=1,
+            kill_timeout_seconds=3,
             process_exit_timeout_seconds=1,
             cancel_in_flight_requests=False,
         ),
@@ -781,83 +784,10 @@ async def test_shutdown_returns_runtime_shutdown_result_and_sets_draining_state(
     assert conn.state == RuntimeConnectionState.DRAINING
     assert fake_peer.last_request is not None
     assert fake_peer.last_request.method == "runtime.shutdown"
-    # Note: grace_period_seconds is handled on the Python side via sleep,
-    # not sent to the runtime. Only cancel_in_flight_requests and reason are sent.
     assert fake_peer.last_request.params == {
         "cancel_in_flight_requests": False,
         "reason": "caller_requested",
     }
-
-
-@pytest.mark.anyio
-async def test_shutdown_respects_grace_period(mocker) -> None:
-    """Test that shutdown() sleeps for grace_period_seconds before sending request.
-
-    Verifies:
-    - anyio.sleep is called with the grace_period_seconds value
-    - sleep occurs before the shutdown request is sent to the runtime
-    """
-    fake_peer = _FakePeer(
-        JsonRpcSuccessResponse(id="1", result=_shutdown_result_payload())
-    )
-    mocker.patch(
-        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
-    )
-    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
-    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.anyio.sleep")
-
-    grace_period = 1
-    conn = RuntimeStdioConnection(
-        _process(),
-        RuntimeConnectionState.STARTING,
-        ShutdownConfig(
-            grace_period_seconds=grace_period,
-            process_exit_timeout_seconds=1,
-            cancel_in_flight_requests=True,
-        ),
-    )
-    result = await conn.shutdown()
-
-    # Verify the grace period sleep was called
-    mock_sleep.assert_called_once_with(grace_period)
-    # Verify shutdown was successful
-    assert result.root.accepted is True
-    assert result.root.draining is True
-
-
-@pytest.mark.anyio
-async def test_shutdown_skips_sleep_with_zero_grace_period(mocker) -> None:
-    """Test that shutdown() skips sleep when grace_period_seconds is 0.
-
-    Verifies:
-    - anyio.sleep is not called when grace_period_seconds is 0
-    - shutdown request is sent immediately
-    """
-    fake_peer = _FakePeer(
-        JsonRpcSuccessResponse(id="1", result=_shutdown_result_payload())
-    )
-    mocker.patch(
-        "kiln.sdk.runtime_connection.BufferedByteReceiveStream", side_effect=lambda x: x
-    )
-    mocker.patch("kiln.sdk.runtime_connection.Peer", return_value=fake_peer)
-    mock_sleep = mocker.patch("kiln.sdk.runtime_connection.anyio.sleep")
-
-    conn = RuntimeStdioConnection(
-        _process(),
-        RuntimeConnectionState.STARTING,
-        ShutdownConfig(
-            grace_period_seconds=0,
-            process_exit_timeout_seconds=1,
-            cancel_in_flight_requests=True,
-        ),
-    )
-    result = await conn.shutdown()
-
-    # Verify sleep was NOT called when grace_period is 0
-    mock_sleep.assert_not_called()
-    # Verify shutdown was successful
-    assert result.root.accepted is True
-    assert result.root.draining is True
 
 
 @pytest.mark.anyio
@@ -888,7 +818,7 @@ async def test_shutdown_raises_on_jsonrpc_error_response(mocker) -> None:
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
     mock_connection.state = RuntimeConnectionState.STARTING
     mock_connection._shutdown_config = ShutdownConfig(
-        grace_period_seconds=0,
+        kill_timeout_seconds=3,
         process_exit_timeout_seconds=1,
         cancel_in_flight_requests=True,
     )
@@ -919,8 +849,8 @@ async def test_shutdown_raises_on_unexpected_request_response(mocker) -> None:
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
     mock_connection.state = RuntimeConnectionState.STARTING
     mock_connection._shutdown_config = ShutdownConfig(
-        grace_period_seconds=0,
         process_exit_timeout_seconds=1,
+        kill_timeout_seconds=3,
         cancel_in_flight_requests=True,
     )
     mock_connection.peer = fake_peer
@@ -943,7 +873,7 @@ async def test_shutdown_raises_on_unexpected_response_type(mocker) -> None:
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
     mock_connection.state = RuntimeConnectionState.STARTING
     mock_connection._shutdown_config = ShutdownConfig(
-        grace_period_seconds=0,
+        kill_timeout_seconds=3,
         process_exit_timeout_seconds=1,
         cancel_in_flight_requests=True,
     )

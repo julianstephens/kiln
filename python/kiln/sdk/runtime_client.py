@@ -143,6 +143,10 @@ class RuntimeClient:
                     await self._process.wait()
             except TimeoutError:
                 await self._process.aclose(mark_expected=mark_expected)
+                with anyio.fail_after(
+                    self._connection.shutdown_config.kill_timeout_seconds
+                ):
+                    await self._process.wait()
             finally:
                 if (
                     self._process.exit_status is None
@@ -155,5 +159,8 @@ class RuntimeClient:
         finally:
             if self._exit_stack is not None:
                 await self._exit_stack.aclose()
-            if self._connection.state != RuntimeConnectionState.FAILED:
+            if (
+                self._connection.state != RuntimeConnectionState.FAILED
+                or self._connection.state != RuntimeConnectionState.TIMEOUT
+            ):
                 self._connection.state = RuntimeConnectionState.EXITED

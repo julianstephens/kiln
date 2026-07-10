@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-import anyio
-
 from kiln.protocol.jsonrpc import (
     JsonRpcErrorResponse,
     JsonRpcRequest,
@@ -32,14 +30,14 @@ RUNTIME_PROTOCOL_VERSION = "2026-07-01"
 
 @dataclass
 class ShutdownConfig:
-    grace_period_seconds: int
     process_exit_timeout_seconds: int
+    kill_timeout_seconds: int
     cancel_in_flight_requests: bool
 
 
 DefaultShutdownConfig = ShutdownConfig(
-    grace_period_seconds=30,
     process_exit_timeout_seconds=30,
+    kill_timeout_seconds=10,
     cancel_in_flight_requests=True,
 )
 
@@ -233,8 +231,6 @@ class RuntimeStdioConnection:
                 "reason": "caller_requested",
             }
         )
-        if self._shutdown_config.grace_period_seconds > 0:
-            await anyio.sleep(self._shutdown_config.grace_period_seconds)
 
         res = await self.peer.request(
             JsonRpcRequest(
