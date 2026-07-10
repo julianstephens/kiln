@@ -68,7 +68,7 @@ func Run(ctx context.Context, cfg Config) (err error) {
 	peer := protocol.NewPeer(cfg.Input, cfg.Output, protocol.DefaultMaxMessageBytes)
 	defer func() {
 		if closeErr := peer.Close(); closeErr != nil {
-			deps.Logger.Error("failed to close protocol peer", "error", err.Error())
+			deps.Logger.Error("failed to close protocol peer", "error", closeErr.Error())
 			err = closeErr
 		}
 	}()
@@ -89,6 +89,11 @@ RequestLoop:
 			break RequestLoop
 		case res, ok := <-inCh:
 			if !ok {
+				draining, shutdown := state.ShutdownStatus()
+				if draining || shutdown {
+					deps.Logger.Debug("runtime input channel closed due to shutdown, exiting request loop")
+					break RequestLoop
+				}
 				if _, err := peer.Receive(context.Background()); err != nil {
 					return err
 				}
@@ -99,6 +104,15 @@ RequestLoop:
 				if errors.Is(res.Err, context.Canceled) {
 					deps.Logger.Debug("runtime request loop canceled, exiting")
 					break RequestLoop
+				}
+
+				var protocolErr *protocol.Error
+				if errors.As(res.Err, &protocolErr) && protocolErr.Code == protocol.CodeRuntimeStreamClosed {
+					draining, shutdown := state.ShutdownStatus()
+					if draining || shutdown {
+						deps.Logger.Debug("runtime input stream closed during shutdown, exiting request loop")
+						break RequestLoop
+					}
 				}
 				return res.Err
 			}

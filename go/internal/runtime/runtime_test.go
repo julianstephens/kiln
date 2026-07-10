@@ -3,7 +3,6 @@ package runtime_test
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io"
 	"testing"
 
@@ -117,13 +116,7 @@ func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
 		Error:  errOutput,
 	})
 
-	utest.AssertNotNil(t, err)
-	var protocolErr *protocol.Error
-	ok := errors.As(err, &protocolErr)
-	utest.AssertTrue(t, ok, "expected *protocol.Error")
-	if ok {
-		utest.AssertEqual(t, protocolErr.Code, protocol.CodeRuntimeStreamClosed)
-	}
+	utest.RequireNoError(t, err)
 
 	peer := protocol.NewPeer(bytes.NewBuffer(output.Bytes()), &bytes.Buffer{}, protocol.DefaultMaxMessageBytes)
 
