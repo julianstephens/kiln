@@ -13,7 +13,13 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
-from . import error, initialize_request_payload, initialize_result
+from . import (
+    error,
+    initialize_request_payload,
+    initialize_result,
+    shutdown_request_payload,
+    shutdown_result,
+)
 
 
 class Category(StrEnum):
@@ -69,6 +75,14 @@ class RuntimeInitializeResult(RootModel[initialize_result.Schema]):
     root: initialize_result.Schema
 
 
+class RuntimeShutdownRequestPayload(RootModel[shutdown_request_payload.Schema]):
+    root: shutdown_request_payload.Schema
+
+
+class RuntimeShutdownResult(RootModel[shutdown_result.Schema]):
+    root: shutdown_result.Schema
+
+
 class KilnRuntimeGeneratedPythonModelsBundle(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -77,6 +91,8 @@ class KilnRuntimeGeneratedPythonModelsBundle(BaseModel):
     runtime_health_result: RuntimeHealthResult | None = None
     runtime_initialize_request_payload: RuntimeInitializeRequestPayload | None = None
     runtime_initialize_result: RuntimeInitializeResult | None = None
+    runtime_shutdown_request_payload: RuntimeShutdownRequestPayload | None = None
+    runtime_shutdown_result: RuntimeShutdownResult | None = None
 
 
 class Schema(BaseModel):

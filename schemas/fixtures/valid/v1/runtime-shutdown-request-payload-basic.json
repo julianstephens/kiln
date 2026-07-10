@@ -1,0 +1,4 @@
+{
+    "cancel_in_flight_requests": true,
+    "reason": "Operator requested shutdown"
+}

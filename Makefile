@@ -84,7 +84,7 @@ test-python:
 	cd $(PYTHON_DIR) && uv sync --package kiln-sdk && uv run pytest -c kiln/pyproject.toml 
 
 test-go:
-	cd $(GO_DIR) && $(GO) test -v ./...
+	cd $(GO_DIR) && $(GO) test -race -v ./...
 
 test-e2e: build-go
 	cd $(PYTHON_DIR) && uv sync --package kiln-sdk

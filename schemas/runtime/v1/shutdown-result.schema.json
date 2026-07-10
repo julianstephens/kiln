@@ -1,0 +1,32 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kiln.cyborgdev.cloud/schemas/runtime/v1/shutdown-result.schema.json",
+    "x-kiln-schema-release": "1.0.0",
+    "title": "Kiln runtime shutdown result",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "accepted",
+        "draining",
+        "shutdown",
+        "in_flight_request_count"
+    ],
+    "properties": {
+        "accepted": {
+            "type": "boolean",
+            "description": "Indicates whether the shutdown request was accepted by the runtime."
+        },
+        "draining": {
+            "type": "boolean",
+            "description": "Indicates whether the runtime is currently draining in-flight requests before shutting down."
+        },
+        "shutdown": {
+            "type": "boolean",
+            "description": "Indicates whether the runtime has completed the shutdown process."
+        },
+        "in_flight_request_count": {
+            "type": "integer",
+            "description": "The number of in-flight requests currently being processed by the runtime."
+        }
+    }
+}

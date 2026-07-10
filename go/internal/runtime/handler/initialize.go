@@ -18,9 +18,6 @@ import (
 // MakeInitializeHandler returns a Handler closure that captures state and deps.
 func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) contract.Handler {
 	return func(ctx context.Context, req protocol.Request) protocol.Message {
-		state.Mu.Lock()
-		defer state.Mu.Unlock()
-
 		if deps != nil && deps.Logger != nil {
 			deps.Logger.Debug("initialize request received",
 				"request_id", req.ID.JSONValue(),
@@ -42,7 +39,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			errRes, kilnErr := rpcerror.InvalidParams(req.ID, req.Method, map[string]any{
 				"params": req.Params,
 			})
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		}
 
@@ -64,7 +61,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 					"validated_type": fmt.Sprintf("%T", res),
 				},
 			)
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		}
 
@@ -79,9 +76,9 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			)
 		}
 
-		if state.Initialized {
-			if sameInitializeParams(state.InitialParams, *validatedParams) {
-				return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(state.InitialResult))
+		if state.IsInitialized() {
+			if sameInitializeParams(state.GetInitialParams(), *validatedParams) {
+				return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(state.GetInitialResult()))
 			}
 			spec := rpcerror.Spec{
 				JSONRPCCode: contract.KilnRuntimeAlreadyInitializedWithDifferentParams,
@@ -91,7 +88,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 				Message:     "Runtime already initialized with different params",
 				Retryable:   false,
 				Details: map[string]any{
-					"original_params":  util.MustStructToMap(state.InitialParams),
+					"original_params":  util.MustStructToMap(state.GetInitialParams()),
 					"requested_params": util.MustStructToMap(validatedParams),
 				},
 			}
@@ -114,7 +111,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 				},
 			}
 			errRes, kilnErr := rpcerror.Response(req.ID, spec)
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		case validatedParams.SchemaSetVersion != schema.SchemaSetVersion:
 			spec := rpcerror.Spec{
@@ -129,7 +126,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 				},
 			}
 			errRes, kilnErr := rpcerror.Response(req.ID, spec)
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		case validatedParams.CompatibilityMajor != schema.CompatibilityMajor:
 			spec := rpcerror.Spec{
@@ -144,7 +141,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 				},
 			}
 			errRes, kilnErr := rpcerror.Response(req.ID, spec)
-			state.LastFatalStartupError = &kilnErr
+			state.SetLastFatalStartupError(&kilnErr)
 			return errRes
 		}
 
@@ -165,10 +162,10 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			},
 		}
 
-		state.Initialized = true
-		state.Ready = true
-		state.InitialParams = *validatedParams
-		state.InitialResult = result
+		state.SetInitialized(true)
+		state.SetReady(true)
+		state.SetInitialParams(*validatedParams)
+		state.SetInitialResult(result)
 
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(result))
 	}

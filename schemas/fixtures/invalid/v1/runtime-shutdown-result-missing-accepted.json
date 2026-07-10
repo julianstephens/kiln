@@ -1,0 +1,5 @@
+{
+    "draining": true,
+    "shutdown": false,
+    "in_flight_request_count": 2
+}
