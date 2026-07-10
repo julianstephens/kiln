@@ -87,7 +87,7 @@ func MakeShutdownHandler(state *HandlerState, deps *contract.RuntimeDeps) contra
 			errRes, kilnErr := rpcerror.Internal(
 				req.ID,
 				&req.Method,
-				"initialize params validator returned unexpected type",
+				"shutdown params validator returned unexpected type",
 				map[string]any{
 					"params":         req.Params,
 					"validated_type": fmt.Sprintf("%T", res),
