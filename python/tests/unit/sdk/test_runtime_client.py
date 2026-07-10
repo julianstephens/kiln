@@ -14,7 +14,11 @@ from kiln.protocol.pending import InflightRequestDisposition
 from kiln.sdk.errors import RuntimeProcessExitedError
 from kiln.sdk.runtime_client import RuntimeClient
 from kiln.sdk.runtime_connection import RuntimeConnectionState, RuntimeStdioConnection
-from kiln.sdk.runtime_exit import RuntimeExitStatus, StderrTailBuffer
+from kiln.sdk.runtime_exit import (
+    RuntimeExitStatus,
+    RuntimeFinalExitClass,
+    StderrTailBuffer,
+)
 
 
 @pytest.mark.anyio
@@ -45,9 +49,11 @@ async def test_start_raises_runtime_process_exited_error_on_connection_closed(
     fake_runtime_process.is_alive = False
     fake_runtime_process.exit_status = RuntimeExitStatus(
         expected=False,
+        timeout=False,
         returncode=1,
         signal=None,
         stderr_tail="boom",
+        final_class=RuntimeFinalExitClass.STARTUP_FAILURE,
     )
     # Add the stderr_tail property
     type(fake_runtime_process).stderr_tail = PropertyMock(return_value=stderr_tail)
@@ -97,6 +103,7 @@ async def test_start_raises_runtime_process_exited_error_on_connection_closed(
     assert error.exit_status.returncode == 1
     assert error.exit_status.signal is None
     assert "boom" in error.exit_status.stderr_tail
+    assert error.exit_status.final_class == RuntimeFinalExitClass.STARTUP_FAILURE
 
     # Verify in_flight tracking
     assert len(error.in_flight) == 1
@@ -120,6 +127,14 @@ async def test_close_uses_configured_process_exit_timeout(mocker) -> None:
     fake_runtime_process.close_stdin = AsyncMock()
     fake_runtime_process.wait = AsyncMock()
     fake_runtime_process.aclose = AsyncMock()
+    fake_runtime_process.exit_status = RuntimeExitStatus(
+        expected=True,
+        timeout=False,
+        returncode=0,
+        signal=None,
+        stderr_tail="",
+        final_class=RuntimeFinalExitClass.GRACEFUL_EXIT,
+    )
 
     # Create mock connection with configured timeout
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
@@ -160,6 +175,9 @@ async def test_close_uses_configured_process_exit_timeout(mocker) -> None:
     fake_runtime_process.close_stdin.assert_awaited_once()
     fake_runtime_process.wait.assert_awaited_once()
     fake_runtime_process.aclose.assert_not_awaited()
+    assert client.runtime_exit_status is not None
+    assert client.runtime_exit_status.final_class == RuntimeFinalExitClass.GRACEFUL_EXIT
+    assert client.runtime_exit_status.timeout is False
     assert mock_connection.state == RuntimeConnectionState.EXITED
 
 
@@ -186,6 +204,14 @@ async def test_close_uses_default_process_exit_timeout_when_not_configured(
     fake_runtime_process.close_stdin = AsyncMock()
     fake_runtime_process.wait = AsyncMock()
     fake_runtime_process.aclose = AsyncMock()
+    fake_runtime_process.exit_status = RuntimeExitStatus(
+        expected=True,
+        timeout=False,
+        returncode=0,
+        signal=None,
+        stderr_tail="",
+        final_class=RuntimeFinalExitClass.GRACEFUL_EXIT,
+    )
 
     # Create mock connection with default timeout
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
@@ -223,6 +249,9 @@ async def test_close_uses_default_process_exit_timeout_when_not_configured(
     fake_runtime_process.close_stdin.assert_awaited_once()
     fake_runtime_process.wait.assert_awaited_once()
     fake_runtime_process.aclose.assert_not_awaited()
+    assert client.runtime_exit_status is not None
+    assert client.runtime_exit_status.final_class == RuntimeFinalExitClass.GRACEFUL_EXIT
+    assert client.runtime_exit_status.timeout is False
     assert mock_connection.state == RuntimeConnectionState.EXITED
 
 
@@ -247,6 +276,14 @@ async def test_close_fallback_to_terminate(
     fake_runtime_process.close_stdin = AsyncMock()
     fake_runtime_process.wait = AsyncMock()
     fake_runtime_process.aclose = AsyncMock()
+    fake_runtime_process.exit_status = RuntimeExitStatus(
+        expected=True,
+        timeout=True,
+        returncode=0,
+        signal=None,
+        stderr_tail="",
+        final_class=RuntimeFinalExitClass.FORCED_KILL,
+    )
 
     # Create mock connection with default timeout
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
@@ -282,5 +319,10 @@ async def test_close_fallback_to_terminate(
     # Verify the default timeout is used
     fail_after.assert_called()
     fake_runtime_process.close_stdin.assert_awaited_once()
-    fake_runtime_process.aclose.assert_awaited_once_with(mark_expected=True)
+    fake_runtime_process.aclose.assert_awaited_once_with(
+        mark_expected=True, final_class=RuntimeFinalExitClass.FORCED_KILL, timeout=True
+    )
+    assert client.runtime_exit_status is not None
+    assert client.runtime_exit_status.final_class == RuntimeFinalExitClass.FORCED_KILL
+    assert client.runtime_exit_status.timeout is True
     assert mock_connection.state == RuntimeConnectionState.EXITED

@@ -9,13 +9,14 @@ from kiln.models.budget import Budget
 from kiln.models.run import RunResult
 from kiln.protocol.errors import RuntimeConnectionClosedError
 
-from .errors import RuntimeProcessError, RuntimeProcessExitedError
+from .errors import RuntimeMethodError, RuntimeProcessError, RuntimeProcessExitedError
 from .runtime_connection import (
     DefaultShutdownConfig,
     RuntimeConnectionState,
     RuntimeStdioConnection,
     ShutdownConfig,
 )
+from .runtime_exit import RuntimeExitStatus, RuntimeFinalExitClass
 from .runtime_process import RuntimeProcess
 
 
@@ -28,7 +29,7 @@ class RuntimeClient:
 
     _exit_stack: AsyncExitStack | None
     _task_group: TaskGroup | None
-    _runtime_exit_status: int
+    _runtime_exit_status: RuntimeExitStatus | None = None
     _runtime_exit_code: Literal["graceful", "timeout", "killed", "unexpected"] | None
     _closed: bool
 
@@ -50,6 +51,11 @@ class RuntimeClient:
         tg.start_soon(self._connection.drain_stderr)
         self._exit_stack = stack
         self._task_group = tg
+
+    @property
+    def runtime_exit_status(self) -> RuntimeExitStatus | None:
+        """The exit status of the runtime process, or None if it is still running."""
+        return self._runtime_exit_status
 
     @classmethod
     async def start(
@@ -94,14 +100,20 @@ class RuntimeClient:
         except RuntimeConnectionClosedError as exc:
             connection.mark_failed()
 
-            exit_status = process.exit_status
-            if exit_status is not None and not exit_status.expected:
+            if process.exit_status is not None:
+                process.mark_final_exit_class(RuntimeFinalExitClass.STARTUP_FAILURE)
+                exit_status = process.exit_status
                 await client.close(mark_expected=False)
                 raise RuntimeProcessExitedError(
                     exit_status=exit_status,
                     in_flight=exc.in_flight
                     or connection.inflight_disposition("failed_process_exited"),
                 ) from exc
+            await client.close(mark_expected=False)
+            raise
+        except RuntimeMethodError:
+            connection.mark_failed()
+            process.mark_final_exit_class(RuntimeFinalExitClass.INITIALIZE_FAILURE)
             await client.close(mark_expected=False)
             raise
         except BaseException:
@@ -143,23 +155,31 @@ class RuntimeClient:
                     self._connection.shutdown_config.process_exit_timeout_seconds
                 ):
                     await self._process.wait()
-                    self._runtime_exit_code = "graceful"
+                    self._process.mark_final_exit_class(
+                        RuntimeFinalExitClass.GRACEFUL_EXIT
+                    )
             except TimeoutError:
-                await self._process.aclose(mark_expected=mark_expected)
+                await self._process.aclose(
+                    mark_expected=mark_expected,
+                    final_class=RuntimeFinalExitClass.FORCED_KILL,
+                    timeout=True,
+                )
                 with anyio.fail_after(
                     self._connection.shutdown_config.kill_timeout_seconds
                 ):
                     await self._process.wait()
-                    self._runtime_exit_code = "timeout"
             finally:
                 exit_status = self._process.exit_status
                 if exit_status is None or exit_status.returncode is None:
                     raise RuntimeProcessError(
                         message="runtime process did not exit gracefully"
                     )
-                self._runtime_exit_status = exit_status.returncode
-                if not mark_expected:
-                    self._runtime_exit_code = "unexpected"
+                if not mark_expected and exit_status.final_class is None:
+                    self._process.mark_final_exit_class(
+                        RuntimeFinalExitClass.UNEXPECTED_EXIT
+                    )
+                    exit_status = self._process.exit_status
+                self._runtime_exit_status = exit_status
         finally:
             if self._exit_stack is not None:
                 await self._exit_stack.aclose()

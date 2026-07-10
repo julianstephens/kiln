@@ -100,7 +100,7 @@ RequestLoop:
 					deps.Logger.Debug("runtime input channel closed due to shutdown, exiting request loop")
 					break RequestLoop
 				}
-				if _, err := peer.Receive(context.Background()); err != nil {
+				if err := peer.LastErr(); err != nil {
 					return err
 				}
 				deps.Logger.Debug("runtime input channel closed, exiting request loop")

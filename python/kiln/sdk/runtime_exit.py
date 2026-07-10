@@ -1,6 +1,19 @@
 from dataclasses import dataclass
+from enum import StrEnum
 
 from kiln.protocol.pending import InflightRequestDisposition
+
+
+class RuntimeFinalExitClass(StrEnum):
+    """Represents the final exit class of a runtime process."""
+
+    GRACEFUL_EXIT = "graceful_exit"
+    PROTOCOL_EOF = "protocol_eof"
+    STARTUP_FAILURE = "startup_failure"
+    INITIALIZE_FAILURE = "initialize_failure"
+    UNEXPECTED_EXIT = "unexpected_exit"
+    FORCED_KILL = "forced_kill"
+    CRASH = "crash"
 
 
 @dataclass(frozen=True)
@@ -8,9 +21,11 @@ class RuntimeExitStatus:
     """Represents the exit status of a runtime process."""
 
     expected: bool
+    timeout: bool
     returncode: int | None
     signal: int | None
     stderr_tail: str
+    final_class: RuntimeFinalExitClass | None = None
 
 
 @dataclass(frozen=True)

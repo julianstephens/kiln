@@ -13,7 +13,7 @@ from ._runtime_os.win32 import (
     terminate_windows_process_tree,
 )
 from .errors import MissingRuntimeBinaryError, RuntimeProcessError
-from .runtime_exit import RuntimeExitStatus, StderrTailBuffer
+from .runtime_exit import RuntimeExitStatus, RuntimeFinalExitClass, StderrTailBuffer
 
 if sys.platform == "win32":
     from ._runtime_os.win32 import normalize_exit_status
@@ -29,7 +29,9 @@ class RuntimeProcess:
     _write_closed: bool = False
     _stderr_tail: StderrTailBuffer = field(default_factory=StderrTailBuffer)
     _expected_exit: bool = False
+    _timeout: bool = False
     _last_exit_status: RuntimeExitStatus | None = None
+    _final_exit_class: RuntimeFinalExitClass | None = None
 
     @property
     def is_alive(self) -> bool:
@@ -51,9 +53,11 @@ class RuntimeProcess:
 
         status = RuntimeExitStatus(
             expected=self._expected_exit,
+            timeout=self._timeout,
             returncode=exit_code,
             signal=signal,
             stderr_tail=self._stderr_tail.text(),
+            final_class=self._final_exit_class,
         )
         self._last_exit_status = status
         return status
@@ -101,10 +105,18 @@ class RuntimeProcess:
             await self.process.stdin.aclose()
             self._write_closed = True
 
-    async def aclose(self, mark_expected: bool = True) -> None:
+    async def aclose(
+        self,
+        *,
+        mark_expected: bool = True,
+        final_class: RuntimeFinalExitClass = RuntimeFinalExitClass.FORCED_KILL,
+        timeout: bool = False,
+    ) -> None:
         """Close the runtime process, terminating it if it is still running."""
         if mark_expected and self.process.returncode is None:
             self._expected_exit = True
+        self._final_exit_class = final_class
+        self._timeout = timeout
         await self.terminate_tree()
 
     async def terminate_tree(self) -> None:
@@ -121,6 +133,14 @@ class RuntimeProcess:
         if exit_status is None:
             raise RuntimeProcessError(message="process exited but exit status is None")
         return exit_status
+
+    def mark_final_exit_class(self, final_class: RuntimeFinalExitClass) -> None:
+        """Mark the final exit class of the runtime process.
+
+        Args:
+            final_class: The final exit class to mark.
+        """
+        self._final_exit_class = final_class
 
 
 def _find_runtime_binary() -> Path:
