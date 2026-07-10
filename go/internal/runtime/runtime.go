@@ -82,6 +82,12 @@ RequestLoop:
 	for {
 		select {
 		case <-deps.Lifecycle.ShutdownCh:
+			if len(inCh) > 0 {
+				deps.Logger.Debug("runtime shutdown signal received with buffered requests, draining before exit",
+					"buffered_requests", len(inCh),
+				)
+				continue
+			}
 			deps.Logger.Debug("runtime shutdown signal received, exiting request loop")
 			break RequestLoop
 		case <-cancelCtx.Done():
