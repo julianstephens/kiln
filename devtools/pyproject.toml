@@ -18,6 +18,7 @@ removeschema = "schema_tools.remove_schema:main"
 validateschemas = "schema_tools.validate:main"
 generatepymodels = "schema_tools.generate_py_models:main"
 generategomodels = "schema_tools.generate_go_models:main"
+newmigration = "migration_tools.new_migration:main"
 
 [tool.uv]
 package = true
@@ -32,4 +33,4 @@ dev = [
 ]
 
 [tool.setuptools]
-py-modules = ["schema_tools"]
+py-modules = ["schema_tools", "migration_tools"]
