@@ -1,6 +1,6 @@
 from contextlib import AsyncExitStack
 from pathlib import Path
-from typing import Literal, NoReturn
+from typing import NoReturn
 
 import anyio
 from anyio.abc import TaskGroup
@@ -30,7 +30,6 @@ class RuntimeClient:
     _exit_stack: AsyncExitStack | None
     _task_group: TaskGroup | None
     _runtime_exit_status: RuntimeExitStatus | None = None
-    _runtime_exit_code: Literal["graceful", "timeout", "killed", "unexpected"] | None
     _closed: bool
 
     def __init__(
