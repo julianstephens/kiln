@@ -1,6 +1,6 @@
 from contextlib import AsyncExitStack
 from pathlib import Path
-from typing import NoReturn
+from typing import Literal, NoReturn
 
 import anyio
 from anyio.abc import TaskGroup
@@ -29,6 +29,7 @@ class RuntimeClient:
     _exit_stack: AsyncExitStack | None
     _task_group: TaskGroup | None
     _runtime_exit_status: int
+    _runtime_exit_code: Literal["graceful", "timeout", "killed", "unexpected"] | None
     _closed: bool
 
     def __init__(
@@ -39,6 +40,7 @@ class RuntimeClient:
         self._process = process
         self._connection = connection
         self._exit_stack = None
+        self._runtime_exit_code = None
         self._task_group = None
         self._closed = False
 
@@ -141,26 +143,25 @@ class RuntimeClient:
                     self._connection.shutdown_config.process_exit_timeout_seconds
                 ):
                     await self._process.wait()
+                    self._runtime_exit_code = "graceful"
             except TimeoutError:
                 await self._process.aclose(mark_expected=mark_expected)
                 with anyio.fail_after(
                     self._connection.shutdown_config.kill_timeout_seconds
                 ):
                     await self._process.wait()
+                    self._runtime_exit_code = "timeout"
             finally:
-                if (
-                    self._process.exit_status is None
-                    or self._process.exit_status.returncode is None
-                ):
+                exit_status = self._process.exit_status
+                if exit_status is None or exit_status.returncode is None:
                     raise RuntimeProcessError(
                         message="runtime process did not exit gracefully"
                     )
-                self._runtime_exit_status = self._process.exit_status.returncode
+                self._runtime_exit_status = exit_status.returncode
+                if not mark_expected:
+                    self._runtime_exit_code = "unexpected"
         finally:
             if self._exit_stack is not None:
                 await self._exit_stack.aclose()
-            if (
-                self._connection.state != RuntimeConnectionState.FAILED
-                or self._connection.state != RuntimeConnectionState.TIMEOUT
-            ):
+            if self._connection.state != RuntimeConnectionState.FAILED:
                 self._connection.state = RuntimeConnectionState.EXITED
