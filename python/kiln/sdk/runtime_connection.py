@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from enum import StrEnum
 
 from kiln.protocol.jsonrpc import (
@@ -22,24 +21,11 @@ from kiln.schemas.runtime.initialize_request_payload import Client as RuntimeCli
 
 from . import PACKAGE_NAME, __version__
 from ._runtime_os.win32 import ServerProcess
+from .config import ShutdownConfig
 from .errors import RuntimeMethodError, RuntimeProcessError
 from .runtime_exit import StderrTailBuffer
 
 RUNTIME_PROTOCOL_VERSION = "2026-07-01"
-
-
-@dataclass
-class ShutdownConfig:
-    process_exit_timeout_seconds: int
-    kill_timeout_seconds: int
-    cancel_in_flight_requests: bool
-
-
-DefaultShutdownConfig = ShutdownConfig(
-    process_exit_timeout_seconds=30,
-    kill_timeout_seconds=10,
-    cancel_in_flight_requests=True,
-)
 
 
 class RuntimeConnectionState(StrEnum):

@@ -9,12 +9,11 @@ from kiln.models.budget import Budget
 from kiln.models.run import RunResult
 from kiln.protocol.errors import RuntimeConnectionClosedError
 
+from .config import RuntimeConfig, ShutdownConfig
 from .errors import RuntimeMethodError, RuntimeProcessError, RuntimeProcessExitedError
 from .runtime_connection import (
-    DefaultShutdownConfig,
     RuntimeConnectionState,
     RuntimeStdioConnection,
-    ShutdownConfig,
 )
 from .runtime_exit import RuntimeExitStatus, RuntimeFinalExitClass
 from .runtime_process import RuntimeProcess
@@ -40,7 +39,7 @@ class RuntimeClient:
         self._process = process
         self._connection = connection
         self._exit_stack = None
-        self._runtime_exit_code = None
+        self._runtime_exit_status = None
         self._task_group = None
         self._closed = False
 
@@ -60,15 +59,16 @@ class RuntimeClient:
     async def start(
         cls,
         binary: Path | None = None,
-        shutdown: ShutdownConfig = DefaultShutdownConfig,
+        shutdown: ShutdownConfig | None = None,
+        config: RuntimeConfig | None = None,
     ) -> "RuntimeClient":
         """Start a new runtime process and establish a connection to it.
 
         Args:
             binary: Optional path to the runtime binary. If not provided, the default
                 binary will be used.
-            shutdown: The shutdown configuration that defines how the runtime process
-                should be shut down. Defaults to DefaultShutdownConfig.
+            config: Optional configuration for the runtime client. If not provided, the
+                default configuration will be used.
 
         Returns:
             An instance of `RuntimeClient` representing the connection to the runtime
@@ -76,8 +76,19 @@ class RuntimeClient:
 
         Raises:
             RuntimeProcessError: If the runtime process fails to start or is not ready.
+            RuntimeProcessExitedError: If the runtime process exits unexpectedly during
+                startup.
+            RuntimeMethodError: If there is an error during the initialization of the
+                connection.
+            RuntimeConnectionClosedError: If the connection to the runtime process is
+                closed unexpectedly during startup.
         """
-        process = await RuntimeProcess.start(binary)
+        if shutdown is None:
+            shutdown = ShutdownConfig()
+        if config is None:
+            config = RuntimeConfig()
+
+        process = await RuntimeProcess.start(binary=binary, config=config)
         connection = RuntimeStdioConnection(
             process=process.process,
             state=RuntimeConnectionState.STARTING,

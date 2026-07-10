@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/julianstephens/kiln/go/internal/persistence"
 	"github.com/julianstephens/kiln/go/internal/protocol"
 )
 
@@ -14,6 +15,7 @@ type RuntimeDeps struct {
 	Lifecycle       *Lifecycle
 	Logger          *slog.Logger
 	PendingRequests *protocol.PendingRequests
+	Store           persistence.Store
 }
 
 const (

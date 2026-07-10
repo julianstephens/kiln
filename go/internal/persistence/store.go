@@ -6,7 +6,17 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
+
+type Config struct {
+	DBType                       StoreKind `json:"db_type"`
+	InstallationDBPath           string    `json:"installation_db_path"`
+	MaxOpenConnections           int       `json:"max_open_connections"`
+	MaxIdleConnections           int       `json:"max_idle_connections"`
+	MaxConnectionLifetimeSeconds int       `json:"max_connection_lifetime_seconds"`
+}
 
 type Store interface {
 	Close() error
@@ -17,34 +27,38 @@ type StoreKind string
 
 const (
 	TursoStoreKind  StoreKind = "turso"
-	SqliteStoreKind StoreKind = "sqlite"
+	SqliteStoreKind StoreKind = "sqlite3"
 )
 
 // Open opens a new Store based on the provided kind and path.
-func Open(kind StoreKind, path string) (Store, error) {
-	validatedPath, err := validateStorePath(path)
+func Open(cfg Config) (Store, error) {
+	validatedPath, err := validateStorePath(cfg.InstallationDBPath)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := sql.Open(string(kind), *validatedPath)
+	conn, err := sql.Open(string(cfg.DBType), *validatedPath)
 	if err != nil {
 		return nil, NewStoreOpenFailedError(*validatedPath, err)
 	}
 
-	switch kind {
+	conn.SetMaxOpenConns(cfg.MaxOpenConnections)
+	conn.SetMaxIdleConns(cfg.MaxIdleConnections)
+	conn.SetConnMaxLifetime(time.Duration(cfg.MaxConnectionLifetimeSeconds) * time.Second)
+
+	switch cfg.DBType {
 	case TursoStoreKind:
 		return &TursoStore{
-			Path: path,
+			Path: cfg.InstallationDBPath,
 			Conn: conn,
 		}, nil
 	case SqliteStoreKind:
 		return &SqliteStore{
-			Path: path,
+			Path: cfg.InstallationDBPath,
 			Conn: conn,
 		}, nil
 	default:
-		return nil, NewStoreNotFoundError(path)
+		return nil, NewStoreNotFoundError(cfg.InstallationDBPath)
 	}
 }
 
@@ -101,6 +115,9 @@ func validateStorePath(path string) (validated *string, err error) {
 		return nil, NewStoreError(path, CodeInvalidPath, "store path must be provided", nil)
 	}
 	cleaned := filepath.Clean(path)
+	if cleaned == ":memory:" {
+		return &cleaned, nil
+	}
 	if !isDBFileAndExists(cleaned) {
 		return nil, NewStoreError(path, CodeInvalidPath, "provided store path must be an existing .db file", nil)
 	}
@@ -112,7 +129,7 @@ func isDBFileAndExists(path string) bool {
 	if err != nil {
 		return false
 	}
-	if !info.IsDir() {
+	if info.IsDir() {
 		return false
 	}
 	return info.Mode().IsRegular() && filepath.Ext(path) == ".db"

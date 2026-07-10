@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 
 from kiln.protocol.errors import RuntimeConnectionClosedError
 from kiln.protocol.pending import InflightRequestDisposition
+from kiln.sdk.config import ShutdownConfig
 from kiln.sdk.errors import RuntimeProcessExitedError
 from kiln.sdk.runtime_client import RuntimeClient
 from kiln.sdk.runtime_connection import RuntimeConnectionState, RuntimeStdioConnection
@@ -192,10 +193,9 @@ async def test_close_uses_default_process_exit_timeout_when_not_configured(
     - DefaultShutdownConfig has a sensible default timeout
     - The default is used when ShutdownConfig is created without explicit timeout
     """
-    from kiln.sdk.runtime_connection import DefaultShutdownConfig
 
     # Verify default timeout is set
-    assert DefaultShutdownConfig.process_exit_timeout_seconds == 30
+    assert ShutdownConfig().process_exit_timeout_seconds == 30
 
     # Create fake process and connection mocks
     fake_runtime_process = MagicMock()
@@ -216,7 +216,7 @@ async def test_close_uses_default_process_exit_timeout_when_not_configured(
     # Create mock connection with default timeout
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
     mock_connection.state = RuntimeConnectionState.READY
-    mock_connection.shutdown_config = DefaultShutdownConfig
+    mock_connection.shutdown_config = ShutdownConfig()
     mock_connection.shutdown = AsyncMock(
         return_value=MagicMock(
             root=MagicMock(accepted=True, draining=True, shutdown=False)
@@ -264,10 +264,9 @@ async def test_close_fallback_to_terminate(
 
     Verifies:
     """
-    from kiln.sdk.runtime_connection import DefaultShutdownConfig
 
     # Verify default timeout is set
-    assert DefaultShutdownConfig.process_exit_timeout_seconds == 30
+    assert ShutdownConfig().process_exit_timeout_seconds == 30
 
     # Create fake process and connection mocks
     fake_runtime_process = MagicMock()
@@ -288,7 +287,7 @@ async def test_close_fallback_to_terminate(
     # Create mock connection with default timeout
     mock_connection = MagicMock(spec=RuntimeStdioConnection)
     mock_connection.state = RuntimeConnectionState.READY
-    mock_connection.shutdown_config = DefaultShutdownConfig
+    mock_connection.shutdown_config = ShutdownConfig()
     mock_connection.shutdown = AsyncMock(
         return_value=MagicMock(
             root=MagicMock(accepted=True, draining=True, shutdown=False)

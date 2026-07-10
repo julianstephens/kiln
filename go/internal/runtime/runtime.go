@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/julianstephens/kiln/go/internal/logger"
+	"github.com/julianstephens/kiln/go/internal/persistence"
 	"github.com/julianstephens/kiln/go/internal/protocol"
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
 	"github.com/julianstephens/kiln/go/internal/runtime/handler"
@@ -28,24 +29,38 @@ func Run(ctx context.Context, cfg Config) (err error) {
 			Details: err.Error(),
 		}
 	}
+	defer func() {
+		_ = logCloser.Close()
+	}()
 
 	build, err := contract.NewBuildInfo()
 	if err != nil {
-		_ = logCloser.Close()
 		return &Error{
 			Code:    "runtime.build_info_error",
 			Message: fmt.Sprintf("Failed to retrieve build info: %v", err),
 		}
 	}
+
+	store, err := persistence.Open(cfg.DB)
+	if err != nil {
+		return &Error{
+			Code:    "runtime.persistence_open_failed",
+			Message: fmt.Sprintf("Failed to open persistence store: %v", err),
+		}
+	}
 	defer func() {
-		_ = logCloser.Close()
+		if closeErr := store.Close(); closeErr != nil {
+			appLogger.Error("failed to close persistence store", "error", closeErr.Error())
+			err = closeErr
+		}
 	}()
-	// Later: - open persistence
+
 	deps := &contract.RuntimeDeps{
 		Build:           *build,
 		Lifecycle:       contract.NewLifecycle(),
 		Logger:          appLogger.With("component", "runtime"),
 		PendingRequests: protocol.NewPendingRequests(),
+		Store:           store,
 	}
 	state := &handler.HandlerState{}
 	deps.Logger.Debug("runtime starting",

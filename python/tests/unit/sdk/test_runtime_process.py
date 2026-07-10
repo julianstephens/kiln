@@ -7,8 +7,18 @@ from typing import Any
 
 import pytest
 
+from kiln.sdk.config import DBConfig, RuntimeConfig
 from kiln.sdk.errors import MissingRuntimeBinaryError, RuntimeProcessError
 from kiln.sdk.runtime_process import RuntimeProcess, _find_runtime_binary
+
+DefaultDBConfig = DBConfig(
+    db_type="sqlite3",
+    installation_db_path=":memory:",
+    max_open_connections=1,
+    max_idle_connections=1,
+    max_connection_lifetime_seconds=1,
+)
+DefaultConfig = RuntimeConfig(db=DefaultDBConfig)
 
 
 class TestFindRuntimeBinary:
@@ -62,7 +72,7 @@ class TestRuntimeProcessStartup:
             return_value=fake_process,
         )
 
-        result = await RuntimeProcess.start()
+        result = await RuntimeProcess.start(config=DefaultConfig)
 
         assert isinstance(result, RuntimeProcess)
         assert result.process == fake_process
@@ -85,7 +95,7 @@ class TestRuntimeProcessStartup:
             return_value=fake_process,
         )
 
-        await RuntimeProcess.start(binary=binary_path)
+        await RuntimeProcess.start(binary=binary_path, config=DefaultConfig)
 
         find_binary_mock.assert_not_called()
 
@@ -98,7 +108,7 @@ class TestRuntimeProcessStartup:
         )
 
         with pytest.raises(RuntimeProcessError, match="runtime binary is missing"):
-            await RuntimeProcess.start()
+            await RuntimeProcess.start(config=DefaultConfig)
 
     @pytest.mark.anyio
     async def test_start_posix_passes_correct_subprocess_args(
@@ -124,12 +134,15 @@ class TestRuntimeProcessStartup:
             "kiln.sdk.runtime_process._find_runtime_binary", return_value=binary_path
         )
 
-        await RuntimeProcess.start()
+        await RuntimeProcess.start(config=DefaultConfig)
 
         # Verify anyio.open_process was called with correct args
         open_process_mock.assert_called_once()
         call_args = open_process_mock.call_args
-        assert call_args.kwargs["command"] == [str(binary_path)]
+        assert call_args.kwargs["command"] == [
+            str(binary_path),
+            *DefaultConfig.dump_args(),
+        ]
         # stdin and stdout should be set to subprocess.PIPE
         assert call_args.kwargs["stdin"] == subprocess.PIPE
         assert call_args.kwargs["stdout"] == subprocess.PIPE
@@ -158,13 +171,13 @@ class TestRuntimeProcessStartup:
             "kiln.sdk.runtime_process._find_runtime_binary", return_value=binary_path
         )
 
-        await RuntimeProcess.start()
+        await RuntimeProcess.start(config=DefaultConfig)
 
         # Verify create_windows_process was called
         create_windows_process_mock.assert_called_once()
         call_args = create_windows_process_mock.call_args
         assert call_args.kwargs["command"] == str(binary_path)
-        assert call_args.kwargs["args"] == []
+        assert call_args.kwargs["args"] == [*DefaultConfig.dump_args()]
 
 
 class TestRuntimeProcessFailures:
@@ -189,7 +202,7 @@ class TestRuntimeProcessFailures:
             return_value=fake_process,
         )
 
-        result = await RuntimeProcess.start()
+        result = await RuntimeProcess.start(config=DefaultConfig)
 
         # Process is created, but is_alive property reflects exit
         assert result.is_alive is False
@@ -210,7 +223,7 @@ class TestRuntimeProcessFailures:
         )
         mocker.patch("anyio.open_process", return_value=fake_process)
 
-        runtime_proc = await RuntimeProcess.start()
+        runtime_proc = await RuntimeProcess.start(config=DefaultConfig)
 
         # Process is alive
         assert runtime_proc.is_alive is True
@@ -241,7 +254,7 @@ class TestRuntimeProcessFailures:
             "kiln.sdk.runtime_process.terminate_posix_process_tree"
         )
 
-        runtime_proc = await RuntimeProcess.start()
+        runtime_proc = await RuntimeProcess.start(config=DefaultConfig)
         await runtime_proc.aclose()
 
         terminate_mock.assert_called_once_with(fake_process)
@@ -271,7 +284,7 @@ class TestRuntimeProcessFailures:
             "kiln.sdk.runtime_process.terminate_windows_process_tree"
         )
 
-        runtime_proc = await RuntimeProcess.start()
+        runtime_proc = await RuntimeProcess.start(config=DefaultConfig)
         await runtime_proc.aclose()
 
         terminate_mock.assert_called_once_with(fake_process)
@@ -303,7 +316,7 @@ class TestRuntimeProcessStderrHandling:
             return_value=Path("/opt/kiln/runtime"),
         )
 
-        await RuntimeProcess.start()
+        await RuntimeProcess.start(config=DefaultConfig)
 
         # Verify stderr is piped (subprocess.PIPE = -1)
         call_args = open_process_mock.call_args
@@ -337,7 +350,7 @@ class TestRuntimeProcessStderrHandling:
             return_value=Path("/opt/kiln/runtime"),
         )
 
-        await RuntimeProcess.start()
+        await RuntimeProcess.start(config=DefaultConfig)
 
         # Check env passed to process
         call_args = open_process_mock.call_args

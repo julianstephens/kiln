@@ -3,13 +3,13 @@ from pathlib import Path
 
 from structlog import BoundLogger, get_logger
 
-from kiln.logger import DefaultLoggingConfig, LoggingConfig, configure_logging
+from kiln.logger import configure_logging
 from kiln.models.budget import Budget
 from kiln.models.run import RunResult
 
+from .config import RuntimeConfig, ShutdownConfig
 from .errors import RepositoryNotFoundError, TaskEmptyError
 from .runtime_client import RuntimeClient
-from .runtime_connection import DefaultShutdownConfig, ShutdownConfig
 
 
 @dataclass(frozen=True)
@@ -21,11 +21,9 @@ class AgentConfig:
     # The budget configuration that defines the resource limits for the agent's
     # operations.
     budget: Budget
-    # The logging configuration that defines how the agent will log its operations.
-    logging: LoggingConfig
-    # The shutdown configuration that defines how the agent will shutdown the
-    # Go runtime.
-    shutdown: ShutdownConfig
+    # The Runtime configuration that defines how the agent will be initialized and how
+    # it will interact with the Go runtime.
+    runtime: RuntimeConfig
 
 
 class Agent:
@@ -47,7 +45,7 @@ class Agent:
         """
         self._config = config
         self._client = client
-        configure_logging(config.logging)
+        configure_logging(config.runtime.logging)
         self._logger = get_logger(__name__).bind(repository=str(config.repository))
 
     @classmethod
@@ -56,8 +54,8 @@ class Agent:
         repository: str | Path,
         *,
         budget: Budget,
-        logging: LoggingConfig = DefaultLoggingConfig,
-        shutdown: ShutdownConfig = DefaultShutdownConfig,
+        shutdown: ShutdownConfig | None = None,
+        config: RuntimeConfig | None = None,
     ) -> "Agent":
         """Open an agent for the given repository with the specified budget and logging
         configuration. Agent instance is created and initialized asynchronously,
@@ -68,10 +66,9 @@ class Agent:
                 interact with. Can be a string or a Path object.
             budget: The budget configuration that defines the resource limits for the
                 agent's operations.
-            logging: The logging configuration that defines how the agent will log its
-                operations. Defaults to stderr config
-            shutdown: The shutdown configuration that defines how the agent will
-                shutdown the Go runtime. Defaults to DefaultShutdownConfig.
+            config: Optional runtime configuration that defines how the agent will be
+                initialized and how it will interact with the Go runtime. If not
+                provided, a default configuration will be used.
 
         """
         repository_path = Path(repository).resolve()
@@ -79,14 +76,15 @@ class Agent:
         if not repository_path.is_dir():
             raise RepositoryNotFoundError(str(repository_path))
 
-        client = await RuntimeClient.start(shutdown=shutdown)
+        client = await RuntimeClient.start(
+            config=config, shutdown=shutdown or ShutdownConfig()
+        )
 
         return cls(
             config=AgentConfig(
                 repository=repository_path,
                 budget=budget,
-                logging=logging,
-                shutdown=shutdown,
+                runtime=config or RuntimeConfig(),
             ),
             client=client,
         )

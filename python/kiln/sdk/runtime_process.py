@@ -12,6 +12,7 @@ from ._runtime_os.win32 import (
     create_windows_process,
     terminate_windows_process_tree,
 )
+from .config import RuntimeConfig
 from .errors import MissingRuntimeBinaryError, RuntimeProcessError
 from .runtime_exit import RuntimeExitStatus, RuntimeFinalExitClass, StderrTailBuffer
 
@@ -68,10 +69,16 @@ class RuntimeProcess:
         return self._stderr_tail
 
     @classmethod
-    async def start(cls, binary: Path | None = None) -> "RuntimeProcess":
+    async def start(
+        cls,
+        *,
+        config: RuntimeConfig,
+        binary: Path | None = None,
+    ) -> "RuntimeProcess":
         """Start a new runtime process.
 
         Args:
+            config: The configuration for the runtime process.
             binary: Optional path to the runtime binary. If not provided, the default
                 binary will be used.
 
@@ -83,12 +90,12 @@ class RuntimeProcess:
         if sys.platform == "win32":
             process = await create_windows_process(
                 command=str(binary),
-                args=[],
+                args=[*config.dump_args()],
                 env=_runtime_environment(),
             )
         else:
             process = await anyio.open_process(
-                command=[str(binary)],
+                command=[str(binary), *config.dump_args()],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
