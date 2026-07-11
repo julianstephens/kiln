@@ -39,6 +39,7 @@ SPEC.md
 *_TODO.md
 
 tmp
+.tmp
 logs
 
 # Byte-compiled / optimized / DLL files

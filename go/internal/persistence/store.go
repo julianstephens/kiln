@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,21 +54,35 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 	}
 
 	installationDir := filepath.Dir(*validatedPath)
+	if _, err := ensurePath(installationDir, true); err != nil {
+		return nil, NewStoreError(
+			*validatedPath,
+			CodeInvalidPath,
+			"failed to ensure installation directory exists",
+			err,
+		)
+	}
 
 	exists := false
 	if *validatedPath != ":memory:" {
-		exists, err = ensurePath(installationDir, true)
+		_, err := os.Stat(*validatedPath)
 		if err != nil {
-			return nil, NewStoreError(
-				*validatedPath,
-				CodeInvalidPath,
-				"failed to ensure installation directory exists",
-				err,
-			)
+			if os.IsNotExist(err) {
+				exists = false
+			} else {
+				return nil, NewStoreError(*validatedPath, CodeInvalidPath, "failed to stat installation path", err)
+			}
+		} else {
+			exists = true
 		}
 	}
 
-	conn, err := sql.Open(string(cfg.DBType), *validatedPath)
+	dsn := fmt.Sprintf(
+		"file:%s?_journal_mode=WAL&_synchronous=NORMAL&_foreign_keys=ON&_cache_size=-202000000&_busy_timeout=5000&_optimize",
+		*validatedPath,
+	)
+
+	conn, err := sql.Open(string(cfg.DBType), dsn)
 	if err != nil {
 		return nil, NewStoreOpenFailedError(*validatedPath, err)
 	}
@@ -107,28 +122,34 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 	defer unlock()
 
 	if exists {
-		compatibilityMajor, err := getCompatibilityMajor(store.GetDB())
+		schemaVersion, err := getSchemaVersion(store.GetDB())
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
 				return nil, NewMigrationFailedError(cfg.InstallationDBPath, err)
 			}
 		}
-		if compatibilityMajor > schema.CompatibilityMajor {
+		if schemaVersion > DBFormatVersion {
 			return nil, NewSchemaVersionMismatchError(
 				cfg.InstallationDBPath,
-				compatibilityMajor,
-				schema.CompatibilityMajor,
+				schemaVersion,
+				DBFormatVersion,
 			)
 		}
 	}
 
 	migrationErr := migrate(store.GetDB())
-	if migrationErr != nil {
-		return nil, NewMigrationFailedError(cfg.InstallationDBPath, migrationErr)
+	var migrationState string
+	if migrationErr == nil {
+		migrationState = "normal"
+	} else {
+		migrationState = "migration_failed"
 	}
 
-	if err := initializeDatabase(store.GetDB()); err != nil {
+	if err := updateInstallationMetadata(store.GetDB(), migrationState, exists); err != nil {
 		return nil, NewStoreError(cfg.InstallationDBPath, CodeInvalidPath, "failed to initialize database", err)
+	}
+	if migrationErr != nil {
+		return nil, NewMigrationFailedError(cfg.InstallationDBPath, migrationErr)
 	}
 
 	return store, nil
@@ -231,17 +252,47 @@ func ensurePath(path string, isDir bool) (exists bool, err error) {
 	return err == nil, err
 }
 
-func getCompatibilityMajor(db *sql.DB) (int, error) {
+func getSchemaVersion(db *sql.DB) (int, error) {
 	var version int
-	row := db.QueryRow("SELECT schema_compatibility_major FROM installation_metadata;")
+	row := db.QueryRow("SELECT version_id FROM goose_db_version;")
 	if err := row.Scan(&version); err != nil {
 		return 0, err
 	}
 	return version, nil
 }
 
-func initializeDatabase(db *sql.DB) error {
-	const insertInstallationSQL = `
+func updateInstallationMetadata(db *sql.DB, migrationState string, exists bool) error {
+	if exists {
+		var installationID string
+		err := db.QueryRow("SELECT installation_id FROM installation_metadata LIMIT 1;").Scan(&installationID)
+		if err != nil {
+			return err
+		}
+
+		const updateInstallationSQL = `
+		UPDATE installation_metadata
+		SET
+			database_format_version = ?,
+			schema_compatibility_major = ?,
+			minimum_runtime_version = ?,
+			last_opened_runtime_version = ?,
+			maintenance_state = ?
+		WHERE installation_id = ?;
+		`
+		_, err = db.Exec(
+			updateInstallationSQL,
+			DBFormatVersion,
+			schema.CompatibilityMajor,
+			util.RuntimeProtocolVersion,
+			util.RuntimeProtocolVersion,
+			migrationState,
+			installationID,
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		const insertInstallationSQL = `
 		INSERT INTO installation_metadata (
 			installation_id,
 			database_format_version,
@@ -250,16 +301,18 @@ func initializeDatabase(db *sql.DB) error {
 			last_opened_runtime_version,
 			maintenance_state
 		) VALUES (?, ?, ?, ?, ?, ?);
-	`
+		`
+		_, err := db.Exec(
+			insertInstallationSQL,
+			ulid.Make().String(),
+			DBFormatVersion,
+			schema.CompatibilityMajor,
+			util.RuntimeProtocolVersion,
+			util.RuntimeProtocolVersion,
+			migrationState,
+		)
 
-	_, err := db.Exec(
-		insertInstallationSQL,
-		ulid.Make().String(),
-		DBFormatVersion,
-		schema.CompatibilityMajor,
-		util.RuntimeProtocolVersion,
-		util.RuntimeProtocolVersion,
-		"normal",
-	)
-	return err
+		return err
+	}
+	return nil
 }

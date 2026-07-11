@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/julianstephens/kiln/go/internal/util"
+	"github.com/julianstephens/kiln/go/schema"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -77,25 +79,88 @@ func TestValidateStorePath(t *testing.T) {
 	}
 }
 
-func TestInitializeDatabase(t *testing.T) {
+func TestUpdateInstallationMetadata(t *testing.T) {
 	t.Parallel()
 
-	t.Run("inserts installation row", func(t *testing.T) {
+	t.Run("inserts installation row when database is new", func(t *testing.T) {
 		t.Parallel()
 
 		db := openInMemoryDB(t)
 		createInstallationTable(t, db, "installation_metadata")
 
-		if err := initializeDatabase(db); err != nil {
-			t.Fatalf("initializeDatabase returned error: %v", err)
+		if err := updateInstallationMetadata(db, "normal", false); err != nil {
+			t.Fatalf("updateInstallationMetadata returned error: %v", err)
 		}
 
 		var count int
-		if err := db.QueryRow(`SELECT COUNT(*) FROM installation_metadata;`).Scan(&count); err != nil {
-			t.Fatalf("failed to count installation rows: %v", err)
+		var maintenanceState string
+		var compatibilityMajor int
+		var lastOpenedVersion string
+		if err := db.QueryRow(`
+			SELECT COUNT(*), maintenance_state, schema_compatibility_major, last_opened_runtime_version
+			FROM installation_metadata;
+		`).Scan(&count, &maintenanceState, &compatibilityMajor, &lastOpenedVersion); err != nil {
+			t.Fatalf("failed to read installation row: %v", err)
 		}
 		if count != 1 {
 			t.Fatalf("installation row count = %d, want 1", count)
+		}
+		if maintenanceState != "normal" {
+			t.Fatalf("maintenance_state = %q, want %q", maintenanceState, "normal")
+		}
+		if compatibilityMajor != schema.CompatibilityMajor {
+			t.Fatalf("schema_compatibility_major = %d, want %d", compatibilityMajor, schema.CompatibilityMajor)
+		}
+		if lastOpenedVersion != util.RuntimeProtocolVersion {
+			t.Fatalf("last_opened_runtime_version = %q, want %q", lastOpenedVersion, util.RuntimeProtocolVersion)
+		}
+	})
+
+	t.Run("updates existing installation row", func(t *testing.T) {
+		t.Parallel()
+
+		db := openInMemoryDB(t)
+		createInstallationTable(t, db, "installation_metadata")
+
+		_, err := db.Exec(`
+			INSERT INTO installation_metadata (
+				installation_id,
+				database_format_version,
+				schema_compatibility_major,
+				minimum_runtime_version,
+				last_opened_runtime_version,
+				maintenance_state
+			) VALUES (?, ?, ?, ?, ?, ?);
+		`, "existing-installation", 0, 0, "old-min", "old-open", "normal")
+		if err != nil {
+			t.Fatalf("failed to seed installation row: %v", err)
+		}
+
+		if err := updateInstallationMetadata(db, "migration_failed", true); err != nil {
+			t.Fatalf("updateInstallationMetadata returned error: %v", err)
+		}
+
+		var installationID string
+		var maintenanceState string
+		var dbFormatVersion int
+		var compatibilityMajor int
+		if err := db.QueryRow(`
+			SELECT installation_id, maintenance_state, database_format_version, schema_compatibility_major
+			FROM installation_metadata LIMIT 1;
+		`).Scan(&installationID, &maintenanceState, &dbFormatVersion, &compatibilityMajor); err != nil {
+			t.Fatalf("failed to read updated installation row: %v", err)
+		}
+		if installationID != "existing-installation" {
+			t.Fatalf("installation_id = %q, want %q", installationID, "existing-installation")
+		}
+		if maintenanceState != "migration_failed" {
+			t.Fatalf("maintenance_state = %q, want %q", maintenanceState, "migration_failed")
+		}
+		if dbFormatVersion != DBFormatVersion {
+			t.Fatalf("database_format_version = %d, want %d", dbFormatVersion, DBFormatVersion)
+		}
+		if compatibilityMajor != schema.CompatibilityMajor {
+			t.Fatalf("schema_compatibility_major = %d, want %d", compatibilityMajor, schema.CompatibilityMajor)
 		}
 	})
 
@@ -103,9 +168,9 @@ func TestInitializeDatabase(t *testing.T) {
 		t.Parallel()
 
 		db := openInMemoryDB(t)
-		err := initializeDatabase(db)
+		err := updateInstallationMetadata(db, "normal", false)
 		if err == nil {
-			t.Fatal("initializeDatabase error = nil, want error")
+			t.Fatal("updateInstallationMetadata error = nil, want error")
 		}
 	})
 }

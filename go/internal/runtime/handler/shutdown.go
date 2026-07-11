@@ -204,4 +204,9 @@ func doShutdown(ctx context.Context, deps *contract.RuntimeDeps, cancelInFlightR
 	}
 
 	// later we can add more shutdown logic here, such as closing connections, cleaning up resources, etc.
+	if err := deps.Store.Close(); err != nil {
+		if deps != nil && deps.Logger != nil {
+			deps.Logger.Error("shutdown worker failed to close store", "error", err)
+		}
+	}
 }

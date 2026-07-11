@@ -53,6 +53,7 @@ class Agent:
         cls,
         repository: str | Path,
         *,
+        binary: Path | None = None,
         budget: Budget,
         shutdown: ShutdownConfig | None = None,
         config: RuntimeConfig | None = None,
@@ -64,6 +65,8 @@ class Agent:
         Args:
             repository: The path to the source control repository that the agent will
                 interact with. Can be a string or a Path object.
+            binary: Optional path to the runtime binary to be used by the agent. If not
+                provided, the default binary will be used.
             budget: The budget configuration that defines the resource limits for the
                 agent's operations.
             config: Optional runtime configuration that defines how the agent will be
@@ -77,7 +80,7 @@ class Agent:
             raise RepositoryNotFoundError(str(repository_path))
 
         client = await RuntimeClient.start(
-            config=config, shutdown=shutdown or ShutdownConfig()
+            config=config, shutdown=shutdown or ShutdownConfig(), binary=binary
         )
 
         return cls(
