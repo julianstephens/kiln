@@ -19,9 +19,6 @@ type RuntimeDeps struct {
 }
 
 const (
-	RuntimeProtocolVersion = "2026-07-01"
-	RuntimeName            = "kiln-runtime"
-
 	JSONRPCInvalidRequest = -32600
 	JSONRPCMethodNotFound = -32601
 	JSONRPCInvalidParams  = -32602

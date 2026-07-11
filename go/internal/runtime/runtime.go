@@ -41,7 +41,7 @@ func Run(ctx context.Context, cfg Config) (err error) {
 		}
 	}
 
-	store, err := persistence.Open(cfg.DB)
+	store, err := persistence.Open(ctx, cfg.DB)
 	if err != nil {
 		return &Error{
 			Code:    "runtime.persistence_open_failed",

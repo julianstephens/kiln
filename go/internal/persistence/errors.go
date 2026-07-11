@@ -16,7 +16,7 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Message)
 }
 
-var (
+const (
 	CodeStoreNotFound     = "store_not_found"
 	CodeStoreClosed       = "store_closed"
 	CodeStoreNotOpen      = "store_not_open"
@@ -78,6 +78,39 @@ var (
 			StorePath: storePath,
 			Message:   message,
 			Cause:     cause,
+		}
+	}
+)
+
+const (
+	CodeMigrationLockFailed   = "migration_lock_failed"
+	CodeSchemaVersionMismatch = "schema_version_mismatch"
+	CodeMigrationFailed       = "migration_failed"
+)
+
+var (
+	NewMigrationLockFailedError = func(storePath string, cause error) *Error {
+		return &Error{
+			Code:      CodeMigrationLockFailed,
+			StorePath: storePath,
+			Message:   "failed to acquire migration lock",
+			Cause:     cause,
+		}
+	}
+	NewMigrationFailedError = func(storePath string, cause error) *Error {
+		return &Error{
+			Code:      CodeMigrationFailed,
+			StorePath: storePath,
+			Message:   "migration failed",
+			Cause:     cause,
+		}
+	}
+	NewSchemaVersionMismatchError = func(storePath string, got int, expected int) *Error {
+		return &Error{
+			Code:      CodeSchemaVersionMismatch,
+			StorePath: storePath,
+			Message:   "schema compatibility major newer than expected",
+			Cause:     fmt.Errorf("got compatibility major %d, expected %d", got, expected),
 		}
 	}
 )
