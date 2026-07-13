@@ -11,7 +11,14 @@ import (
 	"github.com/julianstephens/kiln/go/internal/runtime/contract"
 	"github.com/julianstephens/kiln/go/internal/runtime/handler"
 	"github.com/julianstephens/kiln/go/internal/runtime/rpcerror"
+	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
+
+var controlMethods = map[string]struct{}{
+	"runtime.initialize": {},
+	"runtime.health":     {},
+	"runtime.shutdown":   {},
+}
 
 func Run(ctx context.Context, cfg Config) (err error) {
 	if cfg.Input == nil {
@@ -30,43 +37,59 @@ func Run(ctx context.Context, cfg Config) (err error) {
 		}
 	}
 	defer func() {
-		_ = logCloser.Close()
+		err = errors.Join(err, logCloser.Close())
 	}()
 
-	build, err := contract.NewBuildInfo()
-	if err != nil {
-		return &Error{
+	build, buildErr := contract.NewBuildInfo()
+	if buildErr != nil {
+		err = &Error{
 			Code:    "runtime.build_info_error",
-			Message: fmt.Sprintf("Failed to retrieve build info: %v", err),
+			Message: fmt.Sprintf("Failed to retrieve build info: %v", buildErr),
 		}
 	}
 
-	store, err := persistence.Open(ctx, cfg.DB)
-	if err != nil {
-		return &Error{
-			Code:    "runtime.persistence_open_failed",
-			Message: fmt.Sprintf("Failed to open persistence store: %v", err),
-		}
+	lifecycle := contract.NewLifecycle()
+	state := &handler.HandlerState{}
+	var store persistence.Store
+
+	store, openErr := persistence.Open(ctx, cfg.DB)
+	if openErr != nil {
+		fatalErr := normalizePersistenceStartupError(openErr)
+		appLogger.Error(
+			"persistence bootstrap failed",
+			"code", fatalErr.Code,
+			"error", openErr,
+		)
+		state.SetReady(false)
+		state.SetLastFatalStartupError(fatalErr)
+	} else {
+		defer func() {
+			if closeErr := store.Close(); closeErr != nil {
+				err = errors.Join(err, closeErr)
+			}
+		}()
 	}
-	defer func() {
-		if closeErr := store.Close(); closeErr != nil {
-			appLogger.Error("failed to close persistence store", "error", closeErr.Error())
-			err = closeErr
-		}
-	}()
 
 	deps := &contract.RuntimeDeps{
 		Build:           *build,
-		Lifecycle:       contract.NewLifecycle(),
+		Lifecycle:       lifecycle,
 		Logger:          appLogger.With("component", "runtime"),
 		PendingRequests: protocol.NewPendingRequests(),
 		Store:           store,
 	}
-	state := &handler.HandlerState{}
+	return serveProtocol(ctx, cfg, deps, state)
+}
+
+func serveProtocol(
+	ctx context.Context,
+	cfg Config,
+	deps *contract.RuntimeDeps,
+	state *handler.HandlerState,
+) (err error) {
 	deps.Logger.Debug("runtime starting",
-		"build_version", build.Version,
-		"build_commit", build.Commit,
-		"build_date", build.Date,
+		"build_version", deps.Build.Version,
+		"build_commit", deps.Build.Commit,
+		"build_date", deps.Build.Date,
 	)
 
 	// - register protocol handlers
@@ -115,8 +138,9 @@ RequestLoop:
 					deps.Logger.Debug("runtime input channel closed due to shutdown, exiting request loop")
 					break RequestLoop
 				}
-				if err := peer.LastErr(); err != nil {
-					return err
+				if peerErr := peer.LastErr(); peerErr != nil {
+					err = peerErr
+					return
 				}
 				deps.Logger.Debug("runtime input channel closed, exiting request loop")
 				break RequestLoop
@@ -135,7 +159,8 @@ RequestLoop:
 						break RequestLoop
 					}
 				}
-				return res.Err
+				err = res.Err
+				return
 			}
 
 			req := res.Msg
@@ -174,6 +199,10 @@ RequestLoop:
 				msg, _ = rpcerror.Shutdown(protocolReq.ID, protocolReq.Method)
 			}
 
+			if notReadyErr := requireReady(protocolReq.ID, protocolReq.Method, state); notReadyErr != nil {
+				msg = notReadyErr
+			}
+
 			if msg == nil {
 				deps.Logger.Debug("dispatching runtime request",
 					"method", protocolReq.Method,
@@ -188,7 +217,6 @@ RequestLoop:
 					)
 					msg, _ = rpcerror.InvalidRequest(protocolReq.ID, protocolReq.Method, map[string]any{"request": req.ToJSON()})
 				} else {
-
 					deps.PendingRequests.Add(idStr, protocolReq.Method)
 					msg = router.Dispatch(cancelCtx, protocolReq)
 					deps.PendingRequests.Pop(idStr)
@@ -200,8 +228,9 @@ RequestLoop:
 				"response_type", fmt.Sprintf("%T", msg),
 			)
 
-			if err := peer.Send(msg); err != nil {
-				return err
+			if peerErr := peer.Send(msg); peerErr != nil {
+				err = peerErr
+				return
 			}
 		}
 	}
@@ -211,5 +240,42 @@ RequestLoop:
 	deps.Lifecycle.Wg.Wait()
 	deps.Logger.Debug("all background workers finished, runtime exiting")
 
-	return nil
+	return
+}
+
+func normalizePersistenceStartupError(err error) *runtime_error.ErrorKilnError {
+	var persistenceErr *persistence.Error
+	if errors.As(err, &persistenceErr) {
+		return &runtime_error.ErrorKilnError{
+			Code:      "persistence." + persistenceErr.Code,
+			Category:  persistenceErr.Category,
+			Retryable: false,
+			Message:   persistenceErr.Message,
+			Details:   persistenceErr.Details(),
+		}
+	}
+	return &runtime_error.ErrorKilnError{
+		Code:      "persistence.startup_failed",
+		Category:  "persistence",
+		Retryable: false,
+		Message:   "Persistence startup failed.",
+	}
+}
+
+func requireReady(id protocol.ID, method string, state *handler.HandlerState) *protocol.ErrorResponse {
+	if _, allowed := controlMethods[method]; allowed {
+		return nil
+	}
+
+	if state.IsReady() {
+		return nil
+	}
+
+	if fatal := state.GetLastFatalStartupError(); fatal != nil {
+		msg, _ := rpcerror.RuntimeNotReady(id, method, fatal)
+		return &msg
+	}
+
+	msg, _ := rpcerror.RuntimeNotReady(id, method, nil)
+	return &msg
 }

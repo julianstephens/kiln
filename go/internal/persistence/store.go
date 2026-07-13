@@ -10,16 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/julianstephens/kiln/go/internal/util"
-	"github.com/julianstephens/kiln/go/schema"
-	"github.com/oklog/ulid/v2"
+	"github.com/julianstephens/kiln/go/internal/persistence/table/installation"
+	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/rogpeppe/go-internal/lockedfile"
 
 	_ "github.com/mattn/go-sqlite3"
 	_ "turso.tech/database/tursogo"
 )
-
-const DBFormatVersion = 1
 
 type Config struct {
 	DBType                       StoreKind `json:"db_type"`
@@ -54,26 +51,30 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 	}
 
 	installationDir := filepath.Dir(*validatedPath)
-	if _, err := ensurePath(installationDir, true); err != nil {
-		return nil, NewStoreError(
-			*validatedPath,
-			CodeInvalidPath,
-			"failed to ensure installation directory exists",
-			err,
-		)
-	}
-
-	exists := false
-	if *validatedPath != ":memory:" {
-		_, err := os.Stat(*validatedPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				exists = false
-			} else {
-				return nil, NewStoreError(*validatedPath, CodeInvalidPath, "failed to stat installation path", err)
+	_, err = os.Stat(installationDir)
+	// installation directory may not exist yet, so we attempt to create it if it doesn't
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			err = os.MkdirAll(installationDir, 0o700)
+			if err != nil {
+				return nil, NewStoreError(
+					*validatedPath,
+					CodeStoreInitializationFailed,
+					runtime_error.ErrorKilnErrorCategoryInternal,
+					"failed to create installation directory",
+					true,
+					err,
+				)
 			}
 		} else {
-			exists = true
+			return nil, NewStoreError(
+				*validatedPath,
+				CodeStoreInitializationFailed,
+				runtime_error.ErrorKilnErrorCategoryInternal,
+				"failed to stat installation directory",
+				false,
+				err,
+			)
 		}
 	}
 
@@ -86,6 +87,12 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 	if err != nil {
 		return nil, NewStoreOpenFailedError(*validatedPath, err)
 	}
+	opened := false
+	defer func() {
+		if !opened {
+			_ = conn.Close()
+		}
+	}()
 
 	conn.SetMaxOpenConns(cfg.MaxOpenConnections)
 	conn.SetMaxIdleConns(cfg.MaxIdleConnections)
@@ -111,50 +118,69 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 		return nil, err
 	}
 
-	lockfilePath := filepath.Join(filepath.Dir(cfg.InstallationDBPath), LockDir, "migration.lock")
-	if _, err = ensurePath(lockfilePath, false); err != nil {
-		return nil, NewStoreError(*validatedPath, CodeInvalidPath, "failed to ensure locks directory exists", err)
-	}
-	unlock, err := lockedfile.MutexAt(lockfilePath).Lock()
-	if err != nil {
-		return nil, NewMigrationLockFailedError(cfg.InstallationDBPath, err)
-	}
-	defer unlock()
-
-	if exists {
-		schemaVersion, err := getSchemaVersion(store.GetDB())
+	// skip lockfile creation for in-memory databases, as they are not shared between processes
+	if cfg.InstallationDBPath != ":memory:" {
+		lockfilePath := filepath.Join(filepath.Dir(cfg.InstallationDBPath), LockDir, "migration.lock")
+		_, err := lockedfile.Create(lockfilePath)
 		if err != nil {
-			if !errors.Is(err, sql.ErrNoRows) {
-				return nil, NewMigrationFailedError(cfg.InstallationDBPath, err)
-			}
-		}
-		if schemaVersion > DBFormatVersion {
-			return nil, NewSchemaVersionMismatchError(
+			return nil, NewStoreError(
 				cfg.InstallationDBPath,
-				schemaVersion,
-				DBFormatVersion,
+				CodeStoreInitializationFailed,
+				runtime_error.ErrorKilnErrorCategoryInternal,
+				"failed to create lockfile",
+				false,
+				err,
 			)
 		}
+		unlock, err := lockedfile.MutexAt(lockfilePath).Lock()
+		if err != nil {
+			return nil, NewMigrationLockFailedError(cfg.InstallationDBPath, err)
+		}
+		defer unlock()
 	}
 
-	migrationErr := migrate(store.GetDB())
-	var migrationState string
-	if migrationErr == nil {
-		migrationState = "normal"
-	} else {
-		migrationState = "migration_failed"
+	latestSupportedVersion, err := latestEmbeddedMigrationVersion()
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, NewMigrationFailedError(cfg.InstallationDBPath, err)
+		}
+	}
+	schemaVersion, err := currentDBVersion(ctx, store.GetDB())
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, NewMigrationFailedError(cfg.InstallationDBPath, err)
+		}
+	}
+	if schemaVersion > 0 && schemaVersion > latestSupportedVersion {
+		return nil, NewSchemaVersionMismatchError(
+			cfg.InstallationDBPath,
+			schemaVersion,
+			latestSupportedVersion,
+		)
 	}
 
-	if err := updateInstallationMetadata(store.GetDB(), migrationState, exists); err != nil {
-		return nil, NewStoreError(cfg.InstallationDBPath, CodeInvalidPath, "failed to initialize database", err)
-	}
+	migrationErr := migrate(ctx, store.GetDB())
 	if migrationErr != nil {
+		bestEffortRecordMigrationFailure(ctx, store.GetDB())
 		return nil, NewMigrationFailedError(cfg.InstallationDBPath, migrationErr)
 	}
 
+	if _, err := loadOrCreateInstallationMetadata(ctx, store.GetDB(), latestSupportedVersion); err != nil {
+		return nil, NewStoreError(
+			cfg.InstallationDBPath,
+			CodeStoreInitializationFailed,
+			runtime_error.ErrorKilnErrorCategoryInternal,
+			"failed to load or create installation metadata",
+			false,
+			err,
+		)
+	}
+
+	opened = true
 	return store, nil
 }
 
+// TursoStore represents a Turso database store.
 type TursoStore struct {
 	Path string
 	Conn *sql.DB
@@ -179,10 +205,12 @@ func (t *TursoStore) Health(ctx context.Context) error {
 	return nil
 }
 
+// GetDB returns the underlying sql.DB connection of the TursoStore.
 func (t *TursoStore) GetDB() *sql.DB {
 	return t.Conn
 }
 
+// SqliteStore represents a SQLite database store.
 type SqliteStore struct {
 	Path string
 	Conn *sql.DB
@@ -207,112 +235,86 @@ func (s *SqliteStore) Health(ctx context.Context) error {
 	return nil
 }
 
+// GetDB returns the underlying sql.DB connection of the SqliteStore.
 func (s *SqliteStore) GetDB() *sql.DB {
 	return s.Conn
 }
 
 func validateStorePath(path string) (validated *string, err error) {
 	if len(path) == 0 {
-		return nil, NewStoreError(path, CodeInvalidPath, "store path must be provided", nil)
+		return nil, NewStoreError(
+			path,
+			CodeInvalidPath,
+			runtime_error.ErrorKilnErrorCategoryValidation,
+			"store path must be provided",
+			false,
+			nil,
+		)
 	}
 	cleaned := filepath.Clean(path)
 	if cleaned == ":memory:" {
 		return &cleaned, nil
 	}
 	if !filepath.IsAbs(cleaned) {
-		return nil, NewStoreError(path, CodeInvalidPath, "provided store path must be an absolute path", nil)
+		return nil, NewStoreError(
+			path,
+			CodeInvalidPath,
+			runtime_error.ErrorKilnErrorCategoryValidation,
+			"provided store path must be an absolute path",
+			false,
+			nil,
+		)
 	}
 	if !strings.HasSuffix(cleaned, ".db") {
-		return nil, NewStoreError(path, CodeInvalidPath, "provided store path must be a .db file", nil)
+		return nil, NewStoreError(
+			path,
+			CodeInvalidPath,
+			runtime_error.ErrorKilnErrorCategoryValidation,
+			"provided store path must be a .db file",
+			false,
+			nil,
+		)
 	}
 	return &cleaned, nil
 }
 
-func ensurePath(path string, isDir bool) (exists bool, err error) {
-	_, err = os.Stat(path)
-	if err != nil && errors.Is(err, os.ErrNotExist) {
-		if isDir {
-			err = os.MkdirAll(path, 0o700)
-		} else {
-			if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-				return false, err
-			}
-			// #nosec G304 -- path is derived from validated absolute installation path and fixed lock filename
-			file, err := os.OpenFile(path, os.O_CREATE, 0o600)
-			if err != nil {
-				return false, err
-			}
-			if err = file.Close(); err != nil {
-				return false, err
-			}
-			return false, nil
-		}
+func bestEffortRecordMigrationFailure(ctx context.Context, db *sql.DB) {
+	metadataTable := &installation.InstallationMetadataTable{}
+	exists, err := metadataTable.Exists(ctx, db)
+	if err != nil && !exists {
+		return
 	}
 
-	return err == nil, err
+	installationMetadata := &installation.InstallationMetadataRow{}
+	exists, err = installationMetadata.LoadFirst(ctx, db)
+	if err != nil || !exists {
+		return
+	}
+	installationMetadata.MaintenanceState = installation.MaintenanceStateMigrationFailed
+	_, _ = installationMetadata.Update(ctx, db)
 }
 
-func getSchemaVersion(db *sql.DB) (int, error) {
-	var version int
-	row := db.QueryRow("SELECT version_id FROM goose_db_version;")
-	if err := row.Scan(&version); err != nil {
-		return 0, err
-	}
-	return version, nil
-}
+func loadOrCreateInstallationMetadata(
+	ctx context.Context,
+	db *sql.DB,
+	dbFormatVersion int64,
+) (installationID string, err error) {
+	var installationMetadata installation.InstallationMetadataRow
 
-func updateInstallationMetadata(db *sql.DB, migrationState string, exists bool) error {
-	if exists {
-		var installationID string
-		err := db.QueryRow("SELECT installation_id FROM installation_metadata LIMIT 1;").Scan(&installationID)
-		if err != nil {
-			return err
+	if exists, err := installationMetadata.LoadFirst(ctx, db); err != nil || !exists {
+		if err == nil {
+			err = errors.New("installation metadata not found")
 		}
-
-		const updateInstallationSQL = `
-		UPDATE installation_metadata
-		SET
-			database_format_version = ?,
-			schema_compatibility_major = ?,
-			minimum_runtime_version = ?,
-			last_opened_runtime_version = ?,
-			maintenance_state = ?
-		WHERE installation_id = ?;
-		`
-		_, err = db.Exec(
-			updateInstallationSQL,
-			DBFormatVersion,
-			schema.CompatibilityMajor,
-			util.RuntimeProtocolVersion,
-			util.RuntimeProtocolVersion,
-			migrationState,
-			installationID,
-		)
-		if err != nil {
-			return err
-		}
-	} else {
-		const insertInstallationSQL = `
-		INSERT INTO installation_metadata (
-			installation_id,
-			database_format_version,
-			schema_compatibility_major,
-			minimum_runtime_version,
-			last_opened_runtime_version,
-			maintenance_state
-		) VALUES (?, ?, ?, ?, ?, ?);
-		`
-		_, err := db.Exec(
-			insertInstallationSQL,
-			ulid.Make().String(),
-			DBFormatVersion,
-			schema.CompatibilityMajor,
-			util.RuntimeProtocolVersion,
-			util.RuntimeProtocolVersion,
-			migrationState,
-		)
-
-		return err
+		return "", err
 	}
-	return nil
+	if installationMetadata.InstallationID != "" {
+		return installationMetadata.InstallationID, nil
+	}
+
+	installationMetadata.DatabaseFormatVersion = dbFormatVersion
+	if err := installationMetadata.Insert(ctx, db); err != nil {
+		return "", err
+	}
+
+	return installationMetadata.InstallationID, nil
 }

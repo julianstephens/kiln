@@ -20,13 +20,14 @@ func MakeHealthHandler(state *HandlerState) contract.Handler {
 			})
 			return err
 		}
+		snapshot := state.Snapshot()
 
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(health_result.HealthResult{
-			Draining:              state.IsDraining(),
-			Initialized:           state.IsInitialized(),
-			LastFatalStartupError: state.GetLastFatalStartupError(),
-			Ready:                 state.IsReady(),
-			Shutdown:              state.IsShutdown(),
+			Draining:              snapshot.Draining,
+			Initialized:           snapshot.Initialized,
+			LastFatalStartupError: snapshot.LastFatalStartupError,
+			Ready:                 snapshot.Ready,
+			Shutdown:              snapshot.Shutdown,
 		}))
 	}
 }

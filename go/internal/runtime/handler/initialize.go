@@ -162,10 +162,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			},
 		}
 
-		state.SetInitialized(true)
-		state.SetReady(true)
-		state.SetInitialParams(*validatedParams)
-		state.SetInitialResult(result)
+		state.CompleteInitialization(*validatedParams, result, deps.Store != nil)
 
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(result))
 	}

@@ -174,6 +174,24 @@ func Shutdown(id protocol.ID, method string) (protocol.ErrorResponse, runtime_er
 	return Response(id, spec)
 }
 
+func RuntimeNotReady(id protocol.ID, method string, err any) (protocol.ErrorResponse, runtime_error.ErrorKilnError) {
+	spec := Spec{
+		Method:      method,
+		JSONRPCCode: contract.JSONRPCInternalError,
+		Category:    runtime_error.ErrorKilnErrorCategoryInternal,
+		KilnCode:    "runtime.server_not_ready",
+		Message:     "server is not ready to accept new requests",
+		Retryable:   true,
+		Details: map[string]any{
+			"received_method": method,
+		},
+	}
+	if err != nil {
+		spec.Details["last_fatal_err"] = err
+	}
+	return Response(id, spec)
+}
+
 func normalizeDetails(details map[string]any) map[string]any {
 	if details == nil {
 		return map[string]any{}

@@ -3,9 +3,7 @@ package runtime_test
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io"
-	"strings"
 	"testing"
 
 	utest "github.com/julianstephens/go-utils/tests"
@@ -74,24 +72,6 @@ func TestRun_Preconditions_TableDriven(t *testing.T) {
 				Message: "failed to open log sink",
 			},
 		},
-		{
-			name: "invalid persistence config returns expected error",
-			cfg: runtime.Config{
-				Input:  bytes.NewBuffer(nil),
-				Output: &bytes.Buffer{},
-				DB: persistence.Config{
-					DBType:                       "invalid-store",
-					InstallationDBPath:           ":memory:",
-					MaxOpenConnections:           1,
-					MaxIdleConnections:           1,
-					MaxConnectionLifetimeSeconds: 1,
-				},
-			},
-			wantErr: &runtime.Error{
-				Code:    "runtime.persistence_open_failed",
-				Message: "Failed to open persistence store",
-			},
-		},
 	}
 
 	for _, tc := range tests {
@@ -100,23 +80,104 @@ func TestRun_Preconditions_TableDriven(t *testing.T) {
 			t.Parallel()
 
 			err := runtime.Run(context.Background(), tc.cfg)
+			if tc.wantErr == nil {
+				utest.RequireNoError(t, err)
+				return
+			}
+
 			utest.AssertNotNil(t, err)
 
 			runtimeErr, ok := err.(*runtime.Error)
 			utest.AssertTrue(t, ok, "expected *runtime.Error")
 			if ok {
 				utest.AssertEqual(t, runtimeErr.Code, tc.wantErr.Code)
-				// For persistence errors, check that message contains the expected substring
-				// since the full message includes error details
-				if tc.wantErr.Code == "runtime.persistence_open_failed" {
-					utest.AssertTrue(t, strings.Contains(runtimeErr.Message, tc.wantErr.Message),
-						"message should contain expected text")
-				} else {
-					utest.AssertEqual(t, runtimeErr.Message, tc.wantErr.Message)
-				}
+				utest.AssertEqual(t, runtimeErr.Message, tc.wantErr.Message)
 			}
 		})
 	}
+}
+
+func TestRun_PersistenceStartupFailureLeavesRuntimeNotReady(t *testing.T) {
+	previousBuildDate := contract.BuildDate
+	previousBuildVersion := contract.BuildVersion
+	previousBuildCommit := contract.BuildCommit
+	contract.BuildDate = "2026-07-05"
+	contract.BuildVersion = "0.1.0-test"
+	contract.BuildCommit = "test-commit"
+	t.Cleanup(func() {
+		contract.BuildDate = previousBuildDate
+		contract.BuildVersion = previousBuildVersion
+		contract.BuildCommit = previousBuildCommit
+	})
+
+	reader, writer := io.Pipe()
+	go func() {
+		_, _ = writer.Write(
+			[]byte(
+				`{"jsonrpc":"2.0","id":"1","method":"runtime.initialize","params":{"protocol_version":"2026-07-01","schema_set_version":"1.0.0","compatibility_major":1,"client":{"name":"test-client","version":"1.0.0"}}}` + "\n",
+			),
+		)
+		_, _ = writer.Write([]byte(`{"jsonrpc":"2.0","id":"2","method":"runtime.health"}` + "\n"))
+		_, _ = writer.Write(
+			[]byte(
+				`{"jsonrpc":"2.0","id":"3","method":"runtime.shutdown","params":{"cancel_in_flight_requests":true,"reason":"test"}}` + "\n",
+			),
+		)
+		_ = writer.Close()
+	}()
+
+	output := &bytes.Buffer{}
+
+	err := runtime.Run(context.Background(), runtime.Config{
+		Input:  reader,
+		Output: output,
+		DB: persistence.Config{
+			DBType:                       "invalid-store",
+			InstallationDBPath:           ":memory:",
+			MaxOpenConnections:           1,
+			MaxIdleConnections:           1,
+			MaxConnectionLifetimeSeconds: 1,
+		},
+	})
+	utest.RequireNoError(t, err)
+
+	peer := protocol.NewPeer(bytes.NewBuffer(output.Bytes()), &bytes.Buffer{}, protocol.DefaultMaxMessageBytes)
+
+	firstMsg, receiveErr := peer.Receive(context.Background())
+	utest.RequireNoError(t, receiveErr)
+	utest.AssertTrue(t, firstMsg.IsSuccessResponse(), "initialize request should be accepted")
+
+	secondMsg, receiveErr := peer.Receive(context.Background())
+	utest.RequireNoError(t, receiveErr)
+	utest.AssertTrue(t, secondMsg.IsSuccessResponse(), "health request should be accepted")
+
+	healthResp, ok := secondMsg.(protocol.SuccessResponse)
+	utest.AssertTrue(t, ok, "expected success response")
+	if ok {
+		ready, readyOK := healthResp.Result["ready"].(bool)
+		utest.AssertTrue(t, readyOK, "health.ready should be bool")
+		utest.AssertEqual(t, ready, false)
+
+		initialized, initializedOK := healthResp.Result["initialized"].(bool)
+		utest.AssertTrue(t, initializedOK, "health.initialized should be bool")
+		utest.AssertEqual(t, initialized, true)
+
+		fatal, fatalOK := healthResp.Result["last_fatal_startup_error"].(map[string]any)
+		utest.AssertTrue(t, fatalOK, "health.last_fatal_startup_error should be object")
+		if fatalOK {
+			code, codeOK := fatal["code"].(string)
+			utest.AssertTrue(t, codeOK, "fatal error code should be string")
+			utest.AssertEqual(t, code, "persistence.store_open_failed")
+
+			message, messageOK := fatal["message"].(string)
+			utest.AssertTrue(t, messageOK, "fatal error message should be string")
+			utest.AssertEqual(t, message, "failed to open store at path: :memory:")
+		}
+	}
+
+	thirdMsg, receiveErr := peer.Receive(context.Background())
+	utest.RequireNoError(t, receiveErr)
+	utest.AssertTrue(t, thirdMsg.IsSuccessResponse(), "shutdown request should be accepted")
 }
 
 func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
@@ -155,20 +216,15 @@ func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
 		Input:  reader,
 		Output: output,
 		Error:  errOutput,
-		// Empty DB config - runtime will fail during persistence.Open
-		// TODO: update main.go to provide proper DB configuration
-		DB: persistence.Config{},
+		DB: persistence.Config{
+			DBType:                       persistence.SqliteStoreKind,
+			InstallationDBPath:           ":memory:",
+			MaxOpenConnections:           1,
+			MaxIdleConnections:           1,
+			MaxConnectionLifetimeSeconds: 1,
+		},
 	})
-
-	// If persistence initialization failed, skip this test
-	// (test focus is shutdown behavior, not DB initialization)
-	if err != nil {
-		var runtimeErr *runtime.Error
-		if errors.As(err, &runtimeErr) && runtimeErr.Code == "runtime.persistence_open_failed" {
-			t.Skip("skipping shutdown test - persistence initialization not configured for tests")
-		}
-		utest.RequireNoError(t, err)
-	}
+	utest.RequireNoError(t, err)
 
 	peer := protocol.NewPeer(bytes.NewBuffer(output.Bytes()), &bytes.Buffer{}, protocol.DefaultMaxMessageBytes)
 

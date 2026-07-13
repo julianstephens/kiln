@@ -1,26 +1,40 @@
 import argparse
+import re
 from pathlib import Path
 
 MIGRATION_DIR = (
     Path(__file__).parent.parent.parent / "go/internal/persistence" / "migrations"
 )
 
-TEMPLATE = """
--- +goose up
+TEMPLATE = """-- +goose Up
 SELECT 'up SQL query';
 
--- +goose down
+-- +goose Down
 SELECT 'down SQL query';
 """
 
+MIGRATION_FILENAME_RE = re.compile(r"^(?P<number>\d{5})_(?P<name>[a-z0-9_]+)\.sql$")
+MIGRATION_FILENAME_FORMAT = "00001_migration_name.sql"
+
+
+def _next_migration_number() -> int:
+    max_migration_number = 0
+    for migration_file in sorted(MIGRATION_DIR.glob("*.sql")):
+        match = MIGRATION_FILENAME_RE.match(migration_file.name)
+        if not match:
+            raise ValueError(
+                "Malformed migration filename "
+                f"'{migration_file.name}'. Expected format: {MIGRATION_FILENAME_FORMAT}"
+            )
+
+        migration_number = int(match.group("number"))
+        max_migration_number = max(max_migration_number, migration_number)
+
+    return max_migration_number + 1
+
 
 def create_migration_file(name: str, dry_run: bool = False) -> Path:
-    migration_files = sorted(MIGRATION_DIR.glob("*.sql"))
-    next_migration_number = 1
-    if migration_files:
-        last_migration_file = migration_files[-1]
-        last_migration_number = int(last_migration_file.stem.split("_")[0])
-        next_migration_number = last_migration_number + 1
+    next_migration_number = _next_migration_number()
 
     sanitized_name = name.replace(" ", "_").replace("-", "_").lower().strip()
     if not sanitized_name:
@@ -29,8 +43,8 @@ def create_migration_file(name: str, dry_run: bool = False) -> Path:
     migration_filename = f"{next_migration_number:05d}_{sanitized_name}.sql"
     migration_path = MIGRATION_DIR / migration_filename
     if not dry_run:
-        migration_path.touch(exist_ok=False)
-        migration_path.write_text(TEMPLATE)
+        with migration_path.open("x", encoding="utf-8") as migration_file:
+            migration_file.write(TEMPLATE)
     return migration_path
 
 
