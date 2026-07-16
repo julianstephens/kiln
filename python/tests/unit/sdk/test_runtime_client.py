@@ -6,6 +6,7 @@ from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call
 
+import anyio
 import pytest
 from pytest_mock import MockerFixture
 
@@ -333,3 +334,31 @@ async def test_close_fallback_to_terminate(
     assert client.runtime_exit_status.final_class == RuntimeFinalExitClass.FORCED_KILL
     assert client.runtime_exit_status.timeout is True
     assert mock_connection.state == RuntimeConnectionState.EXITED
+
+
+@pytest.mark.anyio
+async def test_close_terminates_live_process_after_startup_failure() -> None:
+    process = MagicMock()
+    process.aclose = AsyncMock()
+    process.wait = AsyncMock()
+    process.exit_status = MagicMock()
+    type(process).is_alive = PropertyMock(side_effect=[True, False])
+
+    connection = MagicMock(spec=RuntimeStdioConnection)
+    connection.state = RuntimeConnectionState.FAILED
+    connection.shutdown_config = ShutdownConfig()
+
+    client = RuntimeClient(process, connection)
+    client._task_group = MagicMock()
+    client._exit_stack = AsyncMock()
+
+    with anyio.fail_after(1):
+        await client.close(mark_expected=False)
+
+    process.aclose.assert_awaited_once_with(
+        mark_expected=False,
+        final_class=RuntimeFinalExitClass.STARTUP_FAILURE,
+    )
+    process.wait.assert_awaited_once()
+    client._task_group.cancel_scope.cancel.assert_called_once()
+    client._exit_stack.aclose.assert_awaited_once()

@@ -203,6 +203,7 @@ func (m *InstallationMetadataRow) Update(ctx context.Context) (int64, error) {
 	}
 
 	storedMetadata := &InstallationMetadataRow{InstallationID: id}
+	storedMetadata.SetExecutor(m.executor)
 	rowExists, err := storedMetadata.Load(ctx)
 	if !rowExists || err != nil {
 		return 0, err

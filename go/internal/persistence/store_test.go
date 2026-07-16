@@ -2,6 +2,7 @@ package persistence_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,15 @@ import (
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func installationID(t *testing.T, db *sql.DB) string {
+	installationID := ""
+	if err := db.QueryRow(`SELECT installation_id FROM installation_metadata WHERE singleton_key = 1`).
+		Scan(&installationID); err != nil {
+		t.Fatalf("failed to retrieve installation ID: %v", err)
+	}
+	return installationID
+}
 
 func TestOpenCreatesInstallationMetadata(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "kiln.db")
@@ -36,6 +46,40 @@ func TestOpenCreatesInstallationMetadata(t *testing.T) {
 
 	if installationID == "" {
 		t.Fatal("installation identity is empty")
+	}
+}
+
+func TestOpenPreservesInstallationIdentity(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "kiln.db")
+	cfg := testConfig(path)
+
+	first, err := persistence.Open(ctx, cfg)
+	if err != nil {
+		t.Fatalf("first Open(): %v", err)
+	}
+	firstID := installationID(t, first.GetDB())
+
+	if err := first.Close(); err != nil {
+		t.Fatalf("first Close(): %v", err)
+	}
+
+	second, err := persistence.Open(ctx, cfg)
+	if err != nil {
+		t.Fatalf("second Open(): %v", err)
+	}
+	defer func() {
+		_ = second.Close()
+	}()
+
+	secondID := installationID(t, second.GetDB())
+
+	if firstID != secondID {
+		t.Fatalf(
+			"installation identity changed: first=%q second=%q",
+			firstID,
+			secondID,
+		)
 	}
 }
 

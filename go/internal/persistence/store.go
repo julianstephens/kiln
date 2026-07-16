@@ -12,6 +12,7 @@ import (
 
 	"github.com/julianstephens/kiln/go/internal/persistence/table"
 	"github.com/julianstephens/kiln/go/internal/persistence/table/installation"
+	"github.com/julianstephens/kiln/go/internal/util"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/rogpeppe/go-internal/lockedfile"
 
@@ -271,12 +272,15 @@ func bestEffortRecordMigrationFailure(ctx context.Context, db *sql.DB) {
 	if err != nil {
 		return
 	}
+	defer func() {
+		_ = txn.Rollback()
+	}()
 
 	metadataTable.SetExecutor(table.NewExecutorWithTx(txn))
 	installationMetadata.SetExecutor(table.NewExecutorWithTx(txn))
 
 	exists, err := metadataTable.Exists(ctx)
-	if err != nil && !exists {
+	if err != nil || !exists {
 		return
 	}
 
@@ -285,7 +289,11 @@ func bestEffortRecordMigrationFailure(ctx context.Context, db *sql.DB) {
 		return
 	}
 	installationMetadata.MaintenanceState = installation.MaintenanceStateMigrationFailed
-	_, _ = installationMetadata.Update(ctx)
+	installationMetadata.LastOpenedRuntimeVersion = util.RuntimeProtocolVersion
+
+	if _, err = installationMetadata.Update(ctx); err != nil {
+		return
+	}
 
 	_ = txn.Commit()
 }
@@ -302,9 +310,12 @@ func loadOrCreateInstallationMetadata(
 		return
 	}
 	defer func() {
-		if err != nil {
-			txErr = txn.Rollback()
-			err = errors.Join(err, fmt.Errorf("rollback installation metadata transaction: %w", txErr))
+		if err == nil {
+			return
+		}
+
+		if rollbackErr := txn.Rollback(); rollbackErr != nil {
+			err = errors.Join(err, fmt.Errorf("rollback installation metadata transaction: %w", rollbackErr))
 		}
 	}()
 	installationMetadata.SetExecutor(table.NewExecutorWithTx(txn))
@@ -316,6 +327,23 @@ func loadOrCreateInstallationMetadata(
 	}
 
 	if exists {
+		if installationMetadata.InstallationID == "" {
+			err = errors.New("installation metadata record exists but installation ID is empty")
+			return
+		}
+
+		installationMetadata.LastOpenedRuntimeVersion = util.RuntimeProtocolVersion
+
+		if _, updateErr := installationMetadata.Update(ctx); updateErr != nil {
+			err = fmt.Errorf("update installation metadata: %w", updateErr)
+			return
+		}
+
+		if commitErr := txn.Commit(); commitErr != nil {
+			err = fmt.Errorf("commit installation metadata transaction: %w", commitErr)
+			return
+		}
+
 		installationID = installationMetadata.InstallationID
 		return
 	}
