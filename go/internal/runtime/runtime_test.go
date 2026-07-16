@@ -217,7 +217,7 @@ func TestRun_RejectsNewRequestsAfterShutdownBegins(t *testing.T) {
 		Output: output,
 		Error:  errOutput,
 		DB: persistence.Config{
-			DBType:                       persistence.SqliteStoreKind,
+			DBType:                       persistence.StoreKindSqlite,
 			InstallationDBPath:           ":memory:",
 			MaxOpenConnections:           1,
 			MaxIdleConnections:           1,

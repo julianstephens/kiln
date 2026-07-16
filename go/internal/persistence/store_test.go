@@ -1,6 +1,7 @@
 package persistence_test
 
 import (
+	"context"
 	"errors"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,33 @@ import (
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func TestOpenCreatesInstallationMetadata(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "kiln.db")
+	cfg := testConfig(path)
+
+	store, err := persistence.Open(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer func() {
+		_ = store.Close()
+	}()
+
+	var installationID string
+	err = store.GetDB().QueryRow(`
+        SELECT installation_id
+        FROM installation_metadata
+        WHERE singleton_key = 1
+    `).Scan(&installationID)
+	if err != nil {
+		t.Fatalf("load installation identity: %v", err)
+	}
+
+	if installationID == "" {
+		t.Fatal("installation identity is empty")
+	}
+}
 
 func TestValidateStorePath(t *testing.T) {
 	t.Parallel()
@@ -121,4 +149,13 @@ func validateStorePath(path string) (validated *string, err error) {
 		)
 	}
 	return &cleaned, nil
+}
+
+func testConfig(path string) persistence.Config {
+	return persistence.Config{
+		DBType:             persistence.StoreKindSqlite,
+		InstallationDBPath: path,
+		MaxOpenConnections: 1,
+		MaxIdleConnections: 1,
+	}
 }

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/julianstephens/kiln/go/internal/persistence/table"
 	"github.com/julianstephens/kiln/go/internal/persistence/table/installation"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/rogpeppe/go-internal/lockedfile"
@@ -35,8 +36,8 @@ type Store interface {
 type StoreKind string
 
 const (
-	TursoStoreKind  StoreKind = "turso"
-	SqliteStoreKind StoreKind = "sqlite3"
+	StoreKindTurso  StoreKind = "turso"
+	StoreKindSqlite StoreKind = "sqlite3"
 )
 
 const (
@@ -51,31 +52,15 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 	}
 
 	installationDir := filepath.Dir(*validatedPath)
-	_, err = os.Stat(installationDir)
-	// installation directory may not exist yet, so we attempt to create it if it doesn't
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			err = os.MkdirAll(installationDir, 0o700)
-			if err != nil {
-				return nil, NewStoreError(
-					*validatedPath,
-					CodeStoreInitializationFailed,
-					runtime_error.ErrorKilnErrorCategoryInternal,
-					"failed to create installation directory",
-					true,
-					err,
-				)
-			}
-		} else {
-			return nil, NewStoreError(
-				*validatedPath,
-				CodeStoreInitializationFailed,
-				runtime_error.ErrorKilnErrorCategoryInternal,
-				"failed to stat installation directory",
-				false,
-				err,
-			)
-		}
+	if err := ensureDirectoryExists(installationDir); err != nil {
+		return nil, NewStoreError(
+			*validatedPath,
+			CodeStoreInitializationFailed,
+			runtime_error.ErrorKilnErrorCategoryInternal,
+			"failed to ensure installation directory exists",
+			false,
+			err,
+		)
 	}
 
 	dsn := fmt.Sprintf(
@@ -100,12 +85,12 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 
 	var store Store
 	switch cfg.DBType {
-	case TursoStoreKind:
+	case StoreKindTurso:
 		store = &TursoStore{
 			Path: cfg.InstallationDBPath,
 			Conn: conn,
 		}
-	case SqliteStoreKind:
+	case StoreKindSqlite:
 		store = &SqliteStore{
 			Path: cfg.InstallationDBPath,
 			Conn: conn,
@@ -120,18 +105,18 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 
 	// skip lockfile creation for in-memory databases, as they are not shared between processes
 	if cfg.InstallationDBPath != ":memory:" {
-		lockfilePath := filepath.Join(filepath.Dir(cfg.InstallationDBPath), LockDir, "migration.lock")
-		_, err := lockedfile.Create(lockfilePath)
-		if err != nil {
+		lockDir := filepath.Join(filepath.Dir(cfg.InstallationDBPath), LockDir)
+		if err := ensureDirectoryExists(lockDir); err != nil {
 			return nil, NewStoreError(
 				cfg.InstallationDBPath,
 				CodeStoreInitializationFailed,
 				runtime_error.ErrorKilnErrorCategoryInternal,
-				"failed to create lockfile",
+				"failed to ensure lock directory exists",
 				false,
 				err,
 			)
 		}
+		lockfilePath := filepath.Join(lockDir, "migration.lock")
 		unlock, err := lockedfile.MutexAt(lockfilePath).Lock()
 		if err != nil {
 			return nil, NewMigrationLockFailedError(cfg.InstallationDBPath, err)
@@ -280,18 +265,29 @@ func validateStorePath(path string) (validated *string, err error) {
 
 func bestEffortRecordMigrationFailure(ctx context.Context, db *sql.DB) {
 	metadataTable := &installation.InstallationMetadataTable{}
-	exists, err := metadataTable.Exists(ctx, db)
+	installationMetadata := &installation.InstallationMetadataRow{}
+
+	txn, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return
+	}
+
+	metadataTable.SetExecutor(table.NewExecutorWithTx(txn))
+	installationMetadata.SetExecutor(table.NewExecutorWithTx(txn))
+
+	exists, err := metadataTable.Exists(ctx)
 	if err != nil && !exists {
 		return
 	}
 
-	installationMetadata := &installation.InstallationMetadataRow{}
-	exists, err = installationMetadata.LoadFirst(ctx, db)
+	exists, err = installationMetadata.LoadFirst(ctx)
 	if err != nil || !exists {
 		return
 	}
 	installationMetadata.MaintenanceState = installation.MaintenanceStateMigrationFailed
-	_, _ = installationMetadata.Update(ctx, db)
+	_, _ = installationMetadata.Update(ctx)
+
+	_ = txn.Commit()
 }
 
 func loadOrCreateInstallationMetadata(
@@ -299,22 +295,51 @@ func loadOrCreateInstallationMetadata(
 	db *sql.DB,
 	dbFormatVersion int64,
 ) (installationID string, err error) {
-	var installationMetadata installation.InstallationMetadataRow
-
-	if exists, err := installationMetadata.LoadFirst(ctx, db); err != nil || !exists {
-		if err == nil {
-			err = errors.New("installation metadata not found")
+	installationMetadata := &installation.InstallationMetadataRow{DatabaseFormatVersion: dbFormatVersion}
+	txn, txErr := db.BeginTx(ctx, nil)
+	if txErr != nil {
+		err = fmt.Errorf("begin installation metadata transaction: %w", txErr)
+		return
+	}
+	defer func() {
+		if err != nil {
+			txErr = txn.Rollback()
+			err = errors.Join(err, fmt.Errorf("rollback installation metadata transaction: %w", txErr))
 		}
-		return "", err
-	}
-	if installationMetadata.InstallationID != "" {
-		return installationMetadata.InstallationID, nil
+	}()
+	installationMetadata.SetExecutor(table.NewExecutorWithTx(txn))
+
+	exists, loadErr := installationMetadata.LoadFirst(ctx)
+	if loadErr != nil {
+		err = fmt.Errorf("load installation metadata: %w", loadErr)
+		return
 	}
 
-	installationMetadata.DatabaseFormatVersion = dbFormatVersion
-	if err := installationMetadata.Insert(ctx, db); err != nil {
-		return "", err
+	if exists {
+		installationID = installationMetadata.InstallationID
+		return
 	}
 
-	return installationMetadata.InstallationID, nil
+	insertErr := installationMetadata.Insert(ctx)
+	if insertErr != nil {
+		err = fmt.Errorf("insert installation metadata: %w", insertErr)
+		return
+	}
+
+	if commitErr := txn.Commit(); commitErr != nil {
+		err = fmt.Errorf("commit installation metadata transaction: %w", commitErr)
+		return
+	}
+
+	installationID = installationMetadata.InstallationID
+	return
+}
+
+func ensureDirectoryExists(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if mkdirErr := os.MkdirAll(path, 0o750); mkdirErr != nil {
+			return fmt.Errorf("ensure directory exists: %w", mkdirErr)
+		}
+	}
+	return nil
 }

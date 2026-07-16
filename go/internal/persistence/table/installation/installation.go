@@ -12,6 +12,8 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+var ErrInstallationIDEmpty = errors.New("installation ID must be set")
+
 const TableNameInstallationMetadata = "installation_metadata"
 
 type MaintenanceState string
@@ -24,18 +26,13 @@ const (
 	MaintenanceStateReadOnly          MaintenanceState = "read_only"
 )
 
-type InstallationMetadataTable struct{}
-
-type InstallationMetadataRow struct {
-	InstallationID           string           `json:"installation_id"`
-	DatabaseFormatVersion    int64            `json:"database_format_version"`
-	SchemaCompatibilityMajor int              `json:"schema_compatibility_major"`
-	MinimumRuntimeVersion    string           `json:"minimum_runtime_version"`
-	LastOpenedRuntimeVersion string           `json:"last_opened_runtime_version"`
-	MaintenanceState         MaintenanceState `json:"maintenance_state"`
+type InstallationMetadataTable struct {
+	executor *table.Executor
 }
 
-var ErrInstallationIDEmpty = errors.New("installation ID must be set")
+func (t *InstallationMetadataTable) SetExecutor(executor *table.Executor) {
+	t.executor = executor
+}
 
 // TableName returns the name of the installation metadata table.
 func (t *InstallationMetadataTable) TableName() string {
@@ -43,21 +40,42 @@ func (t *InstallationMetadataTable) TableName() string {
 }
 
 // Exists checks if the installation metadata table exists in the database. Returns true if it exists, false otherwise.
-func (t *InstallationMetadataTable) Exists(ctx context.Context, db *sql.DB) (bool, error) {
+func (t *InstallationMetadataTable) Exists(ctx context.Context) (bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()
 
 	var count int
-	row := db.QueryRowContext(
+	row, err := t.executor.QueryRowContext(
 		ctx,
 		`SELECT count(*) FROM sqlite_schema WHERE type='table' AND name=?`,
-		TableNameInstallationMetadata,
+		[]any{TableNameInstallationMetadata},
 	)
-	err := row.Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	err = row.Scan(&count)
 	if err != nil {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+type InstallationMetadataRow struct {
+	executor                 *table.Executor  `json:"-"`
+	SingletonKey             int              `json:"singleton_key"`
+	InstallationID           string           `json:"installation_id"`
+	DatabaseFormatVersion    int64            `json:"database_format_version"`
+	SchemaCompatibilityMajor int              `json:"schema_compatibility_major"`
+	MinimumRuntimeVersion    string           `json:"minimum_runtime_version"`
+	LastOpenedRuntimeVersion string           `json:"last_opened_runtime_version"`
+	MaintenanceState         MaintenanceState `json:"maintenance_state"`
+	MaintenanceDetailsJSON   string           `json:"maintenance_details_json"`
+	CreatedAt                int64            `json:"created_at"`
+	UpdatedAt                int64            `json:"updated_at"`
+}
+
+func (m *InstallationMetadataRow) SetExecutor(executor *table.Executor) {
+	m.executor = executor
 }
 
 func (m *InstallationMetadataRow) TableName() string {
@@ -65,7 +83,7 @@ func (m *InstallationMetadataRow) TableName() string {
 }
 
 // Load retrieves the first record from the installation metadata table into the struct.
-func (m *InstallationMetadataRow) Load(ctx context.Context, db *sql.DB) (bool, error) {
+func (m *InstallationMetadataRow) Load(ctx context.Context) (bool, error) {
 	if m.InstallationID == "" {
 		return false, ErrInstallationIDEmpty
 	}
@@ -73,18 +91,26 @@ func (m *InstallationMetadataRow) Load(ctx context.Context, db *sql.DB) (bool, e
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()
 
-	row := db.QueryRowContext(
+	row, err := m.executor.QueryRowContext(
 		ctx,
 		"SELECT * FROM "+TableNameInstallationMetadata+" WHERE installation_id = ?;",
-		m.InstallationID,
+		[]any{m.InstallationID},
 	)
+	if err != nil {
+		return false, err
+	}
+
 	if err := row.Scan(
+		&m.SingletonKey,
 		&m.InstallationID,
 		&m.DatabaseFormatVersion,
 		&m.SchemaCompatibilityMajor,
 		&m.MinimumRuntimeVersion,
 		&m.LastOpenedRuntimeVersion,
 		&m.MaintenanceState,
+		&m.MaintenanceDetailsJSON,
+		&m.CreatedAt,
+		&m.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -96,18 +122,25 @@ func (m *InstallationMetadataRow) Load(ctx context.Context, db *sql.DB) (bool, e
 }
 
 // LoadFirst retrieves the first record from the installation metadata table into the struct.
-func (m *InstallationMetadataRow) LoadFirst(ctx context.Context, db *sql.DB) (bool, error) {
+func (m *InstallationMetadataRow) LoadFirst(ctx context.Context) (bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()
 
-	row := db.QueryRowContext(ctx, "SELECT * FROM "+TableNameInstallationMetadata+" LIMIT 1;")
+	row, err := m.executor.QueryRowContext(ctx, "SELECT * FROM "+TableNameInstallationMetadata+" LIMIT 1;", []any{})
+	if err != nil {
+		return false, err
+	}
 	if err := row.Scan(
+		&m.SingletonKey,
 		&m.InstallationID,
 		&m.DatabaseFormatVersion,
 		&m.SchemaCompatibilityMajor,
 		&m.MinimumRuntimeVersion,
 		&m.LastOpenedRuntimeVersion,
 		&m.MaintenanceState,
+		&m.MaintenanceDetailsJSON,
+		&m.CreatedAt,
+		&m.UpdatedAt,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -119,13 +152,14 @@ func (m *InstallationMetadataRow) LoadFirst(ctx context.Context, db *sql.DB) (bo
 }
 
 // Insert adds a new record for the installation metadata table in the database.
-func (m *InstallationMetadataRow) Insert(ctx context.Context, db *sql.DB) error {
+func (m *InstallationMetadataRow) Insert(ctx context.Context) error {
 	if m.DatabaseFormatVersion == 0 {
 		return errors.New("database format version must be set")
 	}
 	if m.MaintenanceState == "" {
 		m.MaintenanceState = MaintenanceStateNormal
 	}
+	m.SingletonKey = 1
 	m.InstallationID = ulid.Make().String()
 	m.SchemaCompatibilityMajor = schema.CompatibilityMajor
 	m.LastOpenedRuntimeVersion = util.RuntimeProtocolVersion
@@ -134,36 +168,42 @@ func (m *InstallationMetadataRow) Insert(ctx context.Context, db *sql.DB) error 
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()
 
-	_, err := db.ExecContext(
+	_, err := m.executor.ExecContext(
 		ctx,
 		`INSERT INTO `+TableNameInstallationMetadata+` (
+			singleton_key,
 			installation_id,
 			database_format_version,
 			schema_compatibility_major,
 			minimum_runtime_version,
 			last_opened_runtime_version,
-			maintenance_state
-		) VALUES (?, ?, ?, ?, ?, ?);
+			maintenance_state,
+			maintenance_details_json
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 		`,
-		m.InstallationID,
-		m.DatabaseFormatVersion,
-		m.SchemaCompatibilityMajor,
-		m.MinimumRuntimeVersion,
-		m.LastOpenedRuntimeVersion,
-		m.MaintenanceState,
+		[]any{
+			m.SingletonKey,
+			m.InstallationID,
+			m.DatabaseFormatVersion,
+			m.SchemaCompatibilityMajor,
+			m.MinimumRuntimeVersion,
+			m.LastOpenedRuntimeVersion,
+			m.MaintenanceState,
+			m.MaintenanceDetailsJSON,
+		},
 	)
 	return err
 }
 
 // Update modifies the existing record for the installation metadata table in the database.
-func (m *InstallationMetadataRow) Update(ctx context.Context, db *sql.DB) (int64, error) {
+func (m *InstallationMetadataRow) Update(ctx context.Context) (int64, error) {
 	id := m.InstallationID
 	if id == "" {
 		return 0, ErrInstallationIDEmpty
 	}
 
 	storedMetadata := &InstallationMetadataRow{InstallationID: id}
-	rowExists, err := storedMetadata.Load(ctx, db)
+	rowExists, err := storedMetadata.Load(ctx)
 	if !rowExists || err != nil {
 		return 0, err
 	}
@@ -183,26 +223,33 @@ func (m *InstallationMetadataRow) Update(ctx context.Context, db *sql.DB) (int64
 	if !table.IsSet(&m.MaintenanceState) {
 		m.MaintenanceState = storedMetadata.MaintenanceState
 	}
+	if !table.IsSet(&m.MaintenanceDetailsJSON) {
+		m.MaintenanceDetailsJSON = storedMetadata.MaintenanceDetailsJSON
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()
 
-	res, err := db.ExecContext(
+	res, err := m.executor.ExecContext(
 		ctx,
 		`UPDATE `+TableNameInstallationMetadata+` SET
 			database_format_version = ?,
 			schema_compatibility_major = ?,
 			minimum_runtime_version = ?,
 			last_opened_runtime_version = ?,
-			maintenance_state = ?
+			maintenance_state = ?,
+			maintenance_details_json = ?
 		WHERE installation_id = ?;
 		`,
-		m.DatabaseFormatVersion,
-		m.SchemaCompatibilityMajor,
-		m.MinimumRuntimeVersion,
-		m.LastOpenedRuntimeVersion,
-		m.MaintenanceState,
-		m.InstallationID,
+		[]any{
+			m.DatabaseFormatVersion,
+			m.SchemaCompatibilityMajor,
+			m.MinimumRuntimeVersion,
+			m.LastOpenedRuntimeVersion,
+			m.MaintenanceState,
+			m.MaintenanceDetailsJSON,
+			m.InstallationID,
+		},
 	)
 	if err != nil {
 		return 0, err
@@ -218,23 +265,26 @@ func (m *InstallationMetadataRow) Update(ctx context.Context, db *sql.DB) (int64
 }
 
 // Delete removes the record for the installation metadata table from the database.
-func (m *InstallationMetadataRow) Delete(ctx context.Context, db *sql.DB) (int64, error) {
+func (m *InstallationMetadataRow) Delete(ctx context.Context) (int64, error) {
 	if m.InstallationID == "" {
 		return 0, ErrInstallationIDEmpty
 	}
 
-	rowExists, err := m.Load(ctx, db)
-	if !rowExists || err != nil {
+	rowExists, err := m.Load(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if !rowExists {
 		return 0, errors.New("installation metadata record does not exist")
 	}
 
-	res, err := db.ExecContext(
+	res, err := m.executor.ExecContext(
 		ctx,
 		"DELETE FROM "+TableNameInstallationMetadata+" WHERE installation_id = ?;",
-		m.InstallationID,
+		[]any{m.InstallationID},
 	)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	n, err := res.RowsAffected()
 	if err != nil {

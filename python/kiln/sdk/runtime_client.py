@@ -8,9 +8,15 @@ from anyio.abc import TaskGroup
 from kiln.models.budget import Budget
 from kiln.models.run import RunResult
 from kiln.protocol.errors import RuntimeConnectionClosedError
+from kiln.schemas.runtime.error import KilnError
 
 from .config import RuntimeConfig, ShutdownConfig
-from .errors import RuntimeMethodError, RuntimeProcessError, RuntimeProcessExitedError
+from .errors import (
+    RuntimeMethodError,
+    RuntimeProcessError,
+    RuntimeProcessExitedError,
+    RuntimeStartupError,
+)
 from .runtime_connection import (
     RuntimeConnectionState,
     RuntimeStdioConnection,
@@ -97,8 +103,11 @@ class RuntimeClient:
         )
         client = cls(process, connection)
 
+        def _raise_startup_failure(fatal: KilnError) -> NoReturn:
+            raise RuntimeStartupError(fatal)
+
         def _raise_not_ready() -> NoReturn:
-            raise RuntimeProcessError(message=("runtime process is not ready"))
+            raise RuntimeProcessError(message=("runtime initialized but is not ready"))
 
         try:
             await client._open_bg_tasks()
@@ -106,6 +115,8 @@ class RuntimeClient:
             await connection.initialize()
             health = await connection.health()
             if not health.root.ready:
+                if fatal := health.root.last_fatal_startup_error:
+                    _raise_startup_failure(fatal)  # type: ignore
                 _raise_not_ready()
         except RuntimeConnectionClosedError as exc:
             connection.mark_failed()
@@ -148,50 +159,62 @@ class RuntimeClient:
         self._closed = True
 
         try:
-            if (
-                not self._process.is_alive
-                or self._connection.state == RuntimeConnectionState.FAILED
-            ):
-                return
+            if self._process.is_alive:
+                if self._connection.state != RuntimeConnectionState.FAILED:
+                    await self._try_graceful_shutdown(mark_expected=mark_expected)
+                else:
+                    await self._terminate_failed_process(mark_expected=mark_expected)
+
+            if self._process.is_alive:
+                await self._force_terminate(mark_expected=mark_expected)
+
+            self._runtime_exit_status = self._process.exit_status
+        finally:
+            if self._task_group is not None:
+                self._task_group.cancel_scope.cancel()
+
+            if self._exit_stack is not None:
+                await self._exit_stack.aclose()
+
+            if self._connection.state != RuntimeConnectionState.FAILED:
+                self._connection.state = RuntimeConnectionState.EXITED
+
+    async def _try_graceful_shutdown(self, *, mark_expected: bool) -> None:
+        try:
             res = await self._connection.shutdown()
+
             if not res.root.accepted and not (res.root.draining or res.root.shutdown):
                 raise RuntimeProcessError(
                     message="runtime process refused to shutdown gracefully"
                 )
+
             if not self._process.write_closed:
                 await self._process.close_stdin()
-            try:
-                with anyio.fail_after(
-                    self._connection.shutdown_config.process_exit_timeout_seconds
-                ):
-                    await self._process.wait()
-                    self._process.mark_final_exit_class(
-                        RuntimeFinalExitClass.GRACEFUL_EXIT
-                    )
-            except TimeoutError:
-                await self._process.aclose(
-                    mark_expected=mark_expected,
-                    final_class=RuntimeFinalExitClass.FORCED_KILL,
-                    timeout=True,
-                )
-                with anyio.fail_after(
-                    self._connection.shutdown_config.kill_timeout_seconds
-                ):
-                    await self._process.wait()
-            finally:
-                exit_status = self._process.exit_status
-                if exit_status is None or exit_status.returncode is None:
-                    raise RuntimeProcessError(
-                        message="runtime process did not exit gracefully"
-                    )
-                if not mark_expected and exit_status.final_class is None:
-                    self._process.mark_final_exit_class(
-                        RuntimeFinalExitClass.UNEXPECTED_EXIT
-                    )
-                    exit_status = self._process.exit_status
-                self._runtime_exit_status = exit_status
-        finally:
-            if self._exit_stack is not None:
-                await self._exit_stack.aclose()
-            if self._connection.state != RuntimeConnectionState.FAILED:
-                self._connection.state = RuntimeConnectionState.EXITED
+
+            with anyio.fail_after(
+                self._connection.shutdown_config.process_exit_timeout_seconds
+            ):
+                await self._process.wait()
+
+            self._process.mark_final_exit_class(RuntimeFinalExitClass.GRACEFUL_EXIT)
+        except (RuntimeConnectionClosedError, RuntimeMethodError, TimeoutError):
+            await self._force_terminate(mark_expected=mark_expected)
+
+    async def _force_terminate(self, *, mark_expected: bool) -> None:
+        await self._process.aclose(
+            mark_expected=mark_expected,
+            final_class=RuntimeFinalExitClass.FORCED_KILL,
+            timeout=True,
+        )
+
+        with anyio.fail_after(self._connection.shutdown_config.kill_timeout_seconds):
+            await self._process.wait()
+
+    async def _terminate_failed_process(self, *, mark_expected: bool) -> None:
+        await self._process.aclose(
+            mark_expected=mark_expected,
+            final_class=RuntimeFinalExitClass.STARTUP_FAILURE,
+        )
+
+        with anyio.fail_after(self._connection.shutdown_config.kill_timeout_seconds):
+            await self._process.wait()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, call
 
 import pytest
 from pytest_mock import MockerFixture
@@ -20,6 +20,16 @@ from kiln.sdk.runtime_exit import (
     RuntimeFinalExitClass,
     StderrTailBuffer,
 )
+
+
+def _mock_process_lifecycle(
+    process: MagicMock,
+    *,
+    wait_side_effect: list[object | BaseException] | None = None,
+) -> None:
+    """Configure a process mock to look alive until wait/terminate completes."""
+    type(process).is_alive = PropertyMock(side_effect=[True, False])
+    process.wait = AsyncMock(side_effect=wait_side_effect or [None])
 
 
 @pytest.mark.anyio
@@ -123,11 +133,10 @@ async def test_close_uses_configured_process_exit_timeout(mocker) -> None:
 
     # Create fake process and connection mocks
     fake_runtime_process = MagicMock()
-    fake_runtime_process.is_alive = True
     fake_runtime_process.write_closed = False
     fake_runtime_process.close_stdin = AsyncMock()
-    fake_runtime_process.wait = AsyncMock()
     fake_runtime_process.aclose = AsyncMock()
+    _mock_process_lifecycle(fake_runtime_process)
     fake_runtime_process.exit_status = RuntimeExitStatus(
         expected=True,
         timeout=False,
@@ -199,11 +208,10 @@ async def test_close_uses_default_process_exit_timeout_when_not_configured(
 
     # Create fake process and connection mocks
     fake_runtime_process = MagicMock()
-    fake_runtime_process.is_alive = True
     fake_runtime_process.write_closed = False
     fake_runtime_process.close_stdin = AsyncMock()
-    fake_runtime_process.wait = AsyncMock()
     fake_runtime_process.aclose = AsyncMock()
+    _mock_process_lifecycle(fake_runtime_process)
     fake_runtime_process.exit_status = RuntimeExitStatus(
         expected=True,
         timeout=False,
@@ -270,11 +278,10 @@ async def test_close_fallback_to_terminate(
 
     # Create fake process and connection mocks
     fake_runtime_process = MagicMock()
-    fake_runtime_process.is_alive = True
     fake_runtime_process.write_closed = False
     fake_runtime_process.close_stdin = AsyncMock()
-    fake_runtime_process.wait = AsyncMock()
     fake_runtime_process.aclose = AsyncMock()
+    _mock_process_lifecycle(fake_runtime_process, wait_side_effect=[TimeoutError, None])
     fake_runtime_process.exit_status = RuntimeExitStatus(
         expected=True,
         timeout=True,
@@ -306,7 +313,7 @@ async def test_close_fallback_to_terminate(
     )
     fail_after = mocker.patch(
         "kiln.sdk.runtime_client.anyio.fail_after",
-        side_effect=[TimeoutError, nullcontext()],
+        return_value=nullcontext(),
     )
 
     # Create client
@@ -316,8 +323,9 @@ async def test_close_fallback_to_terminate(
     await client.close()
 
     # Verify the default timeout is used
-    fail_after.assert_called()
+    assert fail_after.call_args_list == [call(30), call(10)]
     fake_runtime_process.close_stdin.assert_awaited_once()
+    assert fake_runtime_process.wait.await_count == 2
     fake_runtime_process.aclose.assert_awaited_once_with(
         mark_expected=True, final_class=RuntimeFinalExitClass.FORCED_KILL, timeout=True
     )

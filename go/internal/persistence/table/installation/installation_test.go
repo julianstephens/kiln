@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/julianstephens/kiln/go/internal/persistence/table"
 	"github.com/julianstephens/kiln/go/internal/persistence/table/installation"
 	"github.com/julianstephens/kiln/go/internal/util"
 	"github.com/julianstephens/kiln/go/schema"
@@ -25,12 +26,16 @@ func createInstallationTable(t *testing.T, db *sql.DB) {
 	t.Helper()
 	_, err := db.Exec(`
 		CREATE TABLE installation_metadata (
-			installation_id TEXT NOT NULL,
-			database_format_version INTEGER NOT NULL,
-			schema_compatibility_major INTEGER NOT NULL,
+			singleton_key INTEGER PRIMARY KEY CHECK (singleton_key = 1),
+			installation_id TEXT NOT NULL UNIQUE,
+			database_format_version INTEGER NOT NULL CHECK (database_format_version >= 1),
+			schema_compatibility_major INTEGER NOT NULL CHECK (schema_compatibility_major >= 1),
 			minimum_runtime_version TEXT,
 			last_opened_runtime_version TEXT,
-			maintenance_state TEXT NOT NULL
+			maintenance_state TEXT NOT NULL DEFAULT 'normal' CHECK (maintenance_state IN ('normal', 'migration_required', 'migration_failed', 'maintenance', 'read_only')),
+			maintenance_details_json TEXT,
+			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+			updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 		);
 	`)
 	if err != nil {
@@ -51,21 +56,23 @@ func TestInstallationMetadata_Insert(t *testing.T) {
 			DatabaseFormatVersion: 1,
 			MaintenanceState:      installation.MaintenanceStateNormal,
 		}
-		err := m.Insert(context.Background(), db)
+		m.SetExecutor(table.NewExecutorWithDB(db))
+		err := m.Insert(context.Background())
 		if err != nil {
 			t.Fatalf("Insert returned unexpected error: %v", err)
 		}
 
 		var count int
 		var installationID string
+		var singletonKey int
 		var dbFormatVersion int64
 		var compatibilityMajor int
 		var minVersion, lastOpenedVersion, maintenanceState string
 		if err := db.QueryRow(`
-			SELECT COUNT(*), installation_id, database_format_version, schema_compatibility_major,
+			SELECT COUNT(*), singleton_key, installation_id, database_format_version, schema_compatibility_major,
 			       minimum_runtime_version, last_opened_runtime_version, maintenance_state
 			FROM installation_metadata;
-		`).Scan(&count, &installationID, &dbFormatVersion, &compatibilityMajor,
+		`).Scan(&count, &singletonKey, &installationID, &dbFormatVersion, &compatibilityMajor,
 			&minVersion, &lastOpenedVersion, &maintenanceState); err != nil {
 			t.Fatalf("failed to read inserted row: %v", err)
 		}
@@ -101,7 +108,8 @@ func TestInstallationMetadata_Insert(t *testing.T) {
 			DatabaseFormatVersion: 1,
 			MaintenanceState:      installation.MaintenanceStateNormal,
 		}
-		err := m.Insert(context.Background(), db)
+		m.SetExecutor(table.NewExecutorWithDB(db))
+		err := m.Insert(context.Background())
 		if err == nil {
 			t.Fatal("Insert error = nil, want error")
 		}
@@ -118,7 +126,8 @@ func TestInstallationMetadata_Load(t *testing.T) {
 		createInstallationTable(t, db)
 
 		m := &installation.InstallationMetadataRow{}
-		exists, err := m.LoadFirst(context.Background(), db)
+		m.SetExecutor(table.NewExecutorWithDB(db))
+		exists, err := m.LoadFirst(context.Background())
 		if err != nil {
 			t.Fatalf("LoadFirst returned unexpected error: %v", err)
 		}
@@ -139,18 +148,19 @@ func TestInstallationMetadata_Load(t *testing.T) {
 		const wantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 		_, err := db.Exec(`
 			INSERT INTO installation_metadata (
-				installation_id, database_format_version, schema_compatibility_major,
-				minimum_runtime_version, last_opened_runtime_version, maintenance_state
-			) VALUES (?, ?, ?, ?, ?, ?);
-		`, wantID, int64(2), schema.CompatibilityMajor,
+				singleton_key, installation_id, database_format_version, schema_compatibility_major,
+				minimum_runtime_version, last_opened_runtime_version, maintenance_state, maintenance_details_json
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+		`, int64(1), wantID, int64(2), schema.CompatibilityMajor,
 			util.RuntimeProtocolVersion, util.RuntimeProtocolVersion,
-			string(installation.MaintenanceStateMaintenance))
+			string(installation.MaintenanceStateMaintenance), "")
 		if err != nil {
 			t.Fatalf("failed to seed row: %v", err)
 		}
 
 		m := &installation.InstallationMetadataRow{}
-		exists, err := m.LoadFirst(context.Background(), db)
+		m.SetExecutor(table.NewExecutorWithDB(db))
+		exists, err := m.LoadFirst(context.Background())
 		if err != nil {
 			t.Fatalf("LoadFirst returned unexpected error: %v", err)
 		}
@@ -183,7 +193,8 @@ func TestInstallationMetadata_Load(t *testing.T) {
 
 		db := openInMemoryDB(t)
 		m := &installation.InstallationMetadataRow{}
-		exists, err := m.LoadFirst(context.Background(), db)
+		m.SetExecutor(table.NewExecutorWithDB(db))
+		exists, err := m.LoadFirst(context.Background())
 		if err == nil {
 			t.Fatal("LoadFirst error = nil, want error")
 		}
