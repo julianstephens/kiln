@@ -74,6 +74,15 @@ type InstallationMetadataRow struct {
 	UpdatedAt                int64            `json:"updated_at"`
 }
 
+type InstallationMetadataRowUpdater struct {
+	DatabaseFormatVersion    *int64            `json:"database_format_version,omitempty"`
+	SchemaCompatibilityMajor *int              `json:"schema_compatibility_major,omitempty"`
+	MinimumRuntimeVersion    *string           `json:"minimum_runtime_version,omitempty"`
+	LastOpenedRuntimeVersion *string           `json:"last_opened_runtime_version,omitempty"`
+	MaintenanceState         *MaintenanceState `json:"maintenance_state,omitempty"`
+	MaintenanceDetailsJSON   *string           `json:"maintenance_details_json,omitempty"`
+}
+
 func (m *InstallationMetadataRow) SetExecutor(executor *table.Executor) {
 	m.executor = executor
 }
@@ -118,6 +127,7 @@ func (m *InstallationMetadataRow) Load(ctx context.Context) (bool, error) {
 			return false, err
 		}
 	}
+
 	return true, nil
 }
 
@@ -196,7 +206,7 @@ func (m *InstallationMetadataRow) Insert(ctx context.Context) error {
 }
 
 // Update modifies the existing record for the installation metadata table in the database.
-func (m *InstallationMetadataRow) Update(ctx context.Context) (int64, error) {
+func (m *InstallationMetadataRow) Update(ctx context.Context, updates InstallationMetadataRowUpdater) (int64, error) {
 	id := m.InstallationID
 	if id == "" {
 		return 0, ErrInstallationIDEmpty
@@ -209,24 +219,36 @@ func (m *InstallationMetadataRow) Update(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 
-	if !table.IsSet(&m.DatabaseFormatVersion) {
-		m.DatabaseFormatVersion = storedMetadata.DatabaseFormatVersion
-	}
-	if !table.IsSet(&m.SchemaCompatibilityMajor) {
-		m.SchemaCompatibilityMajor = storedMetadata.SchemaCompatibilityMajor
-	}
-	if !table.IsSet(&m.MinimumRuntimeVersion) {
-		m.MinimumRuntimeVersion = storedMetadata.MinimumRuntimeVersion
-	}
-	if !table.IsSet(&m.LastOpenedRuntimeVersion) {
-		m.LastOpenedRuntimeVersion = util.RuntimeProtocolVersion
-	}
-	if !table.IsSet(&m.MaintenanceState) {
-		m.MaintenanceState = storedMetadata.MaintenanceState
-	}
-	if !table.IsSet(&m.MaintenanceDetailsJSON) {
-		m.MaintenanceDetailsJSON = storedMetadata.MaintenanceDetailsJSON
-	}
+	m.DatabaseFormatVersion = table.Iff(
+		updates.DatabaseFormatVersion != nil,
+		*updates.DatabaseFormatVersion,
+		storedMetadata.DatabaseFormatVersion,
+	)
+	m.SchemaCompatibilityMajor = table.Iff(
+		updates.SchemaCompatibilityMajor != nil,
+		*updates.SchemaCompatibilityMajor,
+		storedMetadata.SchemaCompatibilityMajor,
+	)
+	m.MinimumRuntimeVersion = table.Iff(
+		updates.MinimumRuntimeVersion != nil,
+		*updates.MinimumRuntimeVersion,
+		storedMetadata.MinimumRuntimeVersion,
+	)
+	m.LastOpenedRuntimeVersion = table.Iff(
+		updates.LastOpenedRuntimeVersion != nil,
+		*updates.LastOpenedRuntimeVersion,
+		storedMetadata.LastOpenedRuntimeVersion,
+	)
+	m.MaintenanceState = table.Iff(
+		updates.MaintenanceState != nil,
+		*updates.MaintenanceState,
+		storedMetadata.MaintenanceState,
+	)
+	m.MaintenanceDetailsJSON = table.Iff(
+		updates.MaintenanceDetailsJSON != nil,
+		*updates.MaintenanceDetailsJSON,
+		storedMetadata.MaintenanceDetailsJSON,
+	)
 
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()

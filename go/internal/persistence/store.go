@@ -288,10 +288,14 @@ func bestEffortRecordMigrationFailure(ctx context.Context, db *sql.DB) {
 	if err != nil || !exists {
 		return
 	}
+	updates := installation.InstallationMetadataRowUpdater{
+		MaintenanceState:         table.Ptr(installation.MaintenanceStateMigrationFailed),
+		LastOpenedRuntimeVersion: table.Ptr(util.RuntimeProtocolVersion),
+	}
 	installationMetadata.MaintenanceState = installation.MaintenanceStateMigrationFailed
 	installationMetadata.LastOpenedRuntimeVersion = util.RuntimeProtocolVersion
 
-	if _, err = installationMetadata.Update(ctx); err != nil {
+	if _, err = installationMetadata.Update(ctx, updates); err != nil {
 		return
 	}
 
@@ -331,10 +335,9 @@ func loadOrCreateInstallationMetadata(
 			err = errors.New("installation metadata record exists but installation ID is empty")
 			return
 		}
-
-		installationMetadata.LastOpenedRuntimeVersion = util.RuntimeProtocolVersion
-
-		if _, updateErr := installationMetadata.Update(ctx); updateErr != nil {
+		if _, updateErr := installationMetadata.Update(ctx, installation.InstallationMetadataRowUpdater{
+			LastOpenedRuntimeVersion: table.Ptr(util.RuntimeProtocolVersion),
+		}); updateErr != nil {
 			err = fmt.Errorf("update installation metadata: %w", updateErr)
 			return
 		}

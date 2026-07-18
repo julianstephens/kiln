@@ -38,19 +38,6 @@ type Row interface {
 	Delete(context.Context) (int64, error)
 }
 
-// IsSet checks if a pointer to a value is set (non-nil and non-zero if it implements IsZero).
-func IsSet[T any](value *T) bool {
-	if value == nil {
-		return false
-	}
-
-	if v, ok := any(*value).(interface{ IsZero() bool }); ok {
-		return !v.IsZero()
-	}
-
-	return true
-}
-
 type Executor struct {
 	tx *sql.Tx
 	db *sql.DB
@@ -105,4 +92,17 @@ func (e *Executor) QueryContext(ctx context.Context, query string, args []any) (
 	}
 
 	return e.db.QueryContext(ctx, query, args...)
+}
+
+// Iff returns trueValue if condition is true, otherwise it returns falseValue.
+func Iff[T any](condition bool, trueValue, falseValue T) T {
+	if condition {
+		return trueValue
+	}
+	return falseValue
+}
+
+// Ptr returns a pointer to the given value of any type.
+func Ptr[T any](value T) *T {
+	return &value
 }
