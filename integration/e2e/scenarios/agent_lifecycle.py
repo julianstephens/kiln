@@ -3,11 +3,20 @@
 from pathlib import Path
 
 import pytest
-from kiln import Agent
+from kiln.sdk.agent import Agent
+from kiln.sdk.config import DBConfig, RuntimeConfig
 from kiln.sdk.errors import RepositoryNotFoundError, TaskEmptyError
 from kiln.sdk.runtime_connection import ShutdownConfig
 
 from .base import BaseScenario
+
+DefaultDBConfig = DBConfig(
+    db_type="sqlite3",
+    installation_db_path=":memory:",
+    max_open_connections=1,
+    max_idle_connections=1,
+    max_connection_lifetime_seconds=1,
+)
 
 
 class InitializeAgentScenario(BaseScenario):
@@ -28,6 +37,7 @@ class InitializeAgentScenario(BaseScenario):
                 kill_timeout_seconds=5,
                 cancel_in_flight_requests=True,
             ),
+            config=RuntimeConfig(db=DefaultDBConfig),
         ) as agent:
             # If we get here without exception, initialization succeeded
             assert agent._client._process.is_alive, (
@@ -52,6 +62,7 @@ class AgentCloseScenario(BaseScenario):
                 kill_timeout_seconds=5,
                 cancel_in_flight_requests=True,
             ),
+            config=RuntimeConfig(db=DefaultDBConfig),
         ) as agent:
             assert agent._client._process.is_alive, (
                 "Process should be alive after open()"
@@ -77,6 +88,7 @@ class MultipleAgentLifecyclesScenario(BaseScenario):
                     kill_timeout_seconds=5,
                     cancel_in_flight_requests=True,
                 ),
+                config=RuntimeConfig(db=DefaultDBConfig),
             ) as agent:
                 assert agent._client._process.is_alive, (
                     f"Process should be alive (iteration {i})"
@@ -104,6 +116,7 @@ class InvalidRepositoryErrorScenario(BaseScenario):
                     kill_timeout_seconds=5,
                     cancel_in_flight_requests=True,
                 ),
+                config=RuntimeConfig(db=DefaultDBConfig),
             ):
                 pass  # Should not reach here
 
@@ -125,6 +138,7 @@ class EmptyTaskErrorScenario(BaseScenario):
                 kill_timeout_seconds=5,
                 cancel_in_flight_requests=True,
             ),
+            config=RuntimeConfig(db=DefaultDBConfig),
         ) as agent:
             with pytest.raises(TaskEmptyError):
                 await agent.run("")

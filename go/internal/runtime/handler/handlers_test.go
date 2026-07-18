@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -12,6 +13,20 @@ import (
 	"github.com/julianstephens/kiln/go/internal/runtime/handler"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 )
+
+type testStore struct{}
+
+func (s *testStore) Close() error {
+	return nil
+}
+
+func (s *testStore) Health(context.Context) error {
+	return nil
+}
+
+func (s *testStore) GetDB() *sql.DB {
+	return nil
+}
 
 func waitForCondition(t *testing.T, timeout time.Duration, condition func() bool) {
 	t.Helper()
@@ -70,6 +85,7 @@ func TestMakeShutdownHandler_InvalidParams(t *testing.T) {
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: protocol.NewPendingRequests(),
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)
@@ -105,6 +121,7 @@ func TestMakeShutdownHandler_AcceptsRequest(t *testing.T) {
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)
@@ -156,6 +173,7 @@ func TestMakeShutdownHandler_AlreadyDraining(t *testing.T) {
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)
@@ -204,6 +222,7 @@ func TestMakeShutdownHandler_AlreadyShutdown(t *testing.T) {
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: protocol.NewPendingRequests(),
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)
@@ -254,6 +273,7 @@ func TestMakeShutdownHandler_CompletesWithCancelInFlightRequests(t *testing.T) {
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)
@@ -295,6 +315,7 @@ func TestMakeShutdownHandler_CompletesAfterInFlightRequestsDrain(t *testing.T) {
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)
@@ -340,6 +361,7 @@ func TestMakeShutdownHandler_ContextTimeoutWhileWaitingForInFlight(t *testing.T)
 	deps := &contract.RuntimeDeps{
 		Lifecycle:       contract.NewLifecycle(),
 		PendingRequests: pendingRequests,
+		Store:           &testStore{},
 	}
 
 	shutdownHandler := handler.MakeShutdownHandler(state, deps)

@@ -97,7 +97,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 		}
 
 		switch {
-		case validatedParams.ProtocolVersion != contract.RuntimeProtocolVersion:
+		case validatedParams.ProtocolVersion != util.RuntimeProtocolVersion:
 			spec := rpcerror.Spec{
 				JSONRPCCode: contract.KilnRuntimeUnsupportedProtocolVersion,
 				KilnCode:    "runtime.unsupported_protocol_version",
@@ -107,7 +107,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 				Retryable:   false,
 				Details: map[string]any{
 					"requested_protocol_version":  validatedParams.ProtocolVersion,
-					"supported_protocol_versions": []string{contract.RuntimeProtocolVersion},
+					"supported_protocol_versions": []string{util.RuntimeProtocolVersion},
 				},
 			}
 			errRes, kilnErr := rpcerror.Response(req.ID, spec)
@@ -148,10 +148,10 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 		result := initialize_result.InitializeResult{
 			Runtime: initialize_result.InitializeResultRuntime{
 				ID:      newRuntimeID(),
-				Name:    contract.RuntimeName,
+				Name:    util.RuntimeName,
 				Version: deps.Build.Version,
 			},
-			ProtocolVersion:           contract.RuntimeProtocolVersion,
+			ProtocolVersion:           util.RuntimeProtocolVersion,
 			SchemaSetVersion:          schema.SchemaSetVersion,
 			CompatibilityMajor:        schema.CompatibilityMajor,
 			SupportedMethodNamespaces: protocol.SupportedMethodNamespaces(),
@@ -162,10 +162,7 @@ func MakeInitializeHandler(state *HandlerState, deps *contract.RuntimeDeps) cont
 			},
 		}
 
-		state.SetInitialized(true)
-		state.SetReady(true)
-		state.SetInitialParams(*validatedParams)
-		state.SetInitialResult(result)
+		state.CompleteInitialization(*validatedParams, result, deps.Store != nil)
 
 		return protocol.NewSuccessResponse(req.ID, util.MustStructToMap(result))
 	}

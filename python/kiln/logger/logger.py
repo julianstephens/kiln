@@ -36,19 +36,12 @@ class LogSinkConfig:
 
 @dataclass(frozen=True)
 class LoggingConfig:
-    level: LogLevel = "info"
-    format: LogFormat = "json"
+    level: LogLevel = field(
+        default="info",
+        metadata={"cli": {"map": {"warning": "warn", "critical": "error"}}},
+    )
+    format: LogFormat = field(default="json", metadata={"cli": {"emit": False}})
     sink: LogSinkConfig = field(default_factory=LogSinkConfig)
-
-
-DefaultLoggingConfig = LoggingConfig(
-    level="info",
-    format="json",
-    sink=LogSinkConfig(
-        kind="stderr",
-        compress=False,
-    ),
-)
 
 
 class GzipRotatingFileHandler(RotatingFileHandler):

@@ -15,13 +15,9 @@ from kiln.protocol.jsonrpc import (
 )
 from kiln.schemas import COMPATIBILITY_MAJOR, SCHEMA_SET_VERSION
 from kiln.sdk import PACKAGE_NAME, __version__
+from kiln.sdk.config import ShutdownConfig
 from kiln.sdk.errors import RuntimeMethodError, RuntimeProcessError
-from kiln.sdk.runtime_connection import (
-    RUNTIME_PROTOCOL_VERSION,
-    DefaultShutdownConfig,
-    RuntimeConnectionState,
-    ShutdownConfig,
-)
+from kiln.sdk.runtime_connection import RUNTIME_PROTOCOL_VERSION, RuntimeConnectionState
 from kiln.sdk.runtime_connection import (
     RuntimeStdioConnection as _RuntimeStdioConnection,
 )
@@ -30,11 +26,11 @@ from kiln.sdk.runtime_connection import (
 def RuntimeStdioConnection(  # noqa: N802
     process: Any,
     state: RuntimeConnectionState = RuntimeConnectionState.EXITED,
-    shutdown_config: ShutdownConfig = DefaultShutdownConfig,
+    shutdown_config: ShutdownConfig | None = None,
 ) -> _RuntimeStdioConnection:
     return _RuntimeStdioConnection(
         process=process,
-        shutdown_config=shutdown_config,
+        shutdown_config=shutdown_config or ShutdownConfig(),
         state=state,
     )
 

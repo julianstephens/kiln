@@ -103,7 +103,7 @@ Development currently expects:
 
 - Python 3.13 or later
 - [`uv`](https://docs.astral.sh/uv/)
-- Go 1.25.5 or later
+- Go 1.25.7 or later
 - `golangci-lint`
 - GNU Make or a compatible implementation
 

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from kiln.protocol.jsonrpc import JsonRpcErrorResponse
 from kiln.schemas.runtime import RuntimeError as KilnRuntimeError
+from kiln.schemas.runtime.error import KilnError
 
 if TYPE_CHECKING:
     from .runtime_exit import InflightRequestDisposition, RuntimeExitStatus
@@ -90,3 +91,11 @@ class RuntimeProcessExitedError(RuntimeProcessError):
                 f"signal={exit_status.signal}"
             )
         )
+
+
+class RuntimeStartupError(RuntimeProcessError):
+    def __init__(self, error: KilnError) -> None:
+        super().__init__(
+            message=f"{error.code}: {error.message}",
+        )
+        self.error = error

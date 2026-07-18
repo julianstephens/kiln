@@ -1,6 +1,8 @@
 package contract
 
-import "sync"
+import (
+	"sync"
+)
 
 // Lifecycle represents the lifecycle of the runtime, including shutdown and exit.
 type Lifecycle struct {

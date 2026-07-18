@@ -112,3 +112,38 @@ func (hs *HandlerState) SetInitialResult(result initialize_result.InitializeResu
 	defer hs.Mu.Unlock()
 	hs.InitialResult = result
 }
+
+func (hs *HandlerState) CompleteInitialization(
+	params initialize_request_payload.InitializeRequestPayload,
+	result initialize_result.InitializeResult,
+	operational bool,
+) {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+
+	hs.InitialParams = params
+	hs.InitialResult = result
+	hs.Initialized = true
+	hs.Ready = operational && hs.LastFatalStartupError == nil
+}
+
+type Snapshot struct {
+	Initialized           bool
+	Ready                 bool
+	Draining              bool
+	Shutdown              bool
+	LastFatalStartupError *runtime_error.ErrorKilnError
+}
+
+func (hs *HandlerState) Snapshot() Snapshot {
+	hs.Mu.Lock()
+	defer hs.Mu.Unlock()
+
+	return Snapshot{
+		Initialized:           hs.Initialized,
+		Ready:                 hs.Ready,
+		Draining:              hs.Draining,
+		Shutdown:              hs.Shutdown,
+		LastFatalStartupError: hs.LastFatalStartupError,
+	}
+}
