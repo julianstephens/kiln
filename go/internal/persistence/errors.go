@@ -144,4 +144,13 @@ var (
 			Cause:     fmt.Errorf("got version %d, expected %d", got, expected),
 		}
 	}
+	NewCompatibilityMajorMismatchError = func(storePath string, got int, expected int) *Error {
+		return &Error{
+			Code:      CodeUnsupportedSchemaVersion,
+			Category:  runtime_error.ErrorKilnErrorCategoryCompatibility,
+			StorePath: storePath,
+			Message:   "database schema compatibility major is not compatible with the application",
+			Cause:     fmt.Errorf("got compatibility major %d, expected %d", got, expected),
+		}
+	}
 )

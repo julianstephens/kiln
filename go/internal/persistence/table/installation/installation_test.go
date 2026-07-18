@@ -203,3 +203,61 @@ func TestInstallationMetadata_Load(t *testing.T) {
 		}
 	})
 }
+
+func TestInstallationMetadata_UpdateRefreshesUpdatedAt(t *testing.T) {
+	t.Parallel()
+
+	db := openInMemoryDB(t)
+	createInstallationTable(t, db)
+
+	const installationID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	_, err := db.Exec(`
+		INSERT INTO installation_metadata (
+			singleton_key,
+			installation_id,
+			database_format_version,
+			schema_compatibility_major,
+			minimum_runtime_version,
+			last_opened_runtime_version,
+			maintenance_state,
+			maintenance_details_json,
+			created_at,
+			updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+	`,
+		1,
+		installationID,
+		int64(1),
+		schema.CompatibilityMajor,
+		util.RuntimeProtocolVersion,
+		"old-runtime",
+		string(installation.MaintenanceStateNormal),
+		"",
+		int64(1),
+		int64(1),
+	)
+	if err != nil {
+		t.Fatalf("failed to seed installation metadata row: %v", err)
+	}
+
+	m := &installation.InstallationMetadataRow{InstallationID: installationID}
+	m.SetExecutor(table.NewExecutorWithDB(db))
+
+	if _, err := m.Update(context.Background(), installation.InstallationMetadataRowUpdater{
+		LastOpenedRuntimeVersion: table.Ptr(util.RuntimeProtocolVersion),
+	}); err != nil {
+		t.Fatalf("Update returned unexpected error: %v", err)
+	}
+
+	var updatedAt int64
+	if err := db.QueryRow(
+		"SELECT updated_at FROM installation_metadata WHERE installation_id = ?",
+		installationID,
+	).Scan(&updatedAt); err != nil {
+		t.Fatalf("failed to load updated_at after update: %v", err)
+	}
+
+	if updatedAt <= 1 {
+		t.Fatalf("updated_at = %d, want value > 1", updatedAt)
+	}
+}

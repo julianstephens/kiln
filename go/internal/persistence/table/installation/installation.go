@@ -215,40 +215,37 @@ func (m *InstallationMetadataRow) Update(ctx context.Context, updates Installati
 	storedMetadata := &InstallationMetadataRow{InstallationID: id}
 	storedMetadata.SetExecutor(m.executor)
 	rowExists, err := storedMetadata.Load(ctx)
-	if !rowExists || err != nil {
+	if err != nil {
 		return 0, err
 	}
+	if !rowExists {
+		return 0, sql.ErrNoRows
+	}
 
-	m.DatabaseFormatVersion = table.Iff(
-		updates.DatabaseFormatVersion != nil,
-		*updates.DatabaseFormatVersion,
-		storedMetadata.DatabaseFormatVersion,
-	)
-	m.SchemaCompatibilityMajor = table.Iff(
-		updates.SchemaCompatibilityMajor != nil,
-		*updates.SchemaCompatibilityMajor,
-		storedMetadata.SchemaCompatibilityMajor,
-	)
-	m.MinimumRuntimeVersion = table.Iff(
-		updates.MinimumRuntimeVersion != nil,
-		*updates.MinimumRuntimeVersion,
-		storedMetadata.MinimumRuntimeVersion,
-	)
-	m.LastOpenedRuntimeVersion = table.Iff(
-		updates.LastOpenedRuntimeVersion != nil,
-		*updates.LastOpenedRuntimeVersion,
-		storedMetadata.LastOpenedRuntimeVersion,
-	)
-	m.MaintenanceState = table.Iff(
-		updates.MaintenanceState != nil,
-		*updates.MaintenanceState,
-		storedMetadata.MaintenanceState,
-	)
-	m.MaintenanceDetailsJSON = table.Iff(
-		updates.MaintenanceDetailsJSON != nil,
-		*updates.MaintenanceDetailsJSON,
-		storedMetadata.MaintenanceDetailsJSON,
-	)
+	m.DatabaseFormatVersion = storedMetadata.DatabaseFormatVersion
+	if updates.DatabaseFormatVersion != nil {
+		m.DatabaseFormatVersion = *updates.DatabaseFormatVersion
+	}
+	m.SchemaCompatibilityMajor = storedMetadata.SchemaCompatibilityMajor
+	if updates.SchemaCompatibilityMajor != nil {
+		m.SchemaCompatibilityMajor = *updates.SchemaCompatibilityMajor
+	}
+	m.MinimumRuntimeVersion = storedMetadata.MinimumRuntimeVersion
+	if updates.MinimumRuntimeVersion != nil {
+		m.MinimumRuntimeVersion = *updates.MinimumRuntimeVersion
+	}
+	m.LastOpenedRuntimeVersion = storedMetadata.LastOpenedRuntimeVersion
+	if updates.LastOpenedRuntimeVersion != nil {
+		m.LastOpenedRuntimeVersion = *updates.LastOpenedRuntimeVersion
+	}
+	m.MaintenanceState = storedMetadata.MaintenanceState
+	if updates.MaintenanceState != nil {
+		m.MaintenanceState = *updates.MaintenanceState
+	}
+	m.MaintenanceDetailsJSON = storedMetadata.MaintenanceDetailsJSON
+	if updates.MaintenanceDetailsJSON != nil {
+		m.MaintenanceDetailsJSON = *updates.MaintenanceDetailsJSON
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, table.DefaultQueryTimeout*time.Second)
 	defer cancel()
@@ -261,7 +258,8 @@ func (m *InstallationMetadataRow) Update(ctx context.Context, updates Installati
 			minimum_runtime_version = ?,
 			last_opened_runtime_version = ?,
 			maintenance_state = ?,
-			maintenance_details_json = ?
+			maintenance_details_json = ?,
+			updated_at = unixepoch()
 		WHERE installation_id = ?;
 		`,
 		[]any{

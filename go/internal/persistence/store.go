@@ -13,6 +13,7 @@ import (
 	"github.com/julianstephens/kiln/go/internal/persistence/table"
 	"github.com/julianstephens/kiln/go/internal/persistence/table/installation"
 	"github.com/julianstephens/kiln/go/internal/util"
+	"github.com/julianstephens/kiln/go/schema"
 	runtime_error "github.com/julianstephens/kiln/go/schema/runtime/error"
 	"github.com/rogpeppe/go-internal/lockedfile"
 
@@ -151,7 +152,25 @@ func Open(ctx context.Context, cfg Config) (Store, error) {
 		return nil, NewMigrationFailedError(cfg.InstallationDBPath, migrationErr)
 	}
 
-	if _, err := loadOrCreateInstallationMetadata(ctx, store.GetDB(), latestSupportedVersion); err != nil {
+	currentSchemaVersion, err := currentDBVersion(ctx, store.GetDB())
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, NewMigrationFailedError(cfg.InstallationDBPath, err)
+		}
+	}
+
+	if _, err := loadOrCreateInstallationMetadata(
+		ctx,
+		store.GetDB(),
+		cfg.InstallationDBPath,
+		latestSupportedVersion,
+		schemaVersion,
+		currentSchemaVersion,
+	); err != nil {
+		var storeErr *Error
+		if errors.As(err, &storeErr) && storeErr.Code == CodeUnsupportedSchemaVersion {
+			return nil, storeErr
+		}
 		return nil, NewStoreError(
 			cfg.InstallationDBPath,
 			CodeStoreInitializationFailed,
@@ -305,9 +324,12 @@ func bestEffortRecordMigrationFailure(ctx context.Context, db *sql.DB) {
 func loadOrCreateInstallationMetadata(
 	ctx context.Context,
 	db *sql.DB,
-	dbFormatVersion int64,
+	storePath string,
+	latestSupportedVersion int64,
+	previousSchemaVersion int64,
+	currentSchemaVersion int64,
 ) (installationID string, err error) {
-	installationMetadata := &installation.InstallationMetadataRow{DatabaseFormatVersion: dbFormatVersion}
+	installationMetadata := &installation.InstallationMetadataRow{}
 	txn, txErr := db.BeginTx(ctx, nil)
 	if txErr != nil {
 		err = fmt.Errorf("begin installation metadata transaction: %w", txErr)
@@ -335,9 +357,25 @@ func loadOrCreateInstallationMetadata(
 			err = errors.New("installation metadata record exists but installation ID is empty")
 			return
 		}
-		if _, updateErr := installationMetadata.Update(ctx, installation.InstallationMetadataRowUpdater{
+		if compatibilityErr := validateInstallationMetadataCompatibility(
+			storePath,
+			installationMetadata,
+			latestSupportedVersion,
+		); compatibilityErr != nil {
+			err = compatibilityErr
+			return
+		}
+
+		updates := installation.InstallationMetadataRowUpdater{
 			LastOpenedRuntimeVersion: table.Ptr(util.RuntimeProtocolVersion),
-		}); updateErr != nil {
+		}
+		if currentSchemaVersion > 0 &&
+			currentSchemaVersion != previousSchemaVersion &&
+			installationMetadata.DatabaseFormatVersion != currentSchemaVersion {
+			updates.DatabaseFormatVersion = table.Ptr(currentSchemaVersion)
+		}
+
+		if _, updateErr := installationMetadata.Update(ctx, updates); updateErr != nil {
 			err = fmt.Errorf("update installation metadata: %w", updateErr)
 			return
 		}
@@ -349,6 +387,11 @@ func loadOrCreateInstallationMetadata(
 
 		installationID = installationMetadata.InstallationID
 		return
+	}
+
+	installationMetadata.DatabaseFormatVersion = latestSupportedVersion
+	if currentSchemaVersion > 0 {
+		installationMetadata.DatabaseFormatVersion = currentSchemaVersion
 	}
 
 	insertErr := installationMetadata.Insert(ctx)
@@ -364,6 +407,30 @@ func loadOrCreateInstallationMetadata(
 
 	installationID = installationMetadata.InstallationID
 	return
+}
+
+func validateInstallationMetadataCompatibility(
+	storePath string,
+	installationMetadata *installation.InstallationMetadataRow,
+	latestSupportedVersion int64,
+) error {
+	if installationMetadata.DatabaseFormatVersion > latestSupportedVersion {
+		return NewSchemaVersionMismatchError(
+			storePath,
+			installationMetadata.DatabaseFormatVersion,
+			latestSupportedVersion,
+		)
+	}
+
+	if installationMetadata.SchemaCompatibilityMajor != schema.CompatibilityMajor {
+		return NewCompatibilityMajorMismatchError(
+			storePath,
+			installationMetadata.SchemaCompatibilityMajor,
+			schema.CompatibilityMajor,
+		)
+	}
+
+	return nil
 }
 
 func ensureDirectoryExists(path string) error {
